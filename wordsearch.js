@@ -49,7 +49,11 @@ const elements = {
   tryAgainBtn: document.getElementById('try-again-btn'),
   resumeBtn: document.getElementById('resume-btn'),
   restartBtn: document.getElementById('restart-btn'),
-  storyExcerpt: document.getElementById('story-excerpt')
+  storyExcerpt: document.getElementById('story-excerpt'),
+  titlePanel: document.getElementById('title-panel'),
+  instructionsPanel: document.getElementById('instructions-panel'),
+  startGameBtn: document.getElementById('start-game-btn'),
+  startPlayingBtn: document.getElementById('start-playing-btn')
 };
 
 // Initialize Game
@@ -66,7 +70,7 @@ function initGame(puzzleData) {
   state.startCell = null;
   state.currentCell = null;
   state.timeRemaining = config.timeLimit;
-  state.paused = false;
+  state.paused = true; // Start paused so timer doesn't run until instructions are closed
   state.gameOver = false;
   
   // Filter and prepare words
@@ -92,8 +96,9 @@ function initGame(puzzleData) {
   renderWordList();
   renderTimer();
   
-  // Start timer
-  startTimer();
+  // The timer will start after instructions are closed
+  // But we'll set it up now so it's ready
+  clearInterval(state.timer);
   
   // Set up event listeners
   setupEventListeners();
@@ -639,5 +644,59 @@ function nextLevel() {
   loadRandomPuzzle();
 }
 
-// Call loadPuzzles when the document is ready
-document.addEventListener('DOMContentLoaded', loadPuzzles);
+// Show the title screen
+function showTitleScreen() {
+  // Hide all game panels first
+  elements.winPanel.style.display = 'none';
+  elements.losePanel.style.display = 'none';
+  elements.pausePanel.style.display = 'none';
+  elements.instructionsPanel.style.display = 'none';
+  
+  // Show the title panel
+  elements.titlePanel.style.display = 'block';
+}
+
+// Show the instructions panel
+function showInstructions() {
+  // Hide title screen
+  elements.titlePanel.style.display = 'none';
+  
+  // Show instructions panel
+  elements.instructionsPanel.style.display = 'block';
+  
+  // Make sure the game is paused while instructions are showing
+  state.paused = true;
+}
+
+// Start the game after instructions
+function startAfterInstructions() {
+  // Hide instructions panel
+  elements.instructionsPanel.style.display = 'none';
+  
+  // Unpause the game
+  state.paused = false;
+  
+  // Start timer
+  startTimer();
+}
+
+// Initialize game with title screen first
+function initializeGame() {
+  // First load puzzles data
+  loadPuzzles();
+  
+  // Then show title screen
+  showTitleScreen();
+  
+  // Set up event listeners for new buttons
+  elements.startGameBtn.addEventListener('click', () => {
+    // When Start Game is clicked, load a puzzle and show instructions
+    loadRandomPuzzle();
+    showInstructions();
+  });
+  
+  elements.startPlayingBtn.addEventListener('click', startAfterInstructions);
+}
+
+// Call initializeGame when the document is ready
+document.addEventListener('DOMContentLoaded', initializeGame);

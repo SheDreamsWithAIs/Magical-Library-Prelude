@@ -55,9 +55,41 @@
     .panel { 
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
       background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      text-align: center; display: none;
+      text-align: center; display: none; max-width: 80%; width: 500px;
+      z-index: 1000;
     }
-    .panel button { padding: 10px 20px; margin-top: 15px; cursor: pointer; }
+    .panel button { 
+      padding: 10px 20px; margin-top: 15px; cursor: pointer; 
+      background-color: #4CAF50; color: white; border: none;
+      border-radius: 4px; font-size: 16px;
+    }
+    .panel button:hover {
+      background-color: #45a049;
+    }
+    #title-panel {
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      color: white;
+    }
+    #title-panel h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    #title-panel p {
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+    #title-panel button {
+      background-color: white;
+      color: #6e8efb;
+      font-size: 18px;
+      padding: 12px 30px;
+    }
+    #title-panel button:hover {
+      background-color: #f0f0f0;
+    }
+    #instructions-panel ul {
+      line-height: 1.6;
+    }
 
     /* Responsive design */
     @media (max-width: 768px) {
@@ -123,6 +155,26 @@
     <h2>Game Paused</h2>
     <button id="resume-btn">Resume</button>
     <button id="restart-btn">Restart</button>
+  </div>
+  
+  <!-- Title Screen Panel -->
+  <div class="panel" id="title-panel">
+    <h1>Word Search Game</h1>
+    <p>Find hidden words in a grid of letters!</p>
+    <button id="start-game-btn">Start Game</button>
+  </div>
+  
+  <!-- Instructions Panel -->
+  <div class="panel" id="instructions-panel">
+    <h2>How to Play</h2>
+    <ul style="text-align: left; margin-bottom: 20px;">
+      <li>Find all the words from the list on the right</li>
+      <li>Click and drag to select letters in a straight line</li>
+      <li>Words can go horizontally, vertically, or diagonally</li>
+      <li>Words can also be spelled backwards</li>
+      <li>Find all the words before the timer runs out!</li>
+    </ul>
+    <button id="start-playing-btn">Start Playing</button>
   </div>
 
   <script src="wordsearch.js"></script>
