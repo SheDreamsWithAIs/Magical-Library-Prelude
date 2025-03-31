@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Puzzle 1: Fruits",
+    "words": ["apple", "banana", "cherry", "date", "elderberry"],
+    "storyExcerpt": "In the magical garden, there grew fruits of all kinds. The most prized were the sweet red apples, bright yellow bananas, and ruby-colored cherries. Some travelers even came from far away to taste the exotic dates and rare elderberries that thrived in the corner by the old stone wall."
+  },
+  {
+    "title": "Puzzle 2: Animals",
+    "words": ["dog", "elephant", "fox", "giraffe", "hippo"],
+    "storyExcerpt": "The ancient zoo housed creatures from every corner of the world. Children would laugh at the playful dogs, gasp at the towering elephants, and whisper secrets to the clever foxes. The tallest giraffes could be seen from outside the gates, while the massive hippos splashed happily in their expansive pools."
+  },
+  {
+    "title": "Puzzle 3: Weather",
+    "words": ["rain", "snow", "wind", "storm", "sunshine"],
+    "storyExcerpt": "The village experienced all four seasons in their fullest. Spring brought gentle rain to nourish the crops. Winter covered everything in pristine snow. Autumn winds carried colored leaves through the streets. Summer sunshine warmed the hearts of all, though occasional storms reminded everyone of nature's awesome power."
+  },
+  {
+    "title": "Puzzle 4: Space",
+    "words": ["star", "planet", "moon", "galaxy", "comet"],
+    "storyExcerpt": "Looking up at the night sky, Maya counted the stars one by one. She knew each planet in our solar system by heart and watched the moon change phases through her telescope. Sometimes, she imagined traveling to distant galaxies or chasing a brilliant comet across the universe."
+  },
+  {
+    "title": "Puzzle 5: Ocean",
+    "words": ["wave", "shell", "shark", "coral", "dolphin"],
+    "storyExcerpt": "The ocean held countless mysteries beneath its surface. Powerful waves crashed against the shore, revealing beautiful shells of all shapes and colors. In deeper waters, sharks patrolled the vibrant coral reefs while playful dolphins leaped through the air, seeming to dance with the setting sun."
+  }
+]

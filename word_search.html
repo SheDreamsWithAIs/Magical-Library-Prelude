@@ -7,13 +7,25 @@
   <style>
     /* Core styling */
     body { font-family: Arial, sans-serif; padding: 20px; }
-    #game-container { max-width: 800px; margin: 0 auto; }
+    #game-container { max-width: 1000px; margin: 0 auto; }
     
     /* Header */
     .book-title { font-size: 24px; text-align: center; margin-bottom: 20px; }
     
     /* Game sections */
     .game-area { display: flex; margin-bottom: 20px; }
+    .story-container { 
+      flex: 1; 
+      padding: 15px; 
+      margin-right: 20px; 
+      border-right: 1px solid #ddd;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .story-content {
+      line-height: 1.6;
+      font-size: 16px;
+    }
     .grid-container { flex: 2; margin-right: 20px; }
     .words-container { flex: 1; }
     
@@ -46,6 +58,20 @@
       text-align: center; display: none;
     }
     .panel button { padding: 10px 20px; margin-top: 15px; cursor: pointer; }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .game-area {
+        flex-direction: column;
+      }
+      .story-container {
+        margin-right: 0;
+        margin-bottom: 20px;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+        max-height: 200px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -57,6 +83,12 @@
     </div>
     
     <div class="game-area">
+      <div class="story-container">
+        <div class="story-content" id="story-excerpt">
+          Story excerpt will appear here.
+        </div>
+      </div>
+      
       <div class="grid-container">
         <div class="grid" id="word-grid"></div>
       </div>
@@ -68,7 +100,7 @@
     
     <div class="controls">
       <button id="pause-btn">Pause</button>
-      <button id="next-btn" disabled>Next Puzzle</button>
+      <button id="next-btn">Next Puzzle</button>
     </div>
   </div>
   
