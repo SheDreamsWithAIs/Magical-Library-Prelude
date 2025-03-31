@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Search Puzzle</title>
+  <style>
+    /* Core styling */
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #game-container { max-width: 800px; margin: 0 auto; }
+    
+    /* Header */
+    .book-title { font-size: 24px; text-align: center; margin-bottom: 20px; }
+    
+    /* Game sections */
+    .game-area { display: flex; margin-bottom: 20px; }
+    .grid-container { flex: 2; margin-right: 20px; }
+    .words-container { flex: 1; }
+    
+    /* Grid styling */
+    .grid { display: grid; width: 100%; border: 2px solid #333; }
+    .grid-cell { 
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 20px; border: 1px solid #ddd;
+      user-select: none; cursor: pointer; aspect-ratio: 1 / 1;
+    }
+    .grid-cell.selected { background-color: #b3e0ff; }
+    .grid-cell.correct { background-color: #93d3a2; }
+    
+    /* Word list styling */
+    .word-list { list-style-type: none; padding: 0; }
+    .word-list li { padding: 8px; border-bottom: 1px solid #eee; }
+    .word-list li.found { text-decoration: line-through; color: #999; }
+    
+    /* Timer styling */
+    .timer-container { position: relative; height: 20px; background-color: #eee; margin-bottom: 20px; }
+    .timer-bar { background-color: #4CAF50; height: 100%; width: 100%; transition: width 1s linear; }
+    
+    /* Controls */
+    .controls { display: flex; justify-content: space-between; }
+    
+    /* Popup panels */
+    .panel { 
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      text-align: center; display: none;
+    }
+    .panel button { padding: 10px 20px; margin-top: 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <h1 class="book-title" id="book-title">Book Title Here</h1>
+    
+    <div class="timer-container">
+      <div class="timer-bar" id="timer-bar"></div>
+    </div>
+    
+    <div class="game-area">
+      <div class="grid-container">
+        <div class="grid" id="word-grid"></div>
+      </div>
+      
+      <div class="words-container">
+        <ul class="word-list" id="word-list"></ul>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="pause-btn">Pause</button>
+      <button id="next-btn" disabled>Next Puzzle</button>
+    </div>
+  </div>
+  
+  <!-- Win Panel -->
+  <div class="panel" id="win-panel">
+    <h2>Congratulations!</h2>
+    <p>You found all the words!</p>
+    <button id="next-level-btn">Next Puzzle</button>
+  </div>
+  
+  <!-- Lose Panel -->
+  <div class="panel" id="lose-panel">
+    <h2>Time's Up!</h2>
+    <p>You didn't find all the words in time.</p>
+    <button id="try-again-btn">Try Again</button>
+  </div>
+  
+  <!-- Pause Panel -->
+  <div class="panel" id="pause-panel">
+    <h2>Game Paused</h2>
+    <button id="resume-btn">Resume</button>
+    <button id="restart-btn">Restart</button>
+  </div>
+
+  <script src="wordsearch.js"></script>
+</body>
+</html>
