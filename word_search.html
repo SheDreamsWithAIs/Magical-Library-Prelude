@@ -24,14 +24,14 @@
     
     /* Screen styling - base for all game screens */
     .screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-    padding: 20px;
-    box-sizing: border-box;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      padding: 20px;
+      box-sizing: border-box;
     }
     
     /* Active screen */
@@ -77,6 +77,10 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      width: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
     }
     
     #title-screen h1 {
@@ -136,6 +140,10 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      width: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
     }
     
     .book-container {
@@ -150,6 +158,7 @@
       display: flex;
       flex-direction: column;
       color: #2c2240;
+      overflow: hidden; /* Ensure content doesn't spill out */
     }
     
     .book-spine {
@@ -160,6 +169,7 @@
       width: 40px;
       background-color: #4a3870;
       border-radius: 10px 0 0 10px;
+      z-index: 1;
     }
     
     .book-pages {
@@ -167,6 +177,11 @@
       height: 100%;
       overflow-y: auto;
       padding-left: 50px;
+      position: relative;
+      z-index: 0;
+      padding-right: 15px; /* Add some padding to prevent text from touching the edge */
+      margin-right: -15px; /* Pull the content to compensate for the scrollbar space */
+      box-sizing: content-box; /* Ensure padding doesn't affect overall dimensions */
     }
     
     .book-pages h2 {
@@ -193,6 +208,62 @@
     .progress-section h3 {
       color: #4a3870;
       margin-bottom: 15px;
+    }
+    
+    /* Book progress styling */
+    .book-progress-list {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+    }
+    
+    .book-progress-list li {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #f2e8df;
+    }
+    
+    .book-progress-list li.book-complete {
+      background-color: #e0f0e0;
+      border-left: 4px solid #4CAF50;
+    }
+    
+    .book-progress-list li.book-in-progress {
+      border-left: 4px solid #6e42a3;
+    }
+    
+    .book-parts-progress {
+      display: flex;
+      margin-top: 8px;
+      gap: 5px;
+    }
+    
+    .story-part {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .story-part.complete {
+      background-color: #4CAF50;
+    }
+    
+    .story-part.incomplete {
+      background-color: #ccc;
+      color: #666;
+    }
+    
+    .progress-section h4 {
+      margin-top: 20px;
+      color: #4a3870;
+      font-size: 18px;
     }
     
     /* Library screen styling - not used for now but kept for future */
@@ -491,7 +562,12 @@
             
             <div class="progress-section">
               <h3>Your Archives Progress:</h3>
-              <p>Books cataloged: <span id="completed-puzzles-count">0</span></p>
+              <p>Cataloging Completed: <span id="completed-puzzles-count">0</span></p>
+              <p>Books Discovered: <span id="completed-books-count">0</span></p>
+              
+              <div id="books-progress-section">
+                <!-- Book progress will be filled dynamically -->
+              </div>
             </div>
           </div>
         </div>
