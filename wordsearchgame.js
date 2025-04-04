@@ -1,4 +1,4 @@
-/* Word Search Adventure Game - Simplified Implementation */
+/* Word Search Adventure Game - Updated Implementation for Kethaneum */
 
 // Game Configuration
 const config = {
@@ -33,7 +33,8 @@ let state = {
   gameOver: false,      // Game over flag
   puzzles: {},          // All available puzzles by genre
   currentGenre: '',     // Current selected genre
-  currentPuzzleIndex: -1 // Index of current puzzle
+  currentPuzzleIndex: -1, // Index of current puzzle
+  completedPuzzles: 0   // Track number of completed puzzles
 };
 
 // Initialize the game when the document is fully loaded
@@ -46,7 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
     'backstory-screen': document.getElementById('backstory-screen'),
     'empty-book-screen': document.getElementById('empty-book-screen'),
     'library-screen': document.getElementById('library-screen'),
-    'puzzle-screen': document.getElementById('puzzle-screen')
+    'puzzle-screen': document.getElementById('puzzle-screen'),
+    'book-of-passage-screen': document.getElementById('book-of-passage-screen') // New screen
   };
   
   // Set up elements for the puzzle game
@@ -63,33 +65,97 @@ document.addEventListener('DOMContentLoaded', function() {
     winPanel: document.getElementById('win-panel'),
     losePanel: document.getElementById('lose-panel'),
     pausePanel: document.getElementById('pause-panel'),
-    instructionsPanel: document.getElementById('instructions-panel')
+    instructionsPanel: document.getElementById('instructions-panel'),
+    
+    // Update title elements
+    gameTitleElement: document.getElementById('game-title'),
+    gameSubtitleElement: document.getElementById('game-subtitle'),
+    
+    // Update backstory content
+    backstoryContent: document.getElementById('backstory-content'),
+    
+    // Update book of passage content
+    bookOfPassageContent: document.getElementById('book-of-passage-content'),
+    
+    // Progress tracking
+    completedPuzzlesCount: document.getElementById('completed-puzzles-count')
   };
+  
+  // Update game title and narrative
+  function updateGameContent() {
+    // Update title screen
+    if (elements.gameTitleElement) {
+      elements.gameTitleElement.textContent = "Chronicles of the Kethaneum";
+    }
+    if (elements.gameSubtitleElement) {
+      elements.gameSubtitleElement.textContent = "Searching the Cosmic Catalog";
+    }
+    
+    // Update backstory content
+    if (elements.backstoryContent) {
+      elements.backstoryContent.innerHTML = `
+        <p>The Kethaneum exists in the spaces between worlds—a vast library stretching across dimensions, accessible only to those deemed worthy by its mysterious custodians. Neither fully physical nor entirely ethereal, this repository houses knowledge from countless civilizations, epochs, and realities.</p>
+        
+        <p>For millennia, brilliant minds across the multiverse have sought entry to this hallowed space. Few succeed. The journey requires years of dedicated study and the completion of increasingly complex trials that test not just intellect, but character and perseverance. Those who prove themselves receive a Book of Passage—a living artifact that serves as both key and chronicle.</p>
+        
+        <p>Your Book of Passage now rests in your hands, its pages initially blank except for your name. Unlike ordinary books, it observes and records your journey, adding new chapters as you explore the Kethaneum's infinite collections. Every discovery, every challenge overcome, every insight gained—all become part of your unique narrative, preserved within its pages.</p>
+        
+        <p>As you step through the threshold that separates your realm from the Kethaneum, remember: you are now both reader and story, archivist and archive. The knowledge you help preserve will guide countless others who follow in your footsteps.</p>
+      `;
+    }
+    
+    // Update book of passage content
+    if (elements.bookOfPassageContent) {
+      elements.bookOfPassageContent.innerHTML = `
+        <p><em>The pages of your Book of Passage shimmer as new words appear, chronicling your arrival:</em></p>
+        
+        <p>"Today marks your first day as Assistant Archivist within the hallowed halls of the Kethaneum, the greatest repository of knowledge across all realms. After years of dedicated study, you've earned this honored position—a rare achievement celebrated by your teachers and peers alike.</p>
+        
+        <p>Your assignment is to catalog the newly arrived knowledge constructs, which appear to you as books containing words scattered and unordered. By finding and organizing these words, you strengthen the Kethaneum's indexing matrix, making this wisdom accessible to scholars throughout the multiverse. The Senior Archivists have noticed your particular talent for pattern recognition—a gift that will serve you well as you bring order to chaos, one word at a time."</p>
+        
+        <div class="progress-section">
+          <h3>Your Archives Progress:</h3>
+          <p>Books cataloged: <span id="completed-puzzles-count">0</span></p>
+        </div>
+      `;
+    }
+  }
   
   // Simple navigation function
   function navigateTo(screenId) {
     console.log('Navigating to:', screenId);
     
     // Hide all screens
-  Object.values(screens).forEach(screen => {
-    screen.style.display = 'none';
-    screen.classList.remove('active');
-  });
-  
-  // Show the requested screen
-  screens[screenId].style.display = 'block';
-  screens[screenId].classList.add('active');
-  
-  // Update current screen in state
-  state.currentScreen = screenId;
-  
-  // Special handling for screens
-  if (screenId === 'puzzle-screen') {
-    // When entering puzzle screen, show instructions
-    elements.instructionsPanel.style.display = 'block';
-    // Game starts paused until instructions are closed
-    state.paused = true;
-    };
+    Object.values(screens).forEach(screen => {
+      if (screen) { // Check if the screen exists
+        screen.style.display = 'none';
+        screen.classList.remove('active');
+      }
+    });
+    
+    // Show the requested screen if it exists
+    if (screens[screenId]) {
+      screens[screenId].style.display = 'block';
+      screens[screenId].classList.add('active');
+      
+      // Update current screen in state
+      state.currentScreen = screenId;
+      
+      // Special handling for screens
+      if (screenId === 'puzzle-screen') {
+        // When entering puzzle screen, show instructions
+        elements.instructionsPanel.style.display = 'block';
+        // Game starts paused until instructions are closed
+        state.paused = true;
+      }
+      
+      // Update Book of Passage progress when visiting
+      if (screenId === 'book-of-passage-screen' && elements.completedPuzzlesCount) {
+        elements.completedPuzzlesCount.textContent = state.completedPuzzles;
+      }
+    } else {
+      console.error(`Screen ${screenId} not found`);
+    }
   }
   
   // Load puzzles data from JSON file
@@ -114,10 +180,21 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
   
-  // Load a random puzzle from the selected genre
+  // Load a random puzzle, choosing a random genre if none specified
   function loadRandomPuzzle(genre) {
-    console.log('Loading random puzzle from genre:', genre);
+    console.log('Loading random puzzle');
     
+    // If no genre is specified, pick a random one from available genres
+    if (!genre) {
+      const genres = Object.keys(state.puzzles);
+      if (genres.length === 0) {
+        console.error('No puzzles loaded yet');
+        return;
+      }
+      genre = genres[Math.floor(Math.random() * genres.length)];
+    }
+    
+    console.log('Using genre:', genre);
     const puzzlesInGenre = state.puzzles[genre];
     
     if (!puzzlesInGenre || puzzlesInGenre.length === 0) {
@@ -380,6 +457,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Pause button
     elements.pauseBtn.addEventListener('click', togglePause);
+    
+    // Book of Passage button
+    const bookOfPassageBtn = document.getElementById('book-of-passage-btn');
+    if (bookOfPassageBtn) {
+      bookOfPassageBtn.addEventListener('click', function() {
+        if (confirm('Visit your Book of Passage? Your current puzzle progress will be paused.')) {
+          state.paused = true;
+          navigateTo('book-of-passage-screen');
+        }
+      });
+    }
   }
   
   // Handle starting a word selection
@@ -617,6 +705,14 @@ document.addEventListener('DOMContentLoaded', function() {
     state.gameOver = true;
     
     if (isWin) {
+      // Increment completed puzzles count
+      state.completedPuzzles++;
+      
+      // Update display in Book of Passage if visible
+      if (elements.completedPuzzlesCount) {
+        elements.completedPuzzlesCount.textContent = state.completedPuzzles;
+      }
+      
       elements.winPanel.style.display = 'block';
     } else {
       elements.losePanel.style.display = 'block';
@@ -655,6 +751,24 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.instructionsPanel.style.display = 'block';
   }
   
+  // Load next puzzle (for endless mode)
+  function loadNextPuzzle() {
+    // Load a new random puzzle
+    loadRandomPuzzle();
+    
+    // Show instructions panel
+    elements.instructionsPanel.style.display = 'block';
+    
+    // Ensure game is paused until instructions are closed
+    state.paused = true;
+    
+    // Reset any game state that might be causing issues
+    state.gameOver = false;
+    state.selectedCells = [];
+    state.startCell = null;
+    state.currentCell = null;
+  }
+  
   // Set up screen navigation
   function setupScreenNavigation() {
     console.log('Setting up screen navigation');
@@ -667,72 +781,44 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('continue-btn').addEventListener('click', function() {
       console.log('Continue button clicked');
-      navigateTo('library-screen');
+      // Go directly to Book of Passage instead of library
+      navigateTo('book-of-passage-screen');
     });
     
     // Backstory screen
     document.getElementById('continue-to-book-btn').addEventListener('click', function() {
       console.log('Continue to book clicked');
-      navigateTo('empty-book-screen');
+      navigateTo('book-of-passage-screen');
     });
     
-    // Empty book screen
-    document.getElementById('continue-to-library-btn').addEventListener('click', function() {
-      console.log('Continue to library clicked');
-      navigateTo('library-screen');
+    // Book of Passage screen
+    document.getElementById('start-cataloging-btn').addEventListener('click', function() {
+      console.log('Start cataloging clicked');
+      // Load a random puzzle directly
+      loadRandomPuzzle();
+      navigateTo('puzzle-screen');
     });
     
-    // Library screen (genre selection)
-    document.querySelectorAll('.genre-card').forEach(card => {
-      card.addEventListener('click', function() {
-        const genre = this.dataset.genre;
-        console.log('Genre selected:', genre);
-        loadRandomPuzzle(genre);
-        navigateTo('puzzle-screen');
-      });
-    });
-    
-    // Return to library button on puzzle screen
-    document.getElementById('return-library-btn').addEventListener('click', function() {
-      if (confirm('Are you sure you want to return to the library? Your progress will be lost.')) {
-        navigateTo('library-screen');
+    // Return to Book of Passage from puzzle screen
+    document.getElementById('return-book-of-passage-btn').addEventListener('click', function() {
+      if (confirm('Return to your Book of Passage? Your progress will be saved.')) {
+        navigateTo('book-of-passage-screen');
       }
     });
     
-    // Win panel buttons
+    // Win panel buttons - modified for endless mode
     document.getElementById('next-book-btn').addEventListener('click', function() {
       console.log('Next book button clicked');
       elements.winPanel.style.display = 'none';
-      
-      // Load a new random puzzle from the same genre
-      loadRandomPuzzle(state.currentGenre);
-      
-      // Make sure instructions panel is shown
-      elements.instructionsPanel.style.display = 'block';
-      
-      // Ensure game is paused until instructions are closed
-      state.paused = true;
-      
-      // Reset any game state that might be causing issues
-      state.gameOver = false;
-      state.selectedCells = [];
-      state.startCell = null;
-      state.currentCell = null;
-      
-      // Clear any event listeners that might be duplicated
-      elements.wordGrid.removeEventListener('mousedown', handleSelectionStart);
-      elements.wordGrid.removeEventListener('mouseover', handleSelectionMove);
-      
-      // Re-attach event listeners
-      setupPuzzleEventListeners();
+      loadNextPuzzle();
     });
     
-    document.getElementById('return-to-library-btn').addEventListener('click', function() {
+    document.getElementById('return-to-book-of-passage-btn').addEventListener('click', function() {
       elements.winPanel.style.display = 'none';
-      navigateTo('library-screen');
+      navigateTo('book-of-passage-screen');
     });
     
-    // Lose panel buttons
+    // Lose panel buttons - modified for endless mode
     document.getElementById('try-again-btn').addEventListener('click', function() {
       elements.losePanel.style.display = 'none';
       resetCurrentPuzzle();
@@ -740,7 +826,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('different-book-btn').addEventListener('click', function() {
       elements.losePanel.style.display = 'none';
-      navigateTo('library-screen');
+      loadNextPuzzle();
     });
     
     // Pause panel buttons
@@ -753,9 +839,9 @@ document.addEventListener('DOMContentLoaded', function() {
       resetCurrentPuzzle();
     });
     
-    document.getElementById('exit-to-library-btn').addEventListener('click', function() {
+    document.getElementById('go-to-book-btn').addEventListener('click', function() {
       elements.pausePanel.style.display = 'none';
-      navigateTo('library-screen');
+      navigateTo('book-of-passage-screen');
     });
     
     // Instructions panel
@@ -767,6 +853,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Start the game
   loadPuzzles();
+  updateGameContent(); // Update content with Kethaneum narrative
   setupScreenNavigation();
   
   // Initially show the title screen

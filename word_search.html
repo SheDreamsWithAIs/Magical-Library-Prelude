@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Word Search Adventure</title>
+  <title>Chronicles of the Kethaneum</title>
   <style>
     /* Core styling */
     body { 
@@ -69,7 +69,7 @@
     
     /* Title screen styling */
     #title-screen {
-      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      background: linear-gradient(135deg, #6e42a3, #352063);
       color: white;
       text-align: center;
       display: flex;
@@ -81,13 +81,13 @@
     
     #title-screen h1 {
       font-size: 48px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
       text-align: center;
     }
     
-    #title-screen p {
-      font-size: 20px;
+    #title-screen h2 {
+      font-size: 24px;
       margin-bottom: 40px;
       max-width: 600px;
       text-align: center;
@@ -95,7 +95,7 @@
     
     /* Backstory screen styling */
     #backstory-screen {
-      background-color: #f8f1e3;
+      background-color: #2c2240;
       padding: 40px;
       text-align: center;
       display: flex;
@@ -103,21 +103,22 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      color: #e9d8d0;
     }
     
     #backstory-screen .story-container {
       max-width: 700px;
       margin: 0 auto;
-      background-color: white;
+      background-color: #3a2e51;
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
     }
     
     #backstory-screen h2 {
       font-size: 32px;
       margin-bottom: 20px;
-      color: #555;
+      color: #e9d8d0;
     }
     
     #backstory-screen p {
@@ -127,9 +128,9 @@
       text-align: left;
     }
     
-    /* Empty book screen styling */
-    #empty-book-screen {
-      background-color: #e6e6e6;
+    /* Book of Passage screen styling */
+    #book-of-passage-screen {
+      background-color: #2c2240;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -141,14 +142,14 @@
       width: 70%;
       max-width: 800px;
       aspect-ratio: 4/3;
-      background-color: #fff;
+      background-color: #e9d8d0;
       border-radius: 10px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.2);
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
       padding: 40px;
       position: relative;
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column;
+      color: #2c2240;
     }
     
     .book-spine {
@@ -157,34 +158,51 @@
       top: 0;
       height: 100%;
       width: 40px;
-      background-color: #8b4513;
+      background-color: #4a3870;
       border-radius: 10px 0 0 10px;
     }
     
     .book-pages {
-      text-align: center;
-      width: 80%;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding-left: 50px;
     }
     
     .book-pages h2 {
       font-size: 28px;
-      color: #aaa;
+      color: #4a3870;
       margin-bottom: 20px;
+      text-align: center;
     }
     
     .book-pages p {
       font-size: 18px;
-      color: #888;
-      font-style: italic;
+      color: #333;
+      margin-bottom: 15px;
+      line-height: 1.5;
     }
     
-    /* Library screen styling */
+    .progress-section {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f2e8df;
+      border-radius: 10px;
+    }
+    
+    .progress-section h3 {
+      color: #4a3870;
+      margin-bottom: 15px;
+    }
+    
+    /* Library screen styling - not used for now but kept for future */
     #library-screen {
       background-color: #2c3e50;
       color: white;
       padding: 40px;
       text-align: center;
       min-height: 100vh;
+      display: none;
     }
     
     #library-screen h2 {
@@ -226,17 +244,19 @@
       color: #666;
     }
     
-    /* Puzzle screen contains original word search game */
+    /* Puzzle screen contains word search game */
     #puzzle-screen {
       padding: 20px;
       min-height: 100vh;
+      background-color: #f4efe7;
     }
     
     /* Header */
     .book-title { 
       font-size: 24px; 
       text-align: center; 
-      margin-bottom: 20px; 
+      margin-bottom: 20px;
+      color: #4a3870;
     }
     
     /* Game sections */
@@ -252,11 +272,14 @@
       border-right: 1px solid #ddd;
       max-height: 500px;
       overflow-y: auto;
+      background-color: #e9d8d0;
+      border-radius: 8px;
     }
     
     .story-content {
       line-height: 1.6;
       font-size: 16px;
+      color: #333;
     }
     
     .grid-container { 
@@ -266,13 +289,19 @@
     
     .words-container { 
       flex: 1; 
+      background-color: #e9d8d0;
+      padding: 15px;
+      border-radius: 8px;
     }
     
     /* Grid styling */
     .grid { 
       display: grid; 
       width: 100%; 
-      border: 2px solid #333; 
+      border: 2px solid #4a3870; 
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #fff;
     }
     
     .grid-cell { 
@@ -281,18 +310,19 @@
       justify-content: center;
       font-weight: bold; 
       font-size: 20px; 
-      border: 1px solid #ddd;
+      border: 1px solid #ccc;
       user-select: none; 
       cursor: pointer; 
       aspect-ratio: 1 / 1;
+      color: #333;
     }
     
     .grid-cell.selected { 
-      background-color: #b3e0ff; 
+      background-color: #d4c1f0; 
     }
     
     .grid-cell.correct { 
-      background-color: #93d3a2; 
+      background-color: #b293e6; 
     }
     
     /* Word list styling */
@@ -303,7 +333,8 @@
     
     .word-list li { 
       padding: 8px; 
-      border-bottom: 1px solid #eee; 
+      border-bottom: 1px solid #dcd0c0; 
+      color: #333;
     }
     
     .word-list li.found { 
@@ -315,21 +346,25 @@
     .timer-container { 
       position: relative; 
       height: 20px; 
-      background-color: #eee; 
+      background-color: #e9e2d0; 
       margin-bottom: 20px; 
+      border-radius: 10px;
+      overflow: hidden;
     }
     
     .timer-bar { 
-      background-color: #4CAF50; 
+      background-color: #6e42a3; 
       height: 100%; 
       width: 100%; 
-      transition: width 1s linear; 
+      transition: width 1s linear;
+      border-radius: 10px;
     }
     
     /* Controls */
     .controls { 
       display: flex; 
       justify-content: space-between; 
+      margin-top: 20px;
     }
     
     /* Popup panels for puzzle game */
@@ -338,7 +373,7 @@
       top: 50%; 
       left: 50%; 
       transform: translate(-50%, -50%);
-      background: white; 
+      background: #e9d8d0; 
       padding: 20px; 
       border-radius: 8px; 
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
@@ -347,6 +382,7 @@
       max-width: 80%; 
       width: 500px;
       z-index: 1000;
+      color: #333;
     }
     
     /* Shared button styling */
@@ -355,7 +391,7 @@
       font-size: 16px;
       border: none;
       border-radius: 5px;
-      background-color: #4CAF50;
+      background-color: #6e42a3;
       color: white;
       cursor: pointer;
       transition: background-color 0.2s;
@@ -363,7 +399,7 @@
     }
     
     button:hover {
-      background-color: #45a049;
+      background-color: #4a3870;
     }
     
     button.large {
@@ -372,12 +408,12 @@
     }
     
     button.secondary {
-      background-color: #f0f0f0;
-      color: #333;
+      background-color: #9a7ecc;
+      color: white;
     }
     
     button.secondary:hover {
-      background-color: #e0e0e0;
+      background-color: #7a5eb0;
     }
     
     /* Responsive design */
@@ -417,8 +453,8 @@
   <div id="game-container">
     <!-- Title Screen -->
     <div id="title-screen" class="screen active">
-      <h1>Word Search Adventure</h1>
-      <p>Discover hidden words and help restore the lost books of knowledge</p>
+      <h1 id="game-title">Chronicles of the Kethaneum</h1>
+      <h2 id="game-subtitle">Searching the Cosmic Catalog</h2>
       <button id="new-game-btn" class="large">New Game</button>
       <button id="continue-btn" class="secondary">Continue</button>
     </div>
@@ -426,27 +462,44 @@
     <!-- Backstory Screen -->
     <div id="backstory-screen" class="screen">
       <div class="story-container">
-        <h2>The Lost Library</h2>
-        <p>In a world where words have begun to fade from existence, you've been chosen as the Keeper of Words. The ancient library that once housed all knowledge has been cursed, and the words have vanished from its many books.</p>
-        <p>Your task is to find these lost words and restore them to their rightful places. Only then can knowledge flow freely once more.</p>
-        <p>Your journey begins now, Keeper. The future of knowledge rests in your hands.</p>
+        <h2>The Kethaneum</h2>
+        <div id="backstory-content">
+          <p>The Kethaneum exists in the spaces between worlds—a vast library stretching across dimensions, accessible only to those deemed worthy by its mysterious custodians. Neither fully physical nor entirely ethereal, this repository houses knowledge from countless civilizations, epochs, and realities.</p>
+          
+          <p>For millennia, brilliant minds across the multiverse have sought entry to this hallowed space. Few succeed. The journey requires years of dedicated study and the completion of increasingly complex trials that test not just intellect, but character and perseverance. Those who prove themselves receive a Book of Passage—a living artifact that serves as both key and chronicle.</p>
+          
+          <p>Your Book of Passage now rests in your hands, its pages initially blank except for your name. Unlike ordinary books, it observes and records your journey, adding new chapters as you explore the Kethaneum's infinite collections. Every discovery, every challenge overcome, every insight gained—all become part of your unique narrative, preserved within its pages.</p>
+          
+          <p>As you step through the threshold that separates your realm from the Kethaneum, remember: you are now both reader and story, archivist and archive. The knowledge you help preserve will guide countless others who follow in your footsteps.</p>
+        </div>
       </div>
       <button id="continue-to-book-btn">Continue</button>
     </div>
     
-    <!-- Empty Book Screen -->
-    <div id="empty-book-screen" class="screen">
+    <!-- Book of Passage Screen -->
+    <div id="book-of-passage-screen" class="screen">
       <div class="book-container">
         <div class="book-spine"></div>
         <div class="book-pages">
-          <h2>The Book Awaits Its Words</h2>
-          <p>Only by finding the hidden words can you restore this book to its former glory.</p>
+          <h2>Your Book of Passage</h2>
+          <div id="book-of-passage-content">
+            <p><em>The pages of your Book of Passage shimmer as new words appear, chronicling your arrival:</em></p>
+            
+            <p>"Today marks your first day as Assistant Archivist within the hallowed halls of the Kethaneum, the greatest repository of knowledge across all realms. After years of dedicated study, you've earned this honored position—a rare achievement celebrated by your teachers and peers alike.</p>
+            
+            <p>Your assignment is to catalog the newly arrived knowledge constructs, which appear to you as books containing words scattered and unordered. By finding and organizing these words, you strengthen the Kethaneum's indexing matrix, making this wisdom accessible to scholars throughout the multiverse. The Senior Archivists have noticed your particular talent for pattern recognition—a gift that will serve you well as you bring order to chaos, one word at a time."</p>
+            
+            <div class="progress-section">
+              <h3>Your Archives Progress:</h3>
+              <p>Books cataloged: <span id="completed-puzzles-count">0</span></p>
+            </div>
+          </div>
         </div>
       </div>
-      <button id="continue-to-library-btn">Enter the Library</button>
+      <button id="start-cataloging-btn">Begin Cataloging</button>
     </div>
     
-    <!-- Library Screen (Genre Selection) -->
+    <!-- Library Screen (Genre Selection) - Hidden for now but kept for future -->
     <div id="library-screen" class="screen">
       <h2>The Great Library</h2>
       <p>Choose a section of the library to explore:</p>
@@ -470,9 +523,9 @@
       </div>
     </div>
     
-    <!-- Puzzle Screen (Original Word Search Game) -->
+    <!-- Puzzle Screen (Word Search Game) -->
     <div id="puzzle-screen" class="screen">
-      <h1 class="book-title" id="book-title">Book Title Here</h1>
+      <h1 class="book-title" id="book-title">Knowledge Construct</h1>
       
       <div class="timer-container">
         <div class="timer-bar" id="timer-bar"></div>
@@ -481,7 +534,7 @@
       <div class="game-area">
         <div class="story-container">
           <div class="story-content" id="story-excerpt">
-            Story excerpt will appear here.
+            Knowledge excerpt will appear here.
           </div>
         </div>
         
@@ -496,48 +549,48 @@
       
       <div class="controls">
         <button id="pause-btn">Pause</button>
-        <button id="return-library-btn">Return to Library</button>
+        <button id="return-book-of-passage-btn">Book of Passage</button>
       </div>
     </div>
   </div>
   
   <!-- Win Panel -->
   <div class="panel" id="win-panel">
-    <h2>Congratulations!</h2>
-    <p>You found all the words and restored this book!</p>
-    <button id="next-book-btn">Find Another Book</button>
-    <button id="return-to-library-btn">Return to Library</button>
+    <h2>Cataloging Complete!</h2>
+    <p>You've successfully organized all the words in this knowledge construct!</p>
+    <button id="next-book-btn">Catalog Another</button>
+    <button id="return-to-book-of-passage-btn">Return to Book of Passage</button>
   </div>
   
   <!-- Lose Panel -->
   <div class="panel" id="lose-panel">
     <h2>Time's Up!</h2>
-    <p>You didn't find all the words in time.</p>
+    <p>You weren't able to organize all the words in time.</p>
     <button id="try-again-btn">Try Again</button>
-    <button id="different-book-btn">Choose Different Book</button>
+    <button id="different-book-btn">Try a Different Construct</button>
   </div>
   
   <!-- Pause Panel -->
   <div class="panel" id="pause-panel">
-    <h2>Game Paused</h2>
+    <h2>Cataloging Paused</h2>
     <button id="resume-btn">Resume</button>
     <button id="restart-btn">Restart</button>
-    <button id="exit-to-library-btn">Exit to Library</button>
+    <button id="go-to-book-btn">Go to Book of Passage</button>
   </div>
   
   <!-- Instructions Panel -->
   <div class="panel" id="instructions-panel">
-    <h2>How to Play</h2>
+    <h2>Cataloging Instructions</h2>
     <ul style="text-align: left; margin-bottom: 20px;">
-      <li>Find all the words from the list on the right</li>
+      <li>Find all the words listed on the right side</li>
       <li>Click and drag to select letters in a straight line</li>
       <li>Words can go horizontally, vertically, or diagonally</li>
       <li>Words can also be spelled backwards</li>
-      <li>Find all the words before the timer runs out!</li>
+      <li>Find all words before time expires to complete cataloging</li>
     </ul>
-    <button id="start-playing-btn">Start Playing</button>
+    <button id="start-playing-btn">Begin Cataloging</button>
   </div>
 
   <script src="wordSearchGame.js"></script>
 </body>
-</html> 
+</html>
