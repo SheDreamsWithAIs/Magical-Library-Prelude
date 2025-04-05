@@ -686,33 +686,56 @@
     });
   </script>
   <script>
-    // Force navigation override - this must be the last script on the page
+    // Comprehensive navigation protection system
     window.addEventListener('load', function() {
-      // Wait a short moment to ensure any other scripts have run
+      // Wait for everything else to load and execute
       setTimeout(function() {
-        // Forcibly reset all screens
-        document.querySelectorAll('.screen').forEach(screen => {
-          screen.style.display = 'none';
-          screen.classList.remove('active');
-        });
-        
-        // Force title screen display
-        const titleScreen = document.getElementById('title-screen');
-        if (titleScreen) {
-          titleScreen.classList.add('active');
-          titleScreen.style.display = 'flex';
+        // Reset all screen visibility
+        function resetAllScreens() {
+          document.querySelectorAll('.screen').forEach(screen => {
+            screen.style.display = 'none';
+            screen.classList.remove('active');
+          });
         }
         
-        // Re-establish navigation button functionality
+        // Show specified screen with correct display property
+        function showScreen(screenId) {
+          resetAllScreens();
+          const screen = document.getElementById(screenId);
+          if (screen) {
+            screen.classList.add('active');
+            if (screenId === 'puzzle-screen') {
+              screen.style.display = 'block'; // Puzzle needs block display
+            } else {
+              screen.style.display = 'flex'; // Other screens use flex
+            }
+          }
+        }
+        
+        // Force initial state
+        showScreen('title-screen');
+        
+        // Reinforce ALL navigation buttons with direct listeners
         document.getElementById('new-game-btn').addEventListener('click', function() {
-          document.querySelectorAll('.screen').forEach(s => {
-            s.style.display = 'none';
-            s.classList.remove('active');
-          });
-          document.getElementById('backstory-screen').style.display = 'flex';
-          document.getElementById('backstory-screen').classList.add('active');
+          showScreen('backstory-screen');
         });
-      }, 100);
+        
+        document.getElementById('continue-btn').addEventListener('click', function() {
+          showScreen('book-of-passage-screen');
+        });
+        
+        document.getElementById('continue-to-book-btn').addEventListener('click', function() {
+          showScreen('book-of-passage-screen');
+        });
+        
+        document.getElementById('start-cataloging-btn').addEventListener('click', function() {
+          showScreen('puzzle-screen');
+        });
+        
+        // Simplifies all navigation to use this protected system
+        window.safeNavigate = showScreen;
+        
+      }, 200); // Slightly longer delay to ensure it runs last
     });
   </script>
 </body>
