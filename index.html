@@ -668,5 +668,22 @@
   </div>
 
   <script src="wordSearchGame.js"></script>
+  <script>
+    // Force reset to title screen on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Hide all screens
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.style.display = 'none';
+        screen.classList.remove('active');
+      });
+      
+      // Show only title screen
+      const titleScreen = document.getElementById('title-screen');
+      if (titleScreen) {
+        titleScreen.classList.add('active');
+        titleScreen.style.display = 'flex';
+      }
+    });
+  </script>
 </body>
 </html>
