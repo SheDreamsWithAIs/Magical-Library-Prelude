@@ -1,4 +1,4 @@
-/* Word Search Adventure Game - Updated Implementation for Kethaneum */
+/* Word Search Adventure Game - Chronicles of the Kethaneum */
 
 // Story Part Enum
 const StoryPart = {
@@ -109,11 +109,11 @@ document.addEventListener('DOMContentLoaded', function() {
     booksProgressSection: document.getElementById('books-progress-section')
   };
   
-  // navigation function
+  // Improved navigation function
   function navigateTo(screenId) {
     console.log('Navigating to:', screenId);
     
-    // Hide all screens
+    // Hide all screens first
     Object.values(screens).forEach(screen => {
       if (screen) { // Check if the screen exists
         screen.style.display = 'none';
@@ -123,18 +123,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show the requested screen if it exists
     if (screens[screenId]) {
-      // Add active class first
+      // Add active class
       screens[screenId].classList.add('active');
       
       // Set display property based on screen type
       if (screenId === 'title-screen' || 
           screenId === 'backstory-screen' || 
-          screenId === 'book-of-passage-screen') {
-        // These screens should use flex display for proper centering
+          screenId === 'book-of-passage-screen' ||
+          screenId === 'puzzle-screen') {
+        // All screens now use flex for consistent vertical centering
         screens[screenId].style.display = 'flex';
-      } else if (screenId === 'puzzle-screen') {
-        // The puzzle screen should use block display for proper game layout
-        screens[screenId].style.display = 'block';
       } else {
         // Default display for other screens
         screens[screenId].style.display = 'block';
@@ -146,7 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Special handling for screens
       if (screenId === 'puzzle-screen') {
         // When entering puzzle screen, show instructions
-        elements.instructionsPanel.style.display = 'block';
+        if (elements.instructionsPanel) {
+          elements.instructionsPanel.style.display = 'block';
+        }
         // Game starts paused until instructions are closed
         state.paused = true;
       }
@@ -588,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (percentRemaining < 50) {
       elements.timerBar.style.backgroundColor = '#ffcc00';
     } else {
-      elements.timerBar.style.backgroundColor = '#4CAF50';
+      elements.timerBar.style.backgroundColor = 'var(--primary-light, #6e42a3)';
     }
   }
   
