@@ -685,5 +685,35 @@
       }
     });
   </script>
+  <script>
+    // Force navigation override - this must be the last script on the page
+    window.addEventListener('load', function() {
+      // Wait a short moment to ensure any other scripts have run
+      setTimeout(function() {
+        // Forcibly reset all screens
+        document.querySelectorAll('.screen').forEach(screen => {
+          screen.style.display = 'none';
+          screen.classList.remove('active');
+        });
+        
+        // Force title screen display
+        const titleScreen = document.getElementById('title-screen');
+        if (titleScreen) {
+          titleScreen.classList.add('active');
+          titleScreen.style.display = 'flex';
+        }
+        
+        // Re-establish navigation button functionality
+        document.getElementById('new-game-btn').addEventListener('click', function() {
+          document.querySelectorAll('.screen').forEach(s => {
+            s.style.display = 'none';
+            s.classList.remove('active');
+          });
+          document.getElementById('backstory-screen').style.display = 'flex';
+          document.getElementById('backstory-screen').classList.add('active');
+        });
+      }, 100);
+    });
+  </script>
 </body>
 </html>
