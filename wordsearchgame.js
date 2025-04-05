@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     booksProgressSection: document.getElementById('books-progress-section')
   };
   
-  // Simple navigation function
+  // navigation function
   function navigateTo(screenId) {
     console.log('Navigating to:', screenId);
     
@@ -123,8 +123,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show the requested screen if it exists
     if (screens[screenId]) {
-      screens[screenId].style.display = 'block';
+      // Add active class first
       screens[screenId].classList.add('active');
+      
+      // Set display property based on screen type
+      if (screenId === 'title-screen' || 
+          screenId === 'backstory-screen' || 
+          screenId === 'book-of-passage-screen') {
+        // These screens should use flex display for proper centering
+        screens[screenId].style.display = 'flex';
+      } else if (screenId === 'puzzle-screen') {
+        // The puzzle screen should use block display for proper game layout
+        screens[screenId].style.display = 'block';
+      } else {
+        // Default display for other screens
+        screens[screenId].style.display = 'block';
+      }
       
       // Update current screen in state
       state.currentScreen = screenId;
