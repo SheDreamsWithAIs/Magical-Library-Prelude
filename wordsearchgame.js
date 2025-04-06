@@ -361,9 +361,20 @@ document.addEventListener('DOMContentLoaded', function () {
         // Continue with a random in-progress book
         selectedBook = inProgressBooks[Math.floor(Math.random() * inProgressBooks.length)];
       } else {
-        // Start a new book or cycle back to a completed one
-        selectedBook = booksInGenre[Math.floor(Math.random() * booksInGenre.length)];
-      }
+        // Start with a new book (one not in bookProgress) if possible
+        const newBooks = booksInGenre.filter(bookTitle => 
+          state.bookProgress[bookTitle] === undefined && 
+          (!state.books[bookTitle] || !state.books[bookTitle].every(part => part === true))
+        );
+        
+        if (newBooks.length > 0) {
+          // Prioritize completely new books
+          selectedBook = newBooks[Math.floor(Math.random() * newBooks.length)];
+        } else {
+          // If all books have been started, pick a random one
+          selectedBook = booksInGenre[Math.floor(Math.random() * booksInGenre.length)];
+        }
+      } 
 
       book = selectedBook;
     }
@@ -387,9 +398,37 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Find the puzzle for this book and story part
-    const matchingPuzzles = puzzlesInGenre.filter(p =>
+    const matchingPuzzles = puzzlesInGenre.filter(p => 
       p.book === book && p.storyPart === nextStoryPart
     );
+    
+    if (matchingPuzzles.length === 0) {
+      console.error(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
+      
+      // Try a fallback - first story part
+      const fallbackPuzzles = puzzlesInGenre.filter(p => 
+        p.book === book && p.storyPart === 0
+      );
+      
+      if (fallbackPuzzles.length > 0) {
+        console.log(`Falling back to the first part of book: ${book}`);
+        const puzzleData = fallbackPuzzles[Math.floor(Math.random() * fallbackPuzzles.length)];
+        state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
+        state.currentGenre = genre;
+        state.currentBook = book;
+        state.currentStoryPart = 0;
+        state.bookProgress[book] = 0; // Reset to beginning
+        
+        // Initialize the puzzle
+        initializePuzzle(puzzleData);
+        return;
+      }
+      
+      // If we can't even find the first part, try another book
+      console.log(`Couldn't find any parts for book: ${book}, trying another book`);
+      loadSequentialPuzzle(genre); // Try again without specifying book
+      return;
+    }
 
     if (matchingPuzzles.length === 0) {
       console.error(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
@@ -1020,6 +1059,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // End the game (win or lose)
   function endGame(isWin) {
+    console.log(`Advanced book "${state.currentBook}" to part ${state.bookProgress[state.currentBook]}`);
     clearInterval(state.timer);
     state.gameOver = true;
   
