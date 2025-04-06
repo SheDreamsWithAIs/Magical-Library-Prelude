@@ -723,20 +723,39 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Start the game timer
+  // Start the game timer - Updated with animation
   function startTimer() {
     clearInterval(state.timer);
-
-    state.timer = setInterval(() => {
-      if (state.paused) return;
-
-      state.timeRemaining--;
-      renderTimer();
-
-      if (state.timeRemaining <= 0) {
-        endGame(false);
-      }
-    }, 1000);
+    
+    // If on mobile, wait for the flash animation to complete before starting countdown
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      // Short delay to allow flashing to complete
+      setTimeout(() => {
+        state.timer = setInterval(() => {
+          if (state.paused) return;
+          
+          state.timeRemaining--;
+          renderTimer();
+          
+          if (state.timeRemaining <= 0) {
+            endGame(false);
+          }
+        }, 1000);
+      }, 2000); // Wait for flashing to finish (3 flashes × 2 states × 300ms = ~1800ms)
+    } else {
+      // Desktop behavior is unchanged
+      state.timer = setInterval(() => {
+        if (state.paused) return;
+        
+        state.timeRemaining--;
+        renderTimer();
+        
+        if (state.timeRemaining <= 0) {
+          endGame(false);
+        }
+      }, 1000);
+    }
   }
 
   // Render timer bar - Updated for mobile
@@ -765,25 +784,57 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Enhanced timer with animation
+  function setupMobileTimerWithAnimation() {
+    // Create mobile timer if it doesn't exist
+    if (!document.querySelector('.mobile-timer-container')) {
+      const mobileTimer = document.createElement('div');
+      mobileTimer.className = 'mobile-timer-container';
+      mobileTimer.innerHTML = '<div class="mobile-timer-bar"></div>';
+      document.body.appendChild(mobileTimer);
+      
+      // Get the timer bar
+      const mobileTimerBar = mobileTimer.querySelector('.mobile-timer-bar');
+      
+      // Animation sequence
+      let flashCount = 0;
+      const maxFlashes = 3;
+      const flashInterval = setInterval(() => {
+        if (flashCount >= maxFlashes * 2) {
+          clearInterval(flashInterval);
+          return;
+        }
+        
+        if (flashCount % 2 === 0) {
+          // Flash to accent color
+          mobileTimerBar.style.backgroundColor = 'var(--accent-main)';
+          mobileTimerBar.style.width = '100%';
+        } else {
+          // Flash to primary color
+          mobileTimerBar.style.backgroundColor = 'var(--primary-light)';
+          mobileTimerBar.style.width = '100%';
+        }
+        
+        flashCount++;
+      }, 300);
+    }
+  }
+
   // Set up mobile-specific enhancements
   function setupMobileEnhancements() {
     // Check if we're on a mobile device
     const isMobile = window.innerWidth <= 768;
     
     if (isMobile) {
-      // Create mobile timer if it doesn't exist
-      if (!document.querySelector('.mobile-timer-container')) {
-        const mobileTimer = document.createElement('div');
-        mobileTimer.className = 'mobile-timer-container';
-        mobileTimer.innerHTML = '<div class="mobile-timer-bar"></div>';
-        document.body.appendChild(mobileTimer);
-      }
+      // Call the enhanced timer setup
+      setupMobileTimerWithAnimation();
       
       // Create collapsible story toggle if not already present
       const storyContainer = document.querySelector('.story-container');
       if (storyContainer && !storyContainer.querySelector('.story-toggle')) {
         const toggleButton = document.createElement('button');
-        toggleButton.className = 'story-toggle';
+
+toggleButton.className = 'story-toggle';
         toggleButton.textContent = 'Show More';
         toggleButton.addEventListener('click', function() {
           storyContainer.classList.toggle('expanded');
@@ -792,25 +843,36 @@ document.addEventListener('DOMContentLoaded', function () {
         storyContainer.appendChild(toggleButton);
       }
       
-      // Convert word list to mobile-friendly format if not already done
-      const wordList = document.getElementById('word-list');
-      if (wordList) {
-        // Create mobile word list if it doesn't exist
-        if (!document.querySelector('.mobile-word-list')) {
-          const mobileWordList = document.createElement('ul');
-          mobileWordList.className = 'mobile-word-list';
-          mobileWordList.id = 'mobile-word-list';
-          
-          // Move after the grid container
-          const gridContainer = document.querySelector('.grid-container');
-          if (gridContainer && gridContainer.parentNode) {
-            gridContainer.parentNode.insertBefore(mobileWordList, gridContainer.nextSibling);
-          }
+      // Create mobile word list if it doesn't exist
+      if (!document.querySelector('.mobile-word-list')) {
+        const mobileWordList = document.createElement('ul');
+        mobileWordList.className = 'mobile-word-list';
+        mobileWordList.id = 'mobile-word-list';
+        
+        // Hide the desktop word list
+        const desktopWordList = document.querySelector('.words-container');
+        if (desktopWordList) {
+          desktopWordList.style.display = 'none';
         }
+        
+        // Place mobile word list after the grid
+        const gridContainer = document.querySelector('.grid-container');
+        if (gridContainer && gridContainer.parentNode) {
+          gridContainer.parentNode.insertBefore(mobileWordList, gridContainer.nextSibling);
+        }
+        
+        // Re-render the word list to populate the mobile list
+        renderWordList();
       }
       
       // Set up haptic feedback for word finding
       setupHapticFeedback();
+      
+      // Make sure book title is visible
+      const bookTitle = document.getElementById('book-title');
+      if (bookTitle) {
+        bookTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   }
 
@@ -826,6 +888,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.checkForWord = function() {
       // Get the current words found count to compare later
       const wordsFoundBefore = state.wordList.filter(wordData => wordData.found).length;
+      
       // Call the original function 
       originalCheckForWord.apply(this, arguments);
       
