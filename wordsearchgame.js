@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Render word list to the DOM - Updated for mobile
+  // Render word list to the DOM - Updated with sorting
   function renderWordList() {
     const desktopWordList = document.getElementById('word-list');
     const mobileWordList = document.getElementById('mobile-word-list');
@@ -695,8 +695,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // Clear both lists
     if (desktopWordList) desktopWordList.innerHTML = '';
     if (mobileWordList) mobileWordList.innerHTML = '';
+    
+    // Sort the word list to put found words at the bottom
+    const sortedWordList = [...state.wordList].sort((a, b) => {
+      if (a.found === b.found) return 0;
+      return a.found ? 1 : -1; // Found words go to the bottom
+    });
   
-    for (const wordData of state.wordList) {
+    for (const wordData of sortedWordList) {
       // Create desktop list item
       if (desktopWordList) {
         const listItem = document.createElement('li');
@@ -723,39 +729,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Start the game timer - Updated with animation
+  // Start the game timer
   function startTimer() {
     clearInterval(state.timer);
     
-    // If on mobile, wait for the flash animation to complete before starting countdown
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      // Short delay to allow flashing to complete
-      setTimeout(() => {
-        state.timer = setInterval(() => {
-          if (state.paused) return;
-          
-          state.timeRemaining--;
-          renderTimer();
-          
-          if (state.timeRemaining <= 0) {
-            endGame(false);
-          }
-        }, 1000);
-      }, 2000); // Wait for flashing to finish (3 flashes × 2 states × 300ms = ~1800ms)
-    } else {
-      // Desktop behavior is unchanged
-      state.timer = setInterval(() => {
-        if (state.paused) return;
-        
-        state.timeRemaining--;
-        renderTimer();
-        
-        if (state.timeRemaining <= 0) {
-          endGame(false);
-        }
-      }, 1000);
-    }
+    state.timer = setInterval(() => {
+      if (state.paused) return;
+      
+      state.timeRemaining--;
+      renderTimer();
+      
+      if (state.timeRemaining <= 0) {
+        endGame(false);
+      }
+    }, 1000);
   }
 
   // Render timer bar - Updated for mobile
@@ -784,8 +771,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Enhanced timer with animation
-  function setupMobileTimerWithAnimation() {
+  // Updated timer animation function with callback
+  function setupMobileTimerWithAnimation(callback) {
     // Create mobile timer if it doesn't exist
     if (!document.querySelector('.mobile-timer-container')) {
       const mobileTimer = document.createElement('div');
@@ -802,6 +789,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const flashInterval = setInterval(() => {
         if (flashCount >= maxFlashes * 2) {
           clearInterval(flashInterval);
+          if (callback && typeof callback === 'function') {
+            callback(); // Run the callback function after animation completes
+          }
           return;
         }
         
@@ -817,6 +807,36 @@ document.addEventListener('DOMContentLoaded', function () {
         
         flashCount++;
       }, 300);
+    } else {
+      // Timer already exists, just run the callback
+      if (callback && typeof callback === 'function') {
+        callback();
+      }
+    }
+  }
+
+  // Setup instructions handler
+  function setupInstructionsHandler() {
+    const startPlayingBtn = document.getElementById('start-playing-btn');
+    if (startPlayingBtn) {
+      startPlayingBtn.addEventListener('click', function() {
+        if (elements.instructionsPanel) {
+          elements.instructionsPanel.style.display = 'none';
+        }
+        
+        // For mobile, start the timer animation first, then start the game after animation
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          // Create and animate the timer
+          setupMobileTimerWithAnimation(function() {
+            // This callback runs after animation completes
+            startPuzzleGame();
+          });
+        } else {
+          // On desktop, just start the game immediately
+          startPuzzleGame();
+        }
+      });
     }
   }
 
@@ -826,15 +846,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const isMobile = window.innerWidth <= 768;
     
     if (isMobile) {
-      // Call the enhanced timer setup
-      setupMobileTimerWithAnimation();
+      // Don't create the timer yet - wait for instruction panel close
       
       // Create collapsible story toggle if not already present
       const storyContainer = document.querySelector('.story-container');
       if (storyContainer && !storyContainer.querySelector('.story-toggle')) {
         const toggleButton = document.createElement('button');
-
-toggleButton.className = 'story-toggle';
+        toggleButton.className = 'story-toggle';
         toggleButton.textContent = 'Show More';
         toggleButton.addEventListener('click', function() {
           storyContainer.classList.toggle('expanded');
@@ -874,6 +892,9 @@ toggleButton.className = 'story-toggle';
         bookTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
+    
+    // Setup instruction panel handler
+    setupInstructionsHandler();
   }
 
   // Add haptic feedback to word finding
@@ -1502,12 +1523,26 @@ toggleButton.className = 'story-toggle';
     // Instructions panel
     const startPlayingBtn = document.getElementById('start-playing-btn');
     if (startPlayingBtn) {
-      startPlayingBtn.addEventListener('click', function () {
+      startPlayingBtn.removeEventListener('click', startPlayingBtn.clickHandler);
+      startPlayingBtn.clickHandler = function() {
         if (elements.instructionsPanel) {
           elements.instructionsPanel.style.display = 'none';
         }
-        startPuzzleGame();
-      });
+        
+        // For mobile, start the timer animation first, then start the game after animation
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          // Create and animate the timer
+          setupMobileTimerWithAnimation(function() {
+            // This callback runs after animation completes
+            startPuzzleGame();
+          });
+        } else {
+          // On desktop, just start the game immediately
+          startPuzzleGame();
+        }
+      };
+      startPlayingBtn.addEventListener('click', startPlayingBtn.clickHandler);
     }
   }
 
