@@ -62,7 +62,8 @@ let state = {
   currentBook: '',      // Current book being worked on
   currentStoryPart: -1, // Current story part (0-4)
   completedBooks: 0,     // Track number of completed books
-  discoveredBooks: new Set() // Set to track unique books discovered
+  discoveredBooks: new Set(), // Set to track unique books discovered
+  bookProgress: {}, // Tracks the next story part to show for each book
 };
 
 // Initialize the game when the document is fully loaded
@@ -318,6 +319,93 @@ document.addEventListener('DOMContentLoaded', function () {
     const puzzleData = puzzlesInGenre[randomIndex];
 
     // Initialize the puzzle game
+    initializePuzzle(puzzleData);
+  }
+
+  // Load puzzles sequentially by book and story part:
+  function loadSequentialPuzzle(genre, book) {
+    console.log('Loading sequential puzzle with parameters:', { genre, book });
+
+    // If no genre is specified, pick a random one from available genres
+    if (!genre) {
+      const genres = Object.keys(state.puzzles);
+      if (genres.length === 0) {
+        console.error('No puzzles loaded yet');
+        return;
+      }
+      genre = genres[Math.floor(Math.random() * genres.length)];
+    }
+
+    let puzzlesInGenre = state.puzzles[genre];
+    if (!puzzlesInGenre || puzzlesInGenre.length === 0) {
+      console.error(`No puzzles found for genre: ${genre}`);
+      return;
+    }
+
+    // If no specific book is requested, choose one
+    if (!book) {
+      // Get all available books in this genre
+      const booksInGenre = [...new Set(puzzlesInGenre.map(p => p.book))];
+
+      // Choose a book to work on
+      // Priority: 1) Continue an in-progress book 2) Start a new book
+      let selectedBook = null;
+
+      // Check for in-progress books (that aren't completed)
+      const inProgressBooks = booksInGenre.filter(bookTitle =>
+        state.bookProgress[bookTitle] !== undefined &&
+        !checkBookCompletion(bookTitle)
+      );
+
+      if (inProgressBooks.length > 0) {
+        // Continue with a random in-progress book
+        selectedBook = inProgressBooks[Math.floor(Math.random() * inProgressBooks.length)];
+      } else {
+        // Start a new book or cycle back to a completed one
+        selectedBook = booksInGenre[Math.floor(Math.random() * booksInGenre.length)];
+      }
+
+      book = selectedBook;
+    }
+
+    // Find which story part to show next
+    let nextStoryPart = 0; // Default to the beginning
+
+    // Initialize book progress tracking if needed
+    if (!state.bookProgress) {
+      state.bookProgress = {};
+    }
+
+    if (state.bookProgress[book] !== undefined) {
+      // Get the next part (0-4 representing parts 1-5)
+      nextStoryPart = state.bookProgress[book];
+
+      // If we've reached part 5 (index 4), cycle back to part 1 (index 0)
+      if (nextStoryPart > 4) {
+        nextStoryPart = 0;
+      }
+    }
+
+    // Find the puzzle for this book and story part
+    const matchingPuzzles = puzzlesInGenre.filter(p =>
+      p.book === book && p.storyPart === nextStoryPart
+    );
+
+    if (matchingPuzzles.length === 0) {
+      console.error(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
+      return;
+    }
+
+    // Choose a random puzzle if multiple match the criteria (unlikely with story parts)
+    const puzzleData = matchingPuzzles[Math.floor(Math.random() * matchingPuzzles.length)];
+
+    // Update tracking for which part of the book we're on
+    state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
+    state.currentGenre = genre;
+    state.currentBook = book;
+    state.currentStoryPart = nextStoryPart;
+
+    // Initialize the puzzle
     initializePuzzle(puzzleData);
   }
 
@@ -607,7 +695,8 @@ document.addEventListener('DOMContentLoaded', function () {
         completedPuzzles: state.completedPuzzles,
         completedBooks: state.completedBooks,
         books: state.books,
-        discoveredBooks: Array.from(state.discoveredBooks || [])
+        discoveredBooks: Array.from(state.discoveredBooks || []),
+        bookProgress: state.bookProgress || {}
       };
   
       localStorage.setItem('kethaneumProgress', JSON.stringify(progress));
@@ -628,9 +717,8 @@ document.addEventListener('DOMContentLoaded', function () {
         state.completedPuzzles = progress.completedPuzzles || 0;
         state.completedBooks = progress.completedBooks || 0;
         state.books = progress.books || {};
-        
-        // Convert the array back to a Set
         state.discoveredBooks = new Set(progress.discoveredBooks || []);
+        state.bookProgress = progress.bookProgress || {};
         
         // Ensure completedBooks matches the size of discoveredBooks
         if (state.discoveredBooks.size !== state.completedBooks) {
@@ -934,28 +1022,46 @@ document.addEventListener('DOMContentLoaded', function () {
   function endGame(isWin) {
     clearInterval(state.timer);
     state.gameOver = true;
-
+  
     if (isWin) {
       // Increment completed puzzles count
       state.completedPuzzles++;
-
+  
       // Update book completion status
       if (state.currentBook && state.currentStoryPart >= 0) {
         // Initialize book tracking if it doesn't exist
         if (!state.books[state.currentBook]) {
           state.books[state.currentBook] = [false, false, false, false, false];
         }
-
+  
         // Mark the story part as complete
         state.books[state.currentBook][state.currentStoryPart] = true;
-
+        
+        // Add to discovered books if this is new
+        if (!state.discoveredBooks) {
+          state.discoveredBooks = new Set();
+        }
+        
+        if (!state.discoveredBooks.has(state.currentBook)) {
+          state.discoveredBooks.add(state.currentBook);
+          state.completedBooks = state.discoveredBooks.size;
+        }
+        
+        // Update the next story part to show for this book
+        if (!state.bookProgress) {
+          state.bookProgress = {};
+        }
+        
+        // Advance to next part
+        state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
+        
         // Check if the book is now complete
         checkBookCompletion(state.currentBook);
       }
-
+  
       // Store progress in local storage
       saveGameProgress();
-
+  
       // Show win panel
       if (elements.winPanel) {
         elements.winPanel.style.display = 'block';
@@ -1017,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Load next puzzle (for endless mode)
   function loadNextPuzzle() {
     // Load a new random puzzle
-    loadRandomPuzzle();
+    loadSequentialPuzzle();
 
     // Show instructions panel
     if (elements.instructionsPanel) {
@@ -1072,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', function () {
       startCatalogingBtn.addEventListener('click', function () {
         console.log('Start cataloging clicked');
         // Load a random puzzle directly
-        loadRandomPuzzle();
+        loadSequentialPuzzle();
         navigateTo('puzzle-screen');
       });
     }
