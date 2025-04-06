@@ -538,6 +538,14 @@ document.addEventListener('DOMContentLoaded', function () {
         state.books[bookTitle].complete = true;
         state.completedBooks++;
         console.log(`Book "${bookTitle}" completed!`);
+        
+        // Show a celebration message
+        if (elements.winPanel) {
+          const winMessage = elements.winPanel.querySelector('p');
+          if (winMessage) {
+            winMessage.innerHTML = `You've successfully organized all the words in this knowledge construct!<br><br><strong>Congratulations! You've completed all parts of "${bookTitle}"!</strong>`;
+          }
+        }
       }
 
       return true;
@@ -780,13 +788,14 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       // Clear localStorage
       localStorage.removeItem('kethaneumProgress');
-
+  
       // Reset state variables
       state.completedPuzzles = 0;
       state.completedBooks = 0;
       state.books = {};
       state.discoveredBooks = new Set();
-
+      state.bookProgress = {}; // Also clear the book progress
+  
       console.log('Game progress cleared');
     } catch (error) {
       console.error('Failed to clear game progress:', error);
