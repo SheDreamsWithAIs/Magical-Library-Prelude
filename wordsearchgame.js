@@ -61,7 +61,7 @@ let state = {
   books: {},            // Object to track books and their completion: { bookTitle: [bool, bool, bool, bool, bool] }
   currentBook: '',      // Current book being worked on
   currentStoryPart: -1, // Current story part (0-4)
-  completedBooks: 0     // Track number of completed books
+  completedBooks: 0,     // Track number of completed books
   discoveredBooks: new Set() // Set to track unique books discovered
 };
 
