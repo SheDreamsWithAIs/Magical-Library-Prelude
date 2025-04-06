@@ -62,6 +62,7 @@ let state = {
   currentBook: '',      // Current book being worked on
   currentStoryPart: -1, // Current story part (0-4)
   completedBooks: 0     // Track number of completed books
+  discoveredBooks: new Set() // Set to track unique books discovered
 };
 
 // Initialize the game when the document is fully loaded
@@ -337,6 +338,19 @@ document.addEventListener('DOMContentLoaded', function () {
     state.currentBook = puzzleData.book || puzzleData.title;
     state.currentStoryPart = puzzleData.storyPart !== undefined ? puzzleData.storyPart : 0;
 
+    // Check if this is a new book discovery
+    if (!state.discoveredBooks) {
+      state.discoveredBooks = new Set();
+    }
+
+    if (!state.discoveredBooks.has(state.currentBook)) {
+      state.discoveredBooks.add(state.currentBook);
+      // Update completedBooks count for newly discovered books
+      state.completedBooks = state.discoveredBooks.size;
+      // Save progress to persist the discovery
+      saveGameProgress();
+    }
+
     // Set book title and show story part
     if (elements.bookTitle) {
       elements.bookTitle.textContent = `${puzzleData.title} (${StoryPart.getName(state.currentStoryPart)})`;
@@ -578,11 +592,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Change color as time runs low
     if (percentRemaining < 20) {
-      elements.timerBar.style.backgroundColor = '#ff4d4d';
+      elements.timerBar.style.backgroundColor = 'var(--accent-main)'; // Amber alert color
     } else if (percentRemaining < 50) {
-      elements.timerBar.style.backgroundColor = '#ffcc00';
+      elements.timerBar.style.backgroundColor = 'var(--primary-lighter)'; // Medium color
     } else {
-      elements.timerBar.style.backgroundColor = '#4CAF50';
+      elements.timerBar.style.backgroundColor = 'var(--primary-light)'; // Normal color
     }
   }
 
@@ -592,9 +606,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const progress = {
         completedPuzzles: state.completedPuzzles,
         completedBooks: state.completedBooks,
-        books: state.books
+        books: state.books,
+        discoveredBooks: Array.from(state.discoveredBooks || [])
       };
-
+  
       localStorage.setItem('kethaneumProgress', JSON.stringify(progress));
       console.log('Game progress saved');
     } catch (error) {
@@ -606,16 +621,24 @@ document.addEventListener('DOMContentLoaded', function () {
   function loadGameProgress() {
     try {
       const savedProgress = localStorage.getItem('kethaneumProgress');
-
+  
       if (savedProgress) {
         const progress = JSON.parse(savedProgress);
-
+  
         state.completedPuzzles = progress.completedPuzzles || 0;
         state.completedBooks = progress.completedBooks || 0;
         state.books = progress.books || {};
-
+        
+        // Convert the array back to a Set
+        state.discoveredBooks = new Set(progress.discoveredBooks || []);
+        
+        // Ensure completedBooks matches the size of discoveredBooks
+        if (state.discoveredBooks.size !== state.completedBooks) {
+          state.completedBooks = state.discoveredBooks.size;
+        }
+  
         console.log('Game progress loaded');
-
+  
         // Update display if on Book of Passage screen
         if (state.currentScreen === 'book-of-passage-screen') {
           updateBookOfPassageProgress();
@@ -623,6 +646,23 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (error) {
       console.error('Failed to load game progress:', error);
+    }
+  }
+
+  function clearGameProgress() {
+    try {
+      // Clear localStorage
+      localStorage.removeItem('kethaneumProgress');
+
+      // Reset state variables
+      state.completedPuzzles = 0;
+      state.completedBooks = 0;
+      state.books = {};
+      state.discoveredBooks = new Set();
+
+      console.log('Game progress cleared');
+    } catch (error) {
+      console.error('Failed to clear game progress:', error);
     }
   }
 
@@ -1003,6 +1043,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (newGameBtn) {
       newGameBtn.addEventListener('click', function () {
         console.log('New Game button clicked');
+        clearGameProgress(); // Clear progress before starting new game
         navigateTo('backstory-screen');
       });
     }
