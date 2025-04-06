@@ -148,6 +148,9 @@ document.addEventListener('DOMContentLoaded', function () {
           elements.instructionsPanel.style.display = 'block';
         }
         state.paused = true;
+        
+        // Initialize mobile features after a short delay to ensure DOM is ready
+        setTimeout(setupMobileEnhancements, 100);
       }
 
       if (screenId === 'book-of-passage-screen') {
@@ -325,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Load puzzles sequentially by book and story part:
   function loadSequentialPuzzle(genre, book) {
     console.log('Loading sequential puzzle with parameters:', { genre, book });
+    console.log('Book progress state before selection:', JSON.stringify(state.bookProgress));
 
     // If no genre is specified, pick a random one from available genres
     if (!genre) {
@@ -396,6 +400,8 @@ document.addEventListener('DOMContentLoaded', function () {
         nextStoryPart = 0;
       }
     }
+    
+    console.log(`Selected story part for "${book}": ${nextStoryPart} (${StoryPart.getName(nextStoryPart)})`);
 
     // Find the puzzle for this book and story part
     const matchingPuzzles = puzzlesInGenre.filter(p => 
@@ -427,11 +433,6 @@ document.addEventListener('DOMContentLoaded', function () {
       // If we can't even find the first part, try another book
       console.log(`Couldn't find any parts for book: ${book}, trying another book`);
       loadSequentialPuzzle(genre); // Try again without specifying book
-      return;
-    }
-
-    if (matchingPuzzles.length === 0) {
-      console.error(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
       return;
     }
 
@@ -684,21 +685,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Render word list to the DOM
+  // Render word list to the DOM - Updated for mobile
   function renderWordList() {
-    if (!elements.wordList) return;
-
-    elements.wordList.innerHTML = '';
-
+    const desktopWordList = document.getElementById('word-list');
+    const mobileWordList = document.getElementById('mobile-word-list');
+    
+    if (!desktopWordList && !mobileWordList) return;
+  
+    // Clear both lists
+    if (desktopWordList) desktopWordList.innerHTML = '';
+    if (mobileWordList) mobileWordList.innerHTML = '';
+  
     for (const wordData of state.wordList) {
-      const listItem = document.createElement('li');
-      listItem.textContent = wordData.word;
-
-      if (wordData.found) {
-        listItem.classList.add('found');
+      // Create desktop list item
+      if (desktopWordList) {
+        const listItem = document.createElement('li');
+        listItem.textContent = wordData.word;
+        
+        if (wordData.found) {
+          listItem.classList.add('found');
+        }
+        
+        desktopWordList.appendChild(listItem);
       }
-
-      elements.wordList.appendChild(listItem);
+      
+      // Create mobile list item
+      if (mobileWordList) {
+        const mobileItem = document.createElement('li');
+        mobileItem.textContent = wordData.word;
+        
+        if (wordData.found) {
+          mobileItem.classList.add('found');
+        }
+        
+        mobileWordList.appendChild(mobileItem);
+      }
     }
   }
 
@@ -718,22 +739,133 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 1000);
   }
 
-  // Render timer bar
+  // Render timer bar - Updated for mobile
   function renderTimer() {
     if (!elements.timerBar) return;
-
+  
     const percentRemaining = (state.timeRemaining / config.timeLimit) * 100;
+    
+    // Update desktop timer
     elements.timerBar.style.width = `${percentRemaining}%`;
-
+  
+    // Update mobile timer if it exists
+    const mobileTimerBar = document.querySelector('.mobile-timer-bar');
+    if (mobileTimerBar) {
+      mobileTimerBar.style.width = `${percentRemaining}%`;
+    }
+  
     // Change color as time runs low
-    if (percentRemaining < 20) {
-      elements.timerBar.style.backgroundColor = 'var(--accent-main)'; // Amber alert color
-    } else if (percentRemaining < 50) {
-      elements.timerBar.style.backgroundColor = 'var(--primary-lighter)'; // Medium color
-    } else {
-      elements.timerBar.style.backgroundColor = 'var(--primary-light)'; // Normal color
+    const timerColor = percentRemaining < 20 ? 
+                      'var(--accent-main)' : percentRemaining < 50 ? 
+                      'var(--primary-lighter)' : 'var(--primary-light)';
+    
+    elements.timerBar.style.backgroundColor = timerColor;
+    if (mobileTimerBar) {
+      mobileTimerBar.style.backgroundColor = timerColor;
     }
   }
+
+  // Set up mobile-specific enhancements
+  function setupMobileEnhancements() {
+    // Check if we're on a mobile device
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // Create mobile timer if it doesn't exist
+      if (!document.querySelector('.mobile-timer-container')) {
+        const mobileTimer = document.createElement('div');
+        mobileTimer.className = 'mobile-timer-container';
+        mobileTimer.innerHTML = '<div class="mobile-timer-bar"></div>';
+        document.body.appendChild(mobileTimer);
+      }
+      
+      // Create collapsible story toggle if not already present
+      const storyContainer = document.querySelector('.story-container');
+      if (storyContainer && !storyContainer.querySelector('.story-toggle')) {
+        const toggleButton = document.createElement('button');
+        toggleButton.className = 'story-toggle';
+        toggleButton.textContent = 'Show More';
+        toggleButton.addEventListener('click', function() {
+          storyContainer.classList.toggle('expanded');
+          this.textContent = storyContainer.classList.contains('expanded') ? 'Show Less' : 'Show More';
+        });
+        storyContainer.appendChild(toggleButton);
+      }
+      
+      // Convert word list to mobile-friendly format if not already done
+      const wordList = document.getElementById('word-list');
+      if (wordList) {
+        // Create mobile word list if it doesn't exist
+        if (!document.querySelector('.mobile-word-list')) {
+          const mobileWordList = document.createElement('ul');
+          mobileWordList.className = 'mobile-word-list';
+          mobileWordList.id = 'mobile-word-list';
+          
+          // Move after the grid container
+          const gridContainer = document.querySelector('.grid-container');
+          if (gridContainer && gridContainer.parentNode) {
+            gridContainer.parentNode.insertBefore(mobileWordList, gridContainer.nextSibling);
+          }
+        }
+      }
+      
+      // Set up haptic feedback for word finding
+      setupHapticFeedback();
+    }
+  }
+
+  // Add haptic feedback to word finding
+  function setupHapticFeedback() {
+    // Check if we've already set up haptic feedback
+    if (window.hapticFeedbackSetup) return;
+    
+    // Store the original checkForWord function reference
+    const originalCheckForWord = checkForWord;
+    
+    // Override checkForWord to add haptic feedback
+    window.checkForWord = function() {
+      // Get the current words found count to compare later
+      const wordsFoundBefore = state.wordList.filter(wordData => wordData.found).length;
+      // Call the original function 
+      originalCheckForWord.apply(this, arguments);
+      
+      // Check if a new word was found
+      const wordsFoundAfter = state.wordList.filter(wordData => wordData.found).length;
+      
+      if (wordsFoundAfter > wordsFoundBefore) {
+        // A word was found! Trigger haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50); // Vibrate for 50ms
+        }
+      }
+    };
+    
+    // Replace the global function
+    checkForWord = window.checkForWord;
+    
+    // Mark that we've set up haptic feedback
+    window.hapticFeedbackSetup = true;
+  }
+
+  // Helper debounce function for resize events
+  function debounce(func, wait) {
+    let timeout;
+    return function() {
+      const context = this;
+      const args = arguments;
+      clearTimeout(timeout);
+      timeout = setTimeout(function() {
+        func.apply(context, args);
+      }, wait);
+    };
+  }
+
+  // Listen for window resize to adjust mobile features
+  window.addEventListener('resize', debounce(function() {
+    if (state.currentScreen === 'puzzle-screen') {
+      setupMobileEnhancements();
+    }
+  }, 250));
 
   // Add function to save game progress to local storage
   function saveGameProgress() {
@@ -1103,6 +1235,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Advance to next part
         state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
+        console.log(`Book progress after win:`, JSON.stringify(state.bookProgress));
         
         // Check if the book is now complete
         checkBookCompletion(state.currentBook);
@@ -1171,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Load next puzzle (for endless mode)
   function loadNextPuzzle() {
-    // Load a new random puzzle
+    // Load a new sequential puzzle
     loadSequentialPuzzle();
 
     // Show instructions panel
@@ -1226,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (startCatalogingBtn) {
       startCatalogingBtn.addEventListener('click', function () {
         console.log('Start cataloging clicked');
-        // Load a random puzzle directly
+        // Load a sequential puzzle
         loadSequentialPuzzle();
         navigateTo('puzzle-screen');
       });

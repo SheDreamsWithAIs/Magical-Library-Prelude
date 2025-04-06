@@ -621,6 +621,146 @@
         width: 90%;
       }
     }
+
+    /* Mobile-specific layout adjustments */
+@media (max-width: 768px) {
+  /* Game area restructuring */
+  .game-area {
+    flex-direction: column;
+  }
+  
+  /* Collapsible story container */
+  .story-container {
+    position: relative;
+    max-height: 100px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    transition: max-height 0.3s ease;
+  }
+  
+  .story-container.expanded {
+    max-height: 200px;
+  }
+  
+  .story-toggle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: var(--primary-light);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 10;
+  }
+  
+  /* Larger grid for touch */
+  .grid-container {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .grid {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+  }
+  
+  .grid-cell {
+    font-size: 20px; /* Larger for touch */
+    font-weight: bold;
+  }
+  
+  /* Timer adjustments */
+  .timer-container {
+    margin-bottom: 10px;
+  }
+  
+  /* Mobile timer that's always visible */
+  .mobile-timer-container {
+    display: none; /* Hidden by default, shown only on mobile */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background-color: var(--warm-light);
+    z-index: 100;
+  }
+  
+  .mobile-timer-bar {
+    height: 100%;
+    background-color: var(--primary-light);
+    transition: width 1s linear;
+  }
+  
+  /* Word list container adjustments */
+  .words-container {
+    max-height: 150px;
+    overflow-y: auto;
+    border-top: 1px solid var(--warm-dark);
+    padding-top: 10px;
+  }
+  
+  /* Word list as horizontal scrollable row for mobile */
+  .mobile-word-list {
+    display: none; /* Hidden by default, shown only on mobile */
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0;
+    list-style-type: none;
+  }
+  
+  .mobile-word-list li {
+    background-color: var(--warm-medium);
+    padding: 6px 10px;
+    border-radius: 16px;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid var(--warm-dark);
+  }
+  
+  .mobile-word-list li.found {
+    text-decoration: line-through;
+    background-color: var(--accent-light);
+    color: var(--accent-dark);
+  }
+  
+  /* Controls adjustment for mobile */
+  .controls {
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-around; /* More spacing on mobile */
+  }
+  
+  .controls button {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+  
+  /* Show specific elements for mobile */
+  .mobile-timer-container,
+  .mobile-word-list {
+    display: block;
+  }
+}
+
+/* Small phones specifically */
+@media (max-width: 480px) {
+  .grid-cell {
+    font-size: 16px; /* Slightly smaller for very small screens */
+  }
+  
+  .controls button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .story-container {
+    max-height: 80px;
+  }
+}
   </style>
 </head>
 
