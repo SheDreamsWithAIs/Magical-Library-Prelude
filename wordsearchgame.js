@@ -1625,4 +1625,10 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 2000); // Check every 2 seconds
     }, 300);
   });
+
+  // Make key functions available to the error handler
+window.generateGrid = generateGrid;
+window.initializePuzzle = initializePuzzle;
+window.navigateTo = navigateTo;
+
 });
