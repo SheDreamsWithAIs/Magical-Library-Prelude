@@ -427,102 +427,131 @@ document.addEventListener('DOMContentLoaded', function () {
         book = selectedBook;
       }
   
-      // Find which story part to show next
-      let nextStoryPart = 0; // Default to the beginning
-  
+      // Now that we have a book, find all available parts for this book
+      const availablePuzzlesForBook = puzzlesInGenre.filter(p => p.book === book);
+      
+      if (availablePuzzlesForBook.length === 0) {
+        throw new Error(`No puzzles found for book: ${book}`);
+      }
+      
+      const availablePartsForBook = [...new Set(availablePuzzlesForBook.map(p => p.storyPart))].sort((a, b) => a - b);
+      console.log(`Book "${book}" has ${availablePartsForBook.length} available parts: ${availablePartsForBook.join(', ')}`);
+      
       // Initialize book progress tracking if needed
       if (!state.bookProgress) {
         state.bookProgress = {};
       }
-  
+      
+      let nextStoryPart;
+      
       if (state.bookProgress[book] !== undefined) {
-        // Get the next part (0-4 representing parts 1-5)
-        nextStoryPart = state.bookProgress[book];
-  
-        // If we've reached part 5 (index 4), cycle back to part 1 (index 0)
-        if (nextStoryPart > 4) {
-          nextStoryPart = 0;
+        // If we've already played this book, try to find a part higher than the current one
+        const currentPart = state.bookProgress[book];
+        
+        // Find parts higher than the current one
+        const higherParts = availablePartsForBook.filter(part => part > currentPart);
+        
+        if (higherParts.length > 0) {
+          // We found higher parts, use the lowest of them
+          nextStoryPart = Math.min(...higherParts);
+          console.log(`Found higher part ${nextStoryPart} for book "${book}"`);
+        } else {
+          // No higher parts found, check if all parts are complete
+          const allPartsComplete = availablePartsForBook.every(part => 
+            state.books[book] && state.books[book][part]
+          );
+          
+          if (!allPartsComplete) {
+            // Find the lowest incomplete part
+            const incompleteParts = availablePartsForBook.filter(part => 
+              !state.books[book] || !state.books[book][part]
+            );
+            
+            if (incompleteParts.length > 0) {
+              nextStoryPart = Math.min(...incompleteParts);
+              console.log(`No higher parts found, but found incomplete part ${nextStoryPart} for book "${book}"`);
+            } else {
+              // Should not happen, but as a fallback use the lowest part
+              nextStoryPart = availablePartsForBook[0];
+              console.log(`Fallback to lowest part ${nextStoryPart} for book "${book}"`);
+            }
+          } else {
+            // All parts of this book are complete, look for a new book
+            console.log(`All parts of book "${book}" are complete, looking for a new book`);
+            
+            // Find other books in this genre
+            const otherBooks = [...new Set(puzzlesInGenre.map(p => p.book))].filter(b => b !== book);
+            
+            if (otherBooks.length > 0) {
+              // First, look for books with incomplete parts
+              let foundIncompleteBook = false;
+              
+              for (const otherBook of otherBooks) {
+                const otherBookParts = [...new Set(puzzlesInGenre
+                  .filter(p => p.book === otherBook)
+                  .map(p => p.storyPart))];
+                
+                const hasIncompleteParts = otherBookParts.some(part => 
+                  !state.books[otherBook] || !state.books[otherBook][part]
+                );
+                
+                if (hasIncompleteParts) {
+                  // Find the lowest incomplete part
+                  const incompleteParts = otherBookParts.filter(part => 
+                    !state.books[otherBook] || !state.books[otherBook][part]
+                  ).sort((a, b) => a - b);
+                  
+                  book = otherBook;
+                  nextStoryPart = incompleteParts[0];
+                  console.log(`Found incomplete part ${nextStoryPart} in book "${book}"`);
+                  foundIncompleteBook = true;
+                  break;
+                }
+              }
+              
+              if (!foundIncompleteBook) {
+                // All books have all parts complete, just pick a random book and start at beginning
+                const randomBook = otherBooks[Math.floor(Math.random() * otherBooks.length)];
+                const randomBookParts = [...new Set(puzzlesInGenre
+                  .filter(p => p.book === randomBook)
+                  .map(p => p.storyPart))].sort((a, b) => a - b);
+                
+                book = randomBook;
+                nextStoryPart = randomBookParts[0]; // Start at the beginning
+                console.log(`All books are complete, starting book "${book}" from beginning (part ${nextStoryPart})`);
+              }
+            } else {
+              // No other books found, loop back to the beginning of this book
+              nextStoryPart = availablePartsForBook[0];
+              console.log(`No other books found, restarting book "${book}" from beginning (part ${nextStoryPart})`);
+            }
+          }
         }
+      } else {
+        // First time playing this book, start with the lowest part
+        nextStoryPart = availablePartsForBook[0];
+        console.log(`First time playing book "${book}", starting at part ${nextStoryPart}`);
       }
       
-      console.log(`Loading "${book}" part ${nextStoryPart+1} (${StoryPart.getName(nextStoryPart)})`);
-  
-      // Find the puzzle for this book and story part
+      // Now find the matching puzzle for the book and part
       const matchingPuzzles = puzzlesInGenre.filter(p => 
         p.book === book && p.storyPart === nextStoryPart
       );
       
       if (matchingPuzzles.length === 0) {
-        // Error case: No puzzle found for this book and story part
-        console.warn(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
-        
-        // Try a fallback - look for any story part for this book
-        const anyPartPuzzles = puzzlesInGenre.filter(p => p.book === book);
-        
-        if (anyPartPuzzles.length > 0) {
-          // Find the lowest available story part
-          const availableParts = anyPartPuzzles.map(p => p.storyPart).sort((a, b) => a - b);
-          const lowestPart = availableParts[0];
-          
-          console.log(`Falling back to part ${lowestPart+1} of book: ${book}`);
-          
-          const fallbackPuzzle = puzzlesInGenre.find(p => p.book === book && p.storyPart === lowestPart);
-          
-          if (fallbackPuzzle) {
-            state.currentPuzzleIndex = puzzlesInGenre.indexOf(fallbackPuzzle);
-            state.currentGenre = genre;
-            state.currentBook = book;
-            state.currentStoryPart = lowestPart;
-            state.bookProgress[book] = lowestPart; // Reset to this part
-            
-            // Initialize the puzzle
-            try {
-              initializePuzzle(fallbackPuzzle);
-              return;
-            } catch (initError) {
-              throw new Error(`Failed to initialize fallback puzzle: ${initError.message}`);
-            }
-          }
-        }
-        
-        // If we can't find any parts for this book, try another book
-        console.warn(`Couldn't find any parts for book: ${book}, trying another book`);
-        
-        // Find another book from the same genre with available puzzles
-        const otherBooks = [...new Set(puzzlesInGenre.map(p => p.book))].filter(b => b !== book);
-        
-        if (otherBooks.length > 0) {
-          // Select a different book and try again with recursive call but limited depth
-          const alternateBook = otherBooks[Math.floor(Math.random() * otherBooks.length)];
-          console.log(`Trying alternate book: ${alternateBook}`);
-          
-          // Use explicit parameters to avoid infinite recursion
-          return loadSequentialPuzzle(genre, alternateBook);
-        }
-        
-        // If no other books in this genre, try another genre as last resort
-        const otherGenres = Object.keys(state.puzzles).filter(g => g !== genre);
-        if (otherGenres.length > 0) {
-          const alternateGenre = otherGenres[Math.floor(Math.random() * otherGenres.length)];
-          console.log(`Trying alternate genre: ${alternateGenre}`);
-          
-          // Use explicit parameters to avoid infinite recursion
-          return loadSequentialPuzzle(alternateGenre, null);
-        }
-        
-        // If we still can't find anything, throw error
-        throw new Error(`No suitable puzzles found in any genre`);
+        throw new Error(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
       }
-  
+      
       // Choose a random puzzle if multiple match the criteria (unlikely with story parts)
       const puzzleData = matchingPuzzles[Math.floor(Math.random() * matchingPuzzles.length)];
-  
+      
       // Update tracking for which part of the book we're on
       state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
       state.currentGenre = genre;
       state.currentBook = book;
       state.currentStoryPart = nextStoryPart;
-  
+      state.bookProgress[book] = nextStoryPart;
+      
       // Initialize the puzzle with error handling
       try {
         initializePuzzle(puzzleData);
