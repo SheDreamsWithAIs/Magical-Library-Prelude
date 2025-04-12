@@ -661,7 +661,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return grid;
     } catch (error) {
       // Use the error handler function
-      return window.handleGridGenerationError(error, words, config);
+      return window.handleGridGenerationError(error, words, config, fillEmptyCells);
     }
   }
 
@@ -1630,5 +1630,8 @@ document.addEventListener('DOMContentLoaded', function () {
 window.generateGrid = generateGrid;
 window.initializePuzzle = initializePuzzle;
 window.navigateTo = navigateTo;
+window.fillEmptyCells = fillEmptyCells;
+window.canPlaceWord = canPlaceWord;
+window.placeWord = placeWord;
 
 });

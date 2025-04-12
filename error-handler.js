@@ -175,7 +175,7 @@ function showErrorMessage(title, message, actionText = "Return to Book of Passag
   }
   
   // Handle errors during grid generation
-  function handleGridGenerationError(error, words, config) {
+  function handleGridGenerationError(error, words, config, fillEmptyCellsFunction) {
     console.error('Error generating grid:', error);
     
     // Try again with fewer words if possible
@@ -183,11 +183,18 @@ function showErrorMessage(title, message, actionText = "Return to Book of Passag
       console.log('Retrying grid generation with fewer words');
       // Try with 75% of the words
       const reducedWords = words.slice(0, Math.max(3, Math.floor(words.length * 0.75)));
-      return window.generateGrid(reducedWords);
+      
+      try {
+        // Try to generate grid with fewer words directly
+        return window.generateGrid(reducedWords);
+      } catch (retryError) {
+        console.error('Retry failed:', retryError);
+        // Continue to fallback
+      }
     }
     
     // If we can't reduce words further, show error and provide fallback grid
-    showErrorMessage(
+    window.showErrorMessage(
       "Grid Generation Error", 
       "The Kethaneum's word pattern generator encountered unexpected interference. A simpler pattern has been substituted.",
       "Proceed with Simplified Pattern",
@@ -199,8 +206,17 @@ function showErrorMessage(title, message, actionText = "Return to Book of Passag
     // Create an emergency fallback grid with simple words
     const fallback = createFallbackGrid(['BOOK', 'PAGE', 'WORD', 'READ'], config);
     
-    // Return grid and save placements to state
-    window.state.wordList = fallback.placements;
+    // Fill empty cells with random letters
+    for (let row = 0; row < config.gridSize; row++) {
+      for (let col = 0; col < config.gridSize; col++) {
+        if (fallback.grid[row][col] === '') {
+          fillEmptyCellsFunction(fallback.grid);
+          break; // Only need to call once
+        }
+      }
+    }
+    
+    // Return grid and make sure to update word list
     return fallback.grid;
   }
   
