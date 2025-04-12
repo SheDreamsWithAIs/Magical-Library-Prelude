@@ -719,6 +719,36 @@
         max-height: 80px;
       }
     }
+
+    /* Error panel styling */
+#error-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--warm-medium);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: none;
+  max-width: 80%;
+  width: 500px;
+  z-index: 2000;
+  color: #333;
+  border-top: 4px solid var(--accent-main);
+}
+
+#error-panel h2 {
+  color: var(--primary-dark);
+  margin-bottom: 15px;
+}
+
+#error-panel p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
   </style>
 </head>
 
@@ -893,6 +923,7 @@
     <button id="start-playing-btn" class="accent">Begin Cataloging</button>
   </div>
 
+  <script src="error-handler.js"></script>
   <script src="wordsearchgame.js"></script>
 
   <!-- Updated JavaScript for screen display management -->
@@ -915,6 +946,17 @@
       }
     });
   </script>
+
+<!-- Error Panel -->
+<div class="panel" id="error-panel">
+  <h2>Archive Error</h2>
+  <p>An error has occurred while accessing the Kethaneum's archives.</p>
+  <button id="error-action-btn" class="accent">Return to Book of Passage</button>
+</div>
+
+<!-- Add this script tag before the wordsearchgame.js script tag -->
+<script src="error-handler.js"></script>
+
 </body>
 
 </html>

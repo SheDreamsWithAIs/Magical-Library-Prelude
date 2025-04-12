@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
           elements.instructionsPanel.style.display = 'block';
         }
         state.paused = true;
-        
+
         // Initialize mobile features after a short delay to ensure DOM is ready
         setTimeout(setupMobileEnhancements, 100);
       }
@@ -242,9 +242,25 @@ document.addEventListener('DOMContentLoaded', function () {
   // Load puzzles data from JSON file
   function loadPuzzles() {
     console.log('Loading puzzles...');
+
+    // Show loading indicator
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'flex';
+    }
+
     fetch('puzzles.json')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to load puzzles: ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+      })
       .then(puzzles => {
+        if (!puzzles || !Array.isArray(puzzles) || puzzles.length === 0) {
+          throw new Error("No puzzles found in the puzzles.json file");
+        }
+
         // Organize puzzles by genre
         puzzles.forEach(puzzle => {
           const genre = puzzle.genre || 'nature'; // Default to nature if no genre specified
@@ -267,9 +283,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         console.log('Puzzles loaded and organized by genre');
+
+        // Hide loading indicator
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
       })
       .catch(error => {
-        console.error('Error loading puzzles:', error);
+        // Use the error handler function
+        window.handlePuzzleLoadError(error);
       });
   }
 
@@ -277,52 +299,53 @@ document.addEventListener('DOMContentLoaded', function () {
   function loadRandomPuzzle(genre, book, storyPart) {
     console.log('Loading puzzle with parameters:', { genre, book, storyPart });
 
-    // If no genre is specified, pick a random one from available genres
-    if (!genre) {
-      const genres = Object.keys(state.puzzles);
-      if (genres.length === 0) {
-        console.error('No puzzles loaded yet');
-        return;
+    try {
+      // If no genre is specified, pick a random one from available genres
+      if (!genre) {
+        const genres = Object.keys(state.puzzles);
+        if (genres.length === 0) {
+          throw new Error('No puzzles loaded yet');
+        }
+        genre = genres[Math.floor(Math.random() * genres.length)];
       }
-      genre = genres[Math.floor(Math.random() * genres.length)];
-    }
 
-    let puzzlesInGenre = state.puzzles[genre];
+      let puzzlesInGenre = state.puzzles[genre];
 
-    if (!puzzlesInGenre || puzzlesInGenre.length === 0) {
-      console.error(`No puzzles found for genre: ${genre}`);
-      return;
-    }
-
-    // Filter by book if specified
-    if (book) {
-      puzzlesInGenre = puzzlesInGenre.filter(p => p.book === book);
-
-      if (puzzlesInGenre.length === 0) {
-        console.error(`No puzzles found for book: ${book}`);
-        return;
+      if (!puzzlesInGenre || puzzlesInGenre.length === 0) {
+        throw new Error(`No puzzles found for genre: ${genre}`);
       }
-    }
 
-    // Filter by story part if specified
-    if (storyPart !== undefined) {
-      puzzlesInGenre = puzzlesInGenre.filter(p => p.storyPart === storyPart);
+      // Filter by book if specified
+      if (book) {
+        puzzlesInGenre = puzzlesInGenre.filter(p => p.book === book);
 
-      if (puzzlesInGenre.length === 0) {
-        console.error(`No puzzles found for story part: ${storyPart}`);
-        return;
+        if (puzzlesInGenre.length === 0) {
+          throw new Error(`No puzzles found for book: ${book}`);
+        }
       }
+
+      // Filter by story part if specified
+      if (storyPart !== undefined) {
+        puzzlesInGenre = puzzlesInGenre.filter(p => p.storyPart === storyPart);
+
+        if (puzzlesInGenre.length === 0) {
+          throw new Error(`No puzzles found for story part: ${storyPart}`);
+        }
+      }
+
+      // Choose a random puzzle from filtered list
+      const randomIndex = Math.floor(Math.random() * puzzlesInGenre.length);
+      state.currentPuzzleIndex = randomIndex;
+      state.currentGenre = genre;
+
+      const puzzleData = puzzlesInGenre[randomIndex];
+
+      // Initialize the puzzle game
+      initializePuzzle(puzzleData);
+    } catch (error) {
+      // Use the error handler function
+      window.handleRandomPuzzleError(error, state);
     }
-
-    // Choose a random puzzle from filtered list
-    const randomIndex = Math.floor(Math.random() * puzzlesInGenre.length);
-    state.currentPuzzleIndex = randomIndex;
-    state.currentGenre = genre;
-
-    const puzzleData = puzzlesInGenre[randomIndex];
-
-    // Initialize the puzzle game
-    initializePuzzle(puzzleData);
   }
 
   // Load puzzles sequentially by book and story part:
@@ -330,123 +353,145 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('Loading sequential puzzle with parameters:', { genre, book });
     console.log('Book progress state before selection:', JSON.stringify(state.bookProgress));
 
-    // If no genre is specified, pick a random one from available genres
-    if (!genre) {
-      const genres = Object.keys(state.puzzles);
-      if (genres.length === 0) {
-        console.error('No puzzles loaded yet');
-        return;
-      }
-      genre = genres[Math.floor(Math.random() * genres.length)];
-    }
-
-    let puzzlesInGenre = state.puzzles[genre];
-    if (!puzzlesInGenre || puzzlesInGenre.length === 0) {
-      console.error(`No puzzles found for genre: ${genre}`);
-      return;
-    }
-
-    // If no specific book is requested, choose one
-    if (!book) {
-      // Get all available books in this genre
-      const booksInGenre = [...new Set(puzzlesInGenre.map(p => p.book))];
-
-      // Choose a book to work on
-      // Priority: 1) Continue an in-progress book 2) Start a new book
-      let selectedBook = null;
-
-      // Check for in-progress books (that aren't completed)
-      const inProgressBooks = booksInGenre.filter(bookTitle =>
-        state.bookProgress[bookTitle] !== undefined &&
-        !checkBookCompletion(bookTitle)
-      );
-
-      if (inProgressBooks.length > 0) {
-        // Continue with a random in-progress book
-        selectedBook = inProgressBooks[Math.floor(Math.random() * inProgressBooks.length)];
-      } else {
-        // Start with a new book (one not in bookProgress) if possible
-        const newBooks = booksInGenre.filter(bookTitle => 
-          state.bookProgress[bookTitle] === undefined && 
-          (!state.books[bookTitle] || !state.books[bookTitle].every(part => part === true))
-        );
-        
-        if (newBooks.length > 0) {
-          // Prioritize completely new books
-          selectedBook = newBooks[Math.floor(Math.random() * newBooks.length)];
-        } else {
-          // If all books have been started, pick a random one
-          selectedBook = booksInGenre[Math.floor(Math.random() * booksInGenre.length)];
+    try {
+      // If no genre is specified, pick a random one from available genres
+      if (!genre) {
+        const genres = Object.keys(state.puzzles);
+        if (genres.length === 0) {
+          throw new Error('No puzzles loaded yet');
         }
-      } 
-
-      book = selectedBook;
-    }
-
-    // Find which story part to show next
-    let nextStoryPart = 0; // Default to the beginning
-
-    // Initialize book progress tracking if needed
-    if (!state.bookProgress) {
-      state.bookProgress = {};
-    }
-
-    if (state.bookProgress[book] !== undefined) {
-      // Get the next part (0-4 representing parts 1-5)
-      nextStoryPart = state.bookProgress[book];
-
-      // If we've reached part 5 (index 4), cycle back to part 1 (index 0)
-      if (nextStoryPart > 4) {
-        nextStoryPart = 0;
+        genre = genres[Math.floor(Math.random() * genres.length)];
       }
-    }
-    
-    console.log(`Selected story part for "${book}": ${nextStoryPart} (${StoryPart.getName(nextStoryPart)})`);
 
-    // Find the puzzle for this book and story part
-    const matchingPuzzles = puzzlesInGenre.filter(p => 
-      p.book === book && p.storyPart === nextStoryPart
-    );
-    
-    if (matchingPuzzles.length === 0) {
-      console.error(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
-      
-      // Try a fallback - first story part
-      const fallbackPuzzles = puzzlesInGenre.filter(p => 
-        p.book === book && p.storyPart === 0
+      let puzzlesInGenre = state.puzzles[genre];
+      if (!puzzlesInGenre || puzzlesInGenre.length === 0) {
+        throw new Error(`No puzzles found for genre: ${genre}`);
+      }
+
+      // If no specific book is requested, choose one
+      if (!book) {
+        // Get all available books in this genre
+        const booksInGenre = [...new Set(puzzlesInGenre.map(p => p.book))];
+
+        if (booksInGenre.length === 0) {
+          throw new Error(`No books found in genre: ${genre}`);
+        }
+
+        // Choose a book to work on
+        // Priority: 1) Continue an in-progress book 2) Start a new book
+        let selectedBook = null;
+
+        // Check for in-progress books (that aren't completed)
+        const inProgressBooks = booksInGenre.filter(bookTitle =>
+          state.bookProgress[bookTitle] !== undefined &&
+          !checkBookCompletion(bookTitle)
+        );
+
+        if (inProgressBooks.length > 0) {
+          // Continue with a random in-progress book
+          selectedBook = inProgressBooks[Math.floor(Math.random() * inProgressBooks.length)];
+        } else {
+          // Start with a new book (one not in bookProgress) if possible
+          const newBooks = booksInGenre.filter(bookTitle =>
+            state.bookProgress[bookTitle] === undefined &&
+            (!state.books[bookTitle] || !state.books[bookTitle].every(part => part === true))
+          );
+
+          if (newBooks.length > 0) {
+            // Prioritize completely new books
+            selectedBook = newBooks[Math.floor(Math.random() * newBooks.length)];
+          } else {
+            // If all books have been started, pick a random one
+            selectedBook = booksInGenre[Math.floor(Math.random() * booksInGenre.length)];
+          }
+        }
+
+        book = selectedBook;
+      }
+
+      // Find which story part to show next
+      let nextStoryPart = 0; // Default to the beginning
+
+      // Initialize book progress tracking if needed
+      if (!state.bookProgress) {
+        state.bookProgress = {};
+      }
+
+      if (state.bookProgress[book] !== undefined) {
+        // Get the next part (0-4 representing parts 1-5)
+        nextStoryPart = state.bookProgress[book];
+
+        // If we've reached part 5 (index 4), cycle back to part 1 (index 0)
+        if (nextStoryPart > 4) {
+          nextStoryPart = 0;
+        }
+      }
+
+      console.log(`Selected story part for "${book}": ${nextStoryPart} (${StoryPart.getName(nextStoryPart)})`);
+
+      // Find the puzzle for this book and story part
+      const matchingPuzzles = puzzlesInGenre.filter(p =>
+        p.book === book && p.storyPart === nextStoryPart
       );
-      
-      if (fallbackPuzzles.length > 0) {
-        console.log(`Falling back to the first part of book: ${book}`);
-        const puzzleData = fallbackPuzzles[Math.floor(Math.random() * fallbackPuzzles.length)];
-        state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
-        state.currentGenre = genre;
-        state.currentBook = book;
-        state.currentStoryPart = 0;
-        state.bookProgress[book] = 0; // Reset to beginning
-        
-        // Initialize the puzzle
-        initializePuzzle(puzzleData);
-        return;
+
+      if (matchingPuzzles.length === 0) {
+        console.warn(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
+
+        // Try a fallback - first story part
+        const fallbackPuzzles = puzzlesInGenre.filter(p =>
+          p.book === book && p.storyPart === 0
+        );
+
+        if (fallbackPuzzles.length > 0) {
+          console.log(`Falling back to the first part of book: ${book}`);
+          const puzzleData = fallbackPuzzles[Math.floor(Math.random() * fallbackPuzzles.length)];
+          state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
+          state.currentGenre = genre;
+          state.currentBook = book;
+          state.currentStoryPart = 0;
+          state.bookProgress[book] = 0; // Reset to beginning
+
+          // Initialize the puzzle
+          initializePuzzle(puzzleData);
+          return;
+        }
+
+        // If we can't find the first part, try another book
+        console.warn(`Couldn't find any parts for book: ${book}, trying another book`);
+
+        // Instead of recursive call that might fail again, look for any valid puzzle
+        const availablePuzzles = puzzlesInGenre;
+        if (availablePuzzles.length > 0) {
+          const randomPuzzle = availablePuzzles[Math.floor(Math.random() * availablePuzzles.length)];
+          state.currentPuzzleIndex = puzzlesInGenre.indexOf(randomPuzzle);
+          state.currentGenre = genre;
+          state.currentBook = randomPuzzle.book;
+          state.currentStoryPart = randomPuzzle.storyPart;
+
+          // Initialize the puzzle with whatever we found
+          initializePuzzle(randomPuzzle);
+          return;
+        }
+
+        // If we still can't find anything, throw error
+        throw new Error(`No suitable puzzles found in genre: ${genre}`);
       }
-      
-      // If we can't even find the first part, try another book
-      console.log(`Couldn't find any parts for book: ${book}, trying another book`);
-      loadSequentialPuzzle(genre); // Try again without specifying book
-      return;
+
+      // Choose a random puzzle if multiple match the criteria (unlikely with story parts)
+      const puzzleData = matchingPuzzles[Math.floor(Math.random() * matchingPuzzles.length)];
+
+      // Update tracking for which part of the book we're on
+      state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
+      state.currentGenre = genre;
+      state.currentBook = book;
+      state.currentStoryPart = nextStoryPart;
+
+      // Initialize the puzzle
+      initializePuzzle(puzzleData);
+    } catch (error) {
+      // Use the error handler function
+      window.handleSequentialPuzzleError(error, state);
     }
-
-    // Choose a random puzzle if multiple match the criteria (unlikely with story parts)
-    const puzzleData = matchingPuzzles[Math.floor(Math.random() * matchingPuzzles.length)];
-
-    // Update tracking for which part of the book we're on
-    state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
-    state.currentGenre = genre;
-    state.currentBook = book;
-    state.currentStoryPart = nextStoryPart;
-
-    // Initialize the puzzle
-    initializePuzzle(puzzleData);
   }
 
   // Initialize the puzzle with the provided data
@@ -539,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function () {
         state.books[bookTitle].complete = true;
         state.completedBooks++;
         console.log(`Book "${bookTitle}" completed!`);
-        
+
         // Show a celebration message
         if (elements.winPanel) {
           const winMessage = elements.winPanel.querySelector('p');
@@ -557,62 +602,67 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Generate word search grid
   function generateGrid(words) {
-    // Sort words by length (longest first for easier placement)
-    const sortedWords = [...words].sort((a, b) => b.length - a.length);
+    try {
+      // Sort words by length (longest first for easier placement)
+      const sortedWords = [...words].sort((a, b) => b.length - a.length);
 
-    // Create empty grid filled with empty spaces
-    const grid = Array(config.gridSize).fill().map(() => Array(config.gridSize).fill(''));
+      // Create empty grid filled with empty spaces
+      const grid = Array(config.gridSize).fill().map(() => Array(config.gridSize).fill(''));
 
-    // Track word placements for state
-    const placements = [];
+      // Track word placements for state
+      const placements = [];
 
-    // Try to place each word
-    for (const word of sortedWords) {
-      let placed = false;
-      let attempts = 0;
-      const maxAttempts = 100; // Prevent infinite loops
+      // Try to place each word
+      for (const word of sortedWords) {
+        let placed = false;
+        let attempts = 0;
+        const maxAttempts = 100; // Prevent infinite loops
 
-      while (!placed && attempts < maxAttempts) {
-        attempts++;
+        while (!placed && attempts < maxAttempts) {
+          attempts++;
 
-        // Random starting position
-        const row = Math.floor(Math.random() * config.gridSize);
-        const col = Math.floor(Math.random() * config.gridSize);
+          // Random starting position
+          const row = Math.floor(Math.random() * config.gridSize);
+          const col = Math.floor(Math.random() * config.gridSize);
 
-        // Random direction
-        const dirIndex = Math.floor(Math.random() * config.directions.length);
-        const [dRow, dCol] = config.directions[dirIndex];
+          // Random direction
+          const dirIndex = Math.floor(Math.random() * config.directions.length);
+          const [dRow, dCol] = config.directions[dirIndex];
 
-        // Check if word fits in this position and direction
-        if (canPlaceWord(grid, word, row, col, dRow, dCol)) {
-          // Place the word
-          placeWord(grid, word, row, col, dRow, dCol);
+          // Check if word fits in this position and direction
+          if (canPlaceWord(grid, word, row, col, dRow, dCol)) {
+            // Place the word
+            placeWord(grid, word, row, col, dRow, dCol);
 
-          // Track placement for game state
-          placements.push({
-            word,
-            found: false,
-            row,
-            col,
-            direction: [dRow, dCol]
-          });
+            // Track placement for game state
+            placements.push({
+              word,
+              found: false,
+              row,
+              col,
+              direction: [dRow, dCol]
+            });
 
-          placed = true;
+            placed = true;
+          }
+        }
+
+        if (!placed) {
+          throw new Error(`Could not place word: ${word}`);
         }
       }
 
-      if (!placed) {
-        throw new Error(`Could not place word: ${word}`);
-      }
+      // Save word placements to game state
+      state.wordList = placements;
+
+      // Fill remaining empty cells with random letters
+      fillEmptyCells(grid);
+
+      return grid;
+    } catch (error) {
+      // Use the error handler function
+      return window.handleGridGenerationError(error, words, config);
     }
-
-    // Save word placements to game state
-    state.wordList = placements;
-
-    // Fill remaining empty cells with random letters
-    fillEmptyCells(grid);
-
-    return grid;
   }
 
   // Check if a word can be placed at the given position and direction
@@ -689,41 +739,41 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderWordList() {
     const desktopWordList = document.getElementById('word-list');
     const mobileWordList = document.getElementById('mobile-word-list');
-    
+
     if (!desktopWordList && !mobileWordList) return;
-  
+
     // Clear both lists
     if (desktopWordList) desktopWordList.innerHTML = '';
     if (mobileWordList) mobileWordList.innerHTML = '';
-    
+
     // Sort the word list to put found words at the bottom
     const sortedWordList = [...state.wordList].sort((a, b) => {
       if (a.found === b.found) return 0;
       return a.found ? 1 : -1; // Found words go to the bottom
     });
-  
+
     for (const wordData of sortedWordList) {
       // Create desktop list item
       if (desktopWordList) {
         const listItem = document.createElement('li');
         listItem.textContent = wordData.word;
-        
+
         if (wordData.found) {
           listItem.classList.add('found');
         }
-        
+
         desktopWordList.appendChild(listItem);
       }
-      
+
       // Create mobile list item
       if (mobileWordList) {
         const mobileItem = document.createElement('li');
         mobileItem.textContent = wordData.word;
-        
+
         if (wordData.found) {
           mobileItem.classList.add('found');
         }
-        
+
         mobileWordList.appendChild(mobileItem);
       }
     }
@@ -732,13 +782,13 @@ document.addEventListener('DOMContentLoaded', function () {
   // Start the game timer
   function startTimer() {
     clearInterval(state.timer);
-    
+
     state.timer = setInterval(() => {
       if (state.paused) return;
-      
+
       state.timeRemaining--;
       renderTimer();
-      
+
       if (state.timeRemaining <= 0) {
         endGame(false);
       }
@@ -748,23 +798,23 @@ document.addEventListener('DOMContentLoaded', function () {
   // Render timer bar - Updated for mobile
   function renderTimer() {
     if (!elements.timerBar) return;
-  
+
     const percentRemaining = (state.timeRemaining / config.timeLimit) * 100;
-    
+
     // Update desktop timer
     elements.timerBar.style.width = `${percentRemaining}%`;
-  
+
     // Update mobile timer if it exists
     const mobileTimerBar = document.querySelector('.mobile-timer-bar');
     if (mobileTimerBar) {
       mobileTimerBar.style.width = `${percentRemaining}%`;
     }
-  
+
     // Change color as time runs low
-    const timerColor = percentRemaining < 20 ? 
-                      'var(--accent-main)' : percentRemaining < 50 ? 
-                      'var(--primary-lighter)' : 'var(--primary-light)';
-    
+    const timerColor = percentRemaining < 20 ?
+      'var(--accent-main)' : percentRemaining < 50 ?
+        'var(--primary-lighter)' : 'var(--primary-light)';
+
     elements.timerBar.style.backgroundColor = timerColor;
     if (mobileTimerBar) {
       mobileTimerBar.style.backgroundColor = timerColor;
@@ -779,10 +829,10 @@ document.addEventListener('DOMContentLoaded', function () {
       mobileTimer.className = 'mobile-timer-container';
       mobileTimer.innerHTML = '<div class="mobile-timer-bar"></div>';
       document.body.appendChild(mobileTimer);
-      
+
       // Get the timer bar
       const mobileTimerBar = mobileTimer.querySelector('.mobile-timer-bar');
-      
+
       // Animation sequence
       let flashCount = 0;
       const maxFlashes = 3;
@@ -794,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           return;
         }
-        
+
         if (flashCount % 2 === 0) {
           // Flash to accent color
           mobileTimerBar.style.backgroundColor = 'var(--accent-main)';
@@ -804,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function () {
           mobileTimerBar.style.backgroundColor = 'var(--primary-light)';
           mobileTimerBar.style.width = '100%';
         }
-        
+
         flashCount++;
       }, 300);
     } else {
@@ -819,16 +869,16 @@ document.addEventListener('DOMContentLoaded', function () {
   function setupInstructionsHandler() {
     const startPlayingBtn = document.getElementById('start-playing-btn');
     if (startPlayingBtn) {
-      startPlayingBtn.addEventListener('click', function() {
+      startPlayingBtn.addEventListener('click', function () {
         if (elements.instructionsPanel) {
           elements.instructionsPanel.style.display = 'none';
         }
-        
+
         // For mobile, start the timer animation first, then start the game after animation
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
           // Create and animate the timer
-          setupMobileTimerWithAnimation(function() {
+          setupMobileTimerWithAnimation(function () {
             // This callback runs after animation completes
             startPuzzleGame();
           });
@@ -844,55 +894,55 @@ document.addEventListener('DOMContentLoaded', function () {
   function setupMobileEnhancements() {
     // Check if we're on a mobile device
     const isMobile = window.innerWidth <= 768;
-    
+
     if (isMobile) {
       // Don't create the timer yet - wait for instruction panel close
-      
+
       // Create collapsible story toggle if not already present
       const storyContainer = document.querySelector('.story-container');
       if (storyContainer && !storyContainer.querySelector('.story-toggle')) {
         const toggleButton = document.createElement('button');
         toggleButton.className = 'story-toggle';
         toggleButton.textContent = 'Show More';
-        toggleButton.addEventListener('click', function() {
+        toggleButton.addEventListener('click', function () {
           storyContainer.classList.toggle('expanded');
           this.textContent = storyContainer.classList.contains('expanded') ? 'Show Less' : 'Show More';
         });
         storyContainer.appendChild(toggleButton);
       }
-      
+
       // Create mobile word list if it doesn't exist
       if (!document.querySelector('.mobile-word-list')) {
         const mobileWordList = document.createElement('ul');
         mobileWordList.className = 'mobile-word-list';
         mobileWordList.id = 'mobile-word-list';
-        
+
         // Hide the desktop word list
         const desktopWordList = document.querySelector('.words-container');
         if (desktopWordList) {
           desktopWordList.style.display = 'none';
         }
-        
+
         // Place mobile word list after the grid
         const gridContainer = document.querySelector('.grid-container');
         if (gridContainer && gridContainer.parentNode) {
           gridContainer.parentNode.insertBefore(mobileWordList, gridContainer.nextSibling);
         }
-        
+
         // Re-render the word list to populate the mobile list
         renderWordList();
       }
-      
+
       // Set up haptic feedback for word finding
       setupHapticFeedback();
-      
+
       // Make sure book title is visible
       const bookTitle = document.getElementById('book-title');
       if (bookTitle) {
         bookTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
-    
+
     // Setup instruction panel handler
     setupInstructionsHandler();
   }
@@ -901,21 +951,21 @@ document.addEventListener('DOMContentLoaded', function () {
   function setupHapticFeedback() {
     // Check if we've already set up haptic feedback
     if (window.hapticFeedbackSetup) return;
-    
+
     // Store the original checkForWord function reference
     const originalCheckForWord = checkForWord;
-    
+
     // Override checkForWord to add haptic feedback
-    window.checkForWord = function() {
+    window.checkForWord = function () {
       // Get the current words found count to compare later
       const wordsFoundBefore = state.wordList.filter(wordData => wordData.found).length;
-      
+
       // Call the original function 
       originalCheckForWord.apply(this, arguments);
-      
+
       // Check if a new word was found
       const wordsFoundAfter = state.wordList.filter(wordData => wordData.found).length;
-      
+
       if (wordsFoundAfter > wordsFoundBefore) {
         // A word was found! Trigger haptic feedback
         if (navigator.vibrate) {
@@ -923,10 +973,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
     };
-    
+
     // Replace the global function
     checkForWord = window.checkForWord;
-    
+
     // Mark that we've set up haptic feedback
     window.hapticFeedbackSetup = true;
   }
@@ -934,18 +984,18 @@ document.addEventListener('DOMContentLoaded', function () {
   // Helper debounce function for resize events
   function debounce(func, wait) {
     let timeout;
-    return function() {
+    return function () {
       const context = this;
       const args = arguments;
       clearTimeout(timeout);
-      timeout = setTimeout(function() {
+      timeout = setTimeout(function () {
         func.apply(context, args);
       }, wait);
     };
   }
 
   // Listen for window resize to adjust mobile features
-  window.addEventListener('resize', debounce(function() {
+  window.addEventListener('resize', debounce(function () {
     if (state.currentScreen === 'puzzle-screen') {
       setupMobileEnhancements();
     }
@@ -961,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', function () {
         discoveredBooks: Array.from(state.discoveredBooks || []),
         bookProgress: state.bookProgress || {}
       };
-  
+
       localStorage.setItem('kethaneumProgress', JSON.stringify(progress));
       console.log('Game progress saved');
     } catch (error) {
@@ -973,23 +1023,23 @@ document.addEventListener('DOMContentLoaded', function () {
   function loadGameProgress() {
     try {
       const savedProgress = localStorage.getItem('kethaneumProgress');
-  
+
       if (savedProgress) {
         const progress = JSON.parse(savedProgress);
-  
+
         state.completedPuzzles = progress.completedPuzzles || 0;
         state.completedBooks = progress.completedBooks || 0;
         state.books = progress.books || {};
         state.discoveredBooks = new Set(progress.discoveredBooks || []);
         state.bookProgress = progress.bookProgress || {};
-        
+
         // Ensure completedBooks matches the size of discoveredBooks
         if (state.discoveredBooks.size !== state.completedBooks) {
           state.completedBooks = state.discoveredBooks.size;
         }
-  
+
         console.log('Game progress loaded');
-  
+
         // Update display if on Book of Passage screen
         if (state.currentScreen === 'book-of-passage-screen') {
           updateBookOfPassageProgress();
@@ -1004,14 +1054,14 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       // Clear localStorage
       localStorage.removeItem('kethaneumProgress');
-  
+
       // Reset state variables
       state.completedPuzzles = 0;
       state.completedBooks = 0;
       state.books = {};
       state.discoveredBooks = new Set();
       state.bookProgress = {}; // Also clear the book progress
-  
+
       console.log('Game progress cleared');
     } catch (error) {
       console.error('Failed to clear game progress:', error);
@@ -1287,47 +1337,47 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log(`Advanced book "${state.currentBook}" to part ${state.bookProgress[state.currentBook]}`);
     clearInterval(state.timer);
     state.gameOver = true;
-  
+
     if (isWin) {
       // Increment completed puzzles count
       state.completedPuzzles++;
-  
+
       // Update book completion status
       if (state.currentBook && state.currentStoryPart >= 0) {
         // Initialize book tracking if it doesn't exist
         if (!state.books[state.currentBook]) {
           state.books[state.currentBook] = [false, false, false, false, false];
         }
-  
+
         // Mark the story part as complete
         state.books[state.currentBook][state.currentStoryPart] = true;
-        
+
         // Add to discovered books if this is new
         if (!state.discoveredBooks) {
           state.discoveredBooks = new Set();
         }
-        
+
         if (!state.discoveredBooks.has(state.currentBook)) {
           state.discoveredBooks.add(state.currentBook);
           state.completedBooks = state.discoveredBooks.size;
         }
-        
+
         // Update the next story part to show for this book
         if (!state.bookProgress) {
           state.bookProgress = {};
         }
-        
+
         // Advance to next part
         state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
         console.log(`Book progress after win:`, JSON.stringify(state.bookProgress));
-        
+
         // Check if the book is now complete
         checkBookCompletion(state.currentBook);
       }
-  
+
       // Store progress in local storage
       saveGameProgress();
-  
+
       // Show win panel
       if (elements.winPanel) {
         elements.winPanel.style.display = 'block';
@@ -1524,16 +1574,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const startPlayingBtn = document.getElementById('start-playing-btn');
     if (startPlayingBtn) {
       startPlayingBtn.removeEventListener('click', startPlayingBtn.clickHandler);
-      startPlayingBtn.clickHandler = function() {
+      startPlayingBtn.clickHandler = function () {
         if (elements.instructionsPanel) {
           elements.instructionsPanel.style.display = 'none';
         }
-        
+
         // For mobile, start the timer animation first, then start the game after animation
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
           // Create and animate the timer
-          setupMobileTimerWithAnimation(function() {
+          setupMobileTimerWithAnimation(function () {
             // This callback runs after animation completes
             startPuzzleGame();
           });
@@ -1550,6 +1600,7 @@ document.addEventListener('DOMContentLoaded', function () {
   loadPuzzles();
   loadGameProgress(); // Load progress from local storage
   setupScreenNavigation();
+  window.handleInitialLoadErrors(state);
 
   // Initially show the title screen
   navigateTo('title-screen');
