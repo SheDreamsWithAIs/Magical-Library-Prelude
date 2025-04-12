@@ -350,10 +350,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Load puzzles sequentially by book and story part:
   function loadSequentialPuzzle(genre, book) {
-    console.log('Loading sequential puzzle with parameters:', { genre, book });
-    console.log('Book progress state before selection:', JSON.stringify(state.bookProgress));
-
     try {
+      // Log initial request with less verbose output
+      if (!genre && !book) {
+        console.log('Loading next puzzle');
+      } else {
+        console.log('Loading specific puzzle:', { genre, book });
+      }
+      
+      // Debug info only in development, could be removed in production
+      if (Object.keys(state.bookProgress).length > 0) {
+        console.log('Book progress state:', JSON.stringify(state.bookProgress));
+      }
+  
+      // If no specific book is requested, prioritize continuing the current book series
+      if (!book && state.currentBook && state.bookProgress[state.currentBook] !== undefined) {
+        book = state.currentBook;
+        console.log(`Prioritizing continuation of current book: ${book}`);
+      }
+  
       // If no genre is specified, pick a random one from available genres
       if (!genre) {
         const genres = Object.keys(state.puzzles);
@@ -362,132 +377,158 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         genre = genres[Math.floor(Math.random() * genres.length)];
       }
-
+  
       let puzzlesInGenre = state.puzzles[genre];
       if (!puzzlesInGenre || puzzlesInGenre.length === 0) {
         throw new Error(`No puzzles found for genre: ${genre}`);
       }
-
+  
       // If no specific book is requested, choose one
       if (!book) {
         // Get all available books in this genre
         const booksInGenre = [...new Set(puzzlesInGenre.map(p => p.book))];
-
+        
         if (booksInGenre.length === 0) {
           throw new Error(`No books found in genre: ${genre}`);
         }
-
-        // Choose a book to work on
-        // Priority: 1) Continue an in-progress book 2) Start a new book
+  
+        // Choose a book to work on - with stronger prioritization for in-progress books
         let selectedBook = null;
-
-        // Check for in-progress books (that aren't completed)
+  
+        // Step 1: Check for in-progress books (that aren't completed)
         const inProgressBooks = booksInGenre.filter(bookTitle =>
           state.bookProgress[bookTitle] !== undefined &&
+          state.bookProgress[bookTitle] < 5 &&  // Less than 5 means not all parts completed
           !checkBookCompletion(bookTitle)
         );
-
+  
         if (inProgressBooks.length > 0) {
-          // Continue with a random in-progress book
+          // Continue with a book that has been started
           selectedBook = inProgressBooks[Math.floor(Math.random() * inProgressBooks.length)];
+          console.log(`Selected in-progress book: ${selectedBook}`);
         } else {
-          // Start with a new book (one not in bookProgress) if possible
-          const newBooks = booksInGenre.filter(bookTitle =>
-            state.bookProgress[bookTitle] === undefined &&
-            (!state.books[bookTitle] || !state.books[bookTitle].every(part => part === true))
+          // Step 2: Start with a new book (one not in bookProgress) if possible
+          const newBooks = booksInGenre.filter(bookTitle => 
+            state.bookProgress[bookTitle] === undefined && 
+            (!state.books[bookTitle] || !state.books[bookTitle]?.every(part => part === true))
           );
-
+          
           if (newBooks.length > 0) {
             // Prioritize completely new books
             selectedBook = newBooks[Math.floor(Math.random() * newBooks.length)];
+            console.log(`Selected new book: ${selectedBook}`);
           } else {
-            // If all books have been started, pick a random one
+            // Step 3: If all books have been started or completed, pick a random one
             selectedBook = booksInGenre[Math.floor(Math.random() * booksInGenre.length)];
+            console.log(`Selected random book (all books already started): ${selectedBook}`);
           }
-        }
-
+        } 
+  
         book = selectedBook;
       }
-
+  
       // Find which story part to show next
       let nextStoryPart = 0; // Default to the beginning
-
+  
       // Initialize book progress tracking if needed
       if (!state.bookProgress) {
         state.bookProgress = {};
       }
-
+  
       if (state.bookProgress[book] !== undefined) {
         // Get the next part (0-4 representing parts 1-5)
         nextStoryPart = state.bookProgress[book];
-
+  
         // If we've reached part 5 (index 4), cycle back to part 1 (index 0)
         if (nextStoryPart > 4) {
           nextStoryPart = 0;
         }
       }
-
-      console.log(`Selected story part for "${book}": ${nextStoryPart} (${StoryPart.getName(nextStoryPart)})`);
-
+      
+      console.log(`Loading "${book}" part ${nextStoryPart+1} (${StoryPart.getName(nextStoryPart)})`);
+  
       // Find the puzzle for this book and story part
-      const matchingPuzzles = puzzlesInGenre.filter(p =>
+      const matchingPuzzles = puzzlesInGenre.filter(p => 
         p.book === book && p.storyPart === nextStoryPart
       );
-
+      
       if (matchingPuzzles.length === 0) {
+        // Error case: No puzzle found for this book and story part
         console.warn(`No puzzle found for book: ${book}, story part: ${nextStoryPart}`);
-
-        // Try a fallback - first story part
-        const fallbackPuzzles = puzzlesInGenre.filter(p =>
-          p.book === book && p.storyPart === 0
-        );
-
-        if (fallbackPuzzles.length > 0) {
-          console.log(`Falling back to the first part of book: ${book}`);
-          const puzzleData = fallbackPuzzles[Math.floor(Math.random() * fallbackPuzzles.length)];
-          state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
-          state.currentGenre = genre;
-          state.currentBook = book;
-          state.currentStoryPart = 0;
-          state.bookProgress[book] = 0; // Reset to beginning
-
-          // Initialize the puzzle
-          initializePuzzle(puzzleData);
-          return;
+        
+        // Try a fallback - look for any story part for this book
+        const anyPartPuzzles = puzzlesInGenre.filter(p => p.book === book);
+        
+        if (anyPartPuzzles.length > 0) {
+          // Find the lowest available story part
+          const availableParts = anyPartPuzzles.map(p => p.storyPart).sort((a, b) => a - b);
+          const lowestPart = availableParts[0];
+          
+          console.log(`Falling back to part ${lowestPart+1} of book: ${book}`);
+          
+          const fallbackPuzzle = puzzlesInGenre.find(p => p.book === book && p.storyPart === lowestPart);
+          
+          if (fallbackPuzzle) {
+            state.currentPuzzleIndex = puzzlesInGenre.indexOf(fallbackPuzzle);
+            state.currentGenre = genre;
+            state.currentBook = book;
+            state.currentStoryPart = lowestPart;
+            state.bookProgress[book] = lowestPart; // Reset to this part
+            
+            // Initialize the puzzle
+            try {
+              initializePuzzle(fallbackPuzzle);
+              return;
+            } catch (initError) {
+              throw new Error(`Failed to initialize fallback puzzle: ${initError.message}`);
+            }
+          }
         }
-
-        // If we can't find the first part, try another book
+        
+        // If we can't find any parts for this book, try another book
         console.warn(`Couldn't find any parts for book: ${book}, trying another book`);
-
-        // Instead of recursive call that might fail again, look for any valid puzzle
-        const availablePuzzles = puzzlesInGenre;
-        if (availablePuzzles.length > 0) {
-          const randomPuzzle = availablePuzzles[Math.floor(Math.random() * availablePuzzles.length)];
-          state.currentPuzzleIndex = puzzlesInGenre.indexOf(randomPuzzle);
-          state.currentGenre = genre;
-          state.currentBook = randomPuzzle.book;
-          state.currentStoryPart = randomPuzzle.storyPart;
-
-          // Initialize the puzzle with whatever we found
-          initializePuzzle(randomPuzzle);
-          return;
+        
+        // Find another book from the same genre with available puzzles
+        const otherBooks = [...new Set(puzzlesInGenre.map(p => p.book))].filter(b => b !== book);
+        
+        if (otherBooks.length > 0) {
+          // Select a different book and try again with recursive call but limited depth
+          const alternateBook = otherBooks[Math.floor(Math.random() * otherBooks.length)];
+          console.log(`Trying alternate book: ${alternateBook}`);
+          
+          // Use explicit parameters to avoid infinite recursion
+          return loadSequentialPuzzle(genre, alternateBook);
         }
-
+        
+        // If no other books in this genre, try another genre as last resort
+        const otherGenres = Object.keys(state.puzzles).filter(g => g !== genre);
+        if (otherGenres.length > 0) {
+          const alternateGenre = otherGenres[Math.floor(Math.random() * otherGenres.length)];
+          console.log(`Trying alternate genre: ${alternateGenre}`);
+          
+          // Use explicit parameters to avoid infinite recursion
+          return loadSequentialPuzzle(alternateGenre, null);
+        }
+        
         // If we still can't find anything, throw error
-        throw new Error(`No suitable puzzles found in genre: ${genre}`);
+        throw new Error(`No suitable puzzles found in any genre`);
       }
-
+  
       // Choose a random puzzle if multiple match the criteria (unlikely with story parts)
       const puzzleData = matchingPuzzles[Math.floor(Math.random() * matchingPuzzles.length)];
-
+  
       // Update tracking for which part of the book we're on
       state.currentPuzzleIndex = puzzlesInGenre.indexOf(puzzleData);
       state.currentGenre = genre;
       state.currentBook = book;
       state.currentStoryPart = nextStoryPart;
-
-      // Initialize the puzzle
-      initializePuzzle(puzzleData);
+  
+      // Initialize the puzzle with error handling
+      try {
+        initializePuzzle(puzzleData);
+      } catch (initError) {
+        throw new Error(`Failed to initialize puzzle: ${initError.message}`);
+      }
     } catch (error) {
       // Use the error handler function
       window.handleSequentialPuzzleError(error, state);
@@ -496,78 +537,150 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Initialize the puzzle with the provided data
   function initializePuzzle(puzzleData) {
-    console.log('Initializing puzzle:', puzzleData.title);
-
-    // Reset game state
-    state.wordList = [];
-    state.selectedCells = [];
-    state.startCell = null;
-    state.currentCell = null;
-    state.timeRemaining = config.timeLimit;
-    state.paused = true;
-    state.gameOver = false;
-
-    // Set current book and story part
-    state.currentBook = puzzleData.book || puzzleData.title;
-    state.currentStoryPart = puzzleData.storyPart !== undefined ? puzzleData.storyPart : 0;
-
-    // Check if this is a new book discovery
-    if (!state.discoveredBooks) {
-      state.discoveredBooks = new Set();
-    }
-
-    if (!state.discoveredBooks.has(state.currentBook)) {
-      state.discoveredBooks.add(state.currentBook);
-      // Update completedBooks count for newly discovered books
-      state.completedBooks = state.discoveredBooks.size;
-      // Save progress to persist the discovery
-      saveGameProgress();
-    }
-
-    // Set book title and show story part
-    if (elements.bookTitle) {
-      elements.bookTitle.textContent = `${puzzleData.title} (${StoryPart.getName(state.currentStoryPart)})`;
-    }
-
-    // Set story excerpt
-    if (elements.storyExcerpt) {
-      elements.storyExcerpt.textContent = puzzleData.storyExcerpt || "No story excerpt available.";
-    }
-
-    // Filter and prepare words
-    const validWords = puzzleData.words
-      .filter(word => word.length >= config.minWordLength && word.length <= config.maxWordLength)
-      .map(word => word.toUpperCase())
-      .filter((word, index, self) => self.indexOf(word) === index) // Remove duplicates
-      .slice(0, config.maxWords);
-
-    if (validWords.length === 0) {
-      console.error('No valid words provided');
-      return;
-    }
-
-    // Generate grid with words
     try {
+      if (!puzzleData) {
+        throw new Error("Cannot initialize puzzle with null data");
+      }
+      
+      if (!puzzleData.words || !Array.isArray(puzzleData.words) || puzzleData.words.length === 0) {
+        throw new Error("Puzzle has no words to find");
+      }
+      
+      // Reset game state
+      state.wordList = [];
+      state.selectedCells = [];
+      state.startCell = null;
+      state.currentCell = null;
+      state.timeRemaining = config.timeLimit;
+      state.paused = true;
+      state.gameOver = false;
+  
+      // Set current book and story part
+      state.currentBook = puzzleData.book || puzzleData.title;
+      state.currentStoryPart = puzzleData.storyPart !== undefined ? puzzleData.storyPart : 0;
+  
+      // Check if this is a new book discovery
+      if (!state.discoveredBooks) {
+        state.discoveredBooks = new Set();
+      }
+  
+      if (!state.discoveredBooks.has(state.currentBook)) {
+        state.discoveredBooks.add(state.currentBook);
+        // Update completedBooks count for newly discovered books
+        state.completedBooks = state.discoveredBooks.size;
+        // Save progress to persist the discovery
+        try {
+          saveGameProgress();
+        } catch (saveError) {
+          console.warn("Failed to save book discovery:", saveError);
+          // Non-critical error, continue without saving
+        }
+      }
+  
+      // Update UI
+      try {
+        // Set book title and show story part
+        if (elements.bookTitle) {
+          elements.bookTitle.textContent = `${puzzleData.title} (${StoryPart.getName(state.currentStoryPart)})`;
+        }
+  
+        // Set story excerpt
+        if (elements.storyExcerpt) {
+          elements.storyExcerpt.textContent = puzzleData.storyExcerpt || "No story excerpt available.";
+        }
+      } catch (uiError) {
+        console.warn("UI update error:", uiError);
+        // Non-critical error, continue with initialization
+      }
+  
+      // Filter and prepare words
+      const validWords = puzzleData.words
+        .filter(word => word.length >= config.minWordLength && word.length <= config.maxWordLength)
+        .map(word => word.toUpperCase())
+        .filter((word, index, self) => self.indexOf(word) === index) // Remove duplicates
+        .slice(0, config.maxWords);
+  
+      if (validWords.length === 0) {
+        throw new Error('No valid words provided after filtering');
+      }
+  
+      // Generate grid with words - potential errors handled in generateGrid
       state.grid = generateGrid(validWords);
+  
+      // Render UI with error handling
+      try {
+        renderGrid();
+        renderWordList();
+        renderTimer();
+  
+        // Set up puzzle game event listeners
+        setupPuzzleEventListeners();
+      } catch (renderError) {
+        throw new Error(`Failed to render puzzle: ${renderError.message}`);
+      }
     } catch (error) {
-      console.error(`Could not fit all words in grid: ${error.message}`);
-      return;
+      // Handle errors in puzzle initialization
+      window.showErrorMessage(
+        "Knowledge Construct Error",
+        "The Kethaneum is having difficulty manifesting this knowledge construct. The patterns appear unstable. Please try a different archive section.",
+        "Try Different Section",
+        function() {
+          document.getElementById('error-panel').style.display = 'none';
+          navigateTo('book-of-passage-screen');
+        }
+      );
+      
+      // Rethrow to signal that initialization failed
+      throw error;
     }
-
-    // Render UI
-    renderGrid();
-    renderWordList();
-    renderTimer();
-
-    // Set up puzzle game event listeners
-    setupPuzzleEventListeners();
   }
 
   // Start the puzzle game (called after instructions are closed)
   function startPuzzleGame() {
-    console.log('Starting puzzle game');
-    state.paused = false;
-    startTimer();
+    try {
+      if (state.gameOver) {
+        throw new Error("Cannot start game that is already over");
+      }
+      
+      if (!state.wordList || state.wordList.length === 0) {
+        throw new Error("Cannot start game with empty word list");
+      }
+      
+      // Set game state
+      state.paused = false;
+      
+      // Start the timer with error handling
+      try {
+        startTimer();
+      } catch (timerError) {
+        console.warn("Timer error:", timerError);
+        // Create emergency timer as fallback
+        clearInterval(state.timer);
+        state.timer = setInterval(() => {
+          if (state.paused) return;
+          state.timeRemaining--;
+          
+          try {
+            renderTimer();
+          } catch (renderError) {
+            // Last resort - just check time
+            if (state.timeRemaining <= 0) {
+              endGame(false);
+            }
+          }
+        }, 1000);
+      }
+    } catch (error) {
+      window.showErrorMessage(
+        "Cataloging System Error",
+        "The Kethaneum's cataloging system encountered an unexpected disruption. Please return to your Book of Passage and try again.",
+        "Return to Book of Passage",
+        function() {
+          document.getElementById('error-panel').style.display = 'none';
+          navigateTo('book-of-passage-screen');
+        }
+      );
+    }
   }
 
   // Function to check if a book is complete and update counters
@@ -1334,59 +1447,90 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // End the game (win or lose)
   function endGame(isWin) {
-    console.log(`Advanced book "${state.currentBook}" to part ${state.bookProgress[state.currentBook]}`);
-    clearInterval(state.timer);
-    state.gameOver = true;
-
-    if (isWin) {
-      // Increment completed puzzles count
-      state.completedPuzzles++;
-
-      // Update book completion status
-      if (state.currentBook && state.currentStoryPart >= 0) {
-        // Initialize book tracking if it doesn't exist
-        if (!state.books[state.currentBook]) {
-          state.books[state.currentBook] = [false, false, false, false, false];
+    try {
+      clearInterval(state.timer);
+      state.gameOver = true;
+    
+      if (isWin) {
+        // Increment completed puzzles count
+        state.completedPuzzles++;
+    
+        // Update book completion status
+        if (state.currentBook && state.currentStoryPart >= 0) {
+          // Initialize book tracking if it doesn't exist
+          if (!state.books[state.currentBook]) {
+            state.books[state.currentBook] = [false, false, false, false, false];
+          }
+    
+          // Mark the story part as complete
+          state.books[state.currentBook][state.currentStoryPart] = true;
+          
+          // Add to discovered books if this is new
+          if (!state.discoveredBooks) {
+            state.discoveredBooks = new Set();
+          }
+          
+          if (!state.discoveredBooks.has(state.currentBook)) {
+            state.discoveredBooks.add(state.currentBook);
+            state.completedBooks = state.discoveredBooks.size;
+          }
+          
+          // Update the next story part to show for this book
+          if (!state.bookProgress) {
+            state.bookProgress = {};
+          }
+          
+          // Advance to next part
+          state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
+          
+          // Check if the book is now complete
+          try {
+            checkBookCompletion(state.currentBook);
+          } catch (error) {
+            console.warn("Error checking book completion:", error);
+            // Non-critical, continue without completion check
+          }
         }
-
-        // Mark the story part as complete
-        state.books[state.currentBook][state.currentStoryPart] = true;
-
-        // Add to discovered books if this is new
-        if (!state.discoveredBooks) {
-          state.discoveredBooks = new Set();
+    
+        // Store progress in local storage
+        try {
+          saveGameProgress();
+        } catch (saveError) {
+          console.warn("Failed to save game progress:", saveError);
+          // Show a subtle warning to the user
+          const message = document.createElement('div');
+          message.textContent = "Your progress could not be saved. You may need to complete this section again.";
+          message.style.color = "var(--accent-main)";
+          message.style.fontSize = "14px";
+          message.style.padding = "10px";
+          
+          // Add to win panel if it exists
+          if (elements.winPanel) {
+            elements.winPanel.appendChild(message);
+          }
         }
-
-        if (!state.discoveredBooks.has(state.currentBook)) {
-          state.discoveredBooks.add(state.currentBook);
-          state.completedBooks = state.discoveredBooks.size;
+    
+        // Show win panel
+        if (elements.winPanel) {
+          elements.winPanel.style.display = 'block';
         }
-
-        // Update the next story part to show for this book
-        if (!state.bookProgress) {
-          state.bookProgress = {};
+      } else {
+        // Show lose panel
+        if (elements.losePanel) {
+          elements.losePanel.style.display = 'block';
         }
-
-        // Advance to next part
-        state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
-        console.log(`Book progress after win:`, JSON.stringify(state.bookProgress));
-
-        // Check if the book is now complete
-        checkBookCompletion(state.currentBook);
       }
-
-      // Store progress in local storage
-      saveGameProgress();
-
-      // Show win panel
-      if (elements.winPanel) {
-        elements.winPanel.style.display = 'block';
-      }
-    } else {
-      // Show lose panel
-      if (elements.losePanel) {
-        elements.losePanel.style.display = 'block';
-      }
+    } catch (error) {
+      // Error in game end procedure
+      window.showErrorMessage(
+        "Cataloging Closure Error",
+        "The Kethaneum's cataloging system encountered difficulty while recording your progress. The record may be incomplete.",
+        "Return to Book of Passage",
+        function() {
+          document.getElementById('error-panel').style.display = 'none';
+          navigateTo('book-of-passage-screen');
+        }
+      );
     }
   }
 
@@ -1633,5 +1777,8 @@ window.navigateTo = navigateTo;
 window.fillEmptyCells = fillEmptyCells;
 window.canPlaceWord = canPlaceWord;
 window.placeWord = placeWord;
+window.resetCurrentPuzzle = resetCurrentPuzzle;
+window.loadSequentialPuzzle = loadSequentialPuzzle;
+window.state = state;  // Make state accessible for detailed error handling
 
 });

@@ -250,6 +250,164 @@ function showErrorMessage(title, message, actionText = "Return to Book of Passag
       }
     }, 5000); // Check after 5 seconds
   }
+
+  // Handle puzzle initialization errors
+function handlePuzzleInitializationError(error, navigateToFunction) {
+    console.error('Puzzle initialization error:', error);
+    
+    showErrorMessage(
+      "Knowledge Pattern Error",
+      "The Kethaneum's archival system cannot properly manifest this knowledge pattern. The Senior Archivists have been notified of the disturbance.",
+      "Return to Book of Passage",
+      function() {
+        document.getElementById('error-panel').style.display = 'none';
+        navigateToFunction('book-of-passage-screen');
+      }
+    );
+  }
+  
+  // Handle timer errors
+  function handleTimerError(error, state) {
+    console.error('Timer error:', error);
+    
+    // Create an emergency timer as fallback that doesn't use the UI
+    clearInterval(state.timer);
+    
+    state.timer = setInterval(() => {
+      if (state.paused) return;
+      
+      state.timeRemaining--;
+      
+      // Just check if time's up without trying to render
+      if (state.timeRemaining <= 0) {
+        clearInterval(state.timer);
+        
+        // Show a basic timeout message
+        showErrorMessage(
+          "Time Expiration",
+          "Your cataloging session has timed out. The knowledge construct remains uncategorized.",
+          "Try Again",
+          function() {
+            document.getElementById('error-panel').style.display = 'none';
+            window.resetCurrentPuzzle();
+          }
+        );
+      }
+    }, 1000);
+  }
+  
+  // Handle save errors with user notification
+  function handleSaveError(error, message = null) {
+    console.error('Save error:', error);
+    
+    // Create a subtle notification instead of an error panel
+    const notification = document.createElement('div');
+    notification.className = 'save-error-notification';
+    notification.textContent = message || "The Kethaneum's record system is experiencing difficulties. Your progress may not be saved.";
+    notification.style.position = 'fixed';
+    notification.style.bottom = '20px';
+    notification.style.right = '20px';
+    notification.style.backgroundColor = 'var(--warm-medium)';
+    notification.style.color = 'var(--accent-main)';
+    notification.style.padding = '10px 15px';
+    notification.style.borderRadius = '5px';
+    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '2000';
+    notification.style.fontSize = '14px';
+    notification.style.maxWidth = '300px';
+    
+    // Add to document
+    document.body.appendChild(notification);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 5000);
+    
+    // Try to save to sessionStorage as a fallback
+    try {
+      sessionStorage.setItem('kethaneum_emergency_backup', JSON.stringify({
+        currentBook: window.state.currentBook,
+        currentStoryPart: window.state.currentStoryPart,
+        completedPuzzles: window.state.completedPuzzles,
+        timestamp: new Date().toISOString()
+      }));
+    } catch (fallbackError) {
+      console.error('Even fallback save failed:', fallbackError);
+    }
+  }
+  
+  // Handle navigation errors
+  function handleNavigationError(error, targetScreen, fallbackScreen = 'title-screen') {
+    console.error('Navigation error:', error);
+    
+    // Try to restore proper screen state
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(screen => {
+      screen.style.display = 'none';
+      screen.classList.remove('active');
+    });
+    
+    // Try to navigate to target screen
+    const targetElement = document.getElementById(targetScreen);
+    if (targetElement) {
+      targetElement.classList.add('active');
+      targetElement.style.display = targetScreen === 'puzzle-screen' ? 'flex' : 
+                                   (targetScreen === 'title-screen' || 
+                                    targetScreen === 'backstory-screen' || 
+                                    targetScreen === 'book-of-passage-screen') ? 'flex' : 'block';
+      
+      // Update state if possible
+      if (window.state) {
+        window.state.currentScreen = targetScreen;
+      }
+    } else {
+      // If target screen not found, try fallback
+      const fallbackElement = document.getElementById(fallbackScreen);
+      if (fallbackElement) {
+        fallbackElement.classList.add('active');
+        fallbackElement.style.display = fallbackScreen === 'puzzle-screen' ? 'flex' : 
+                                       (fallbackScreen === 'title-screen' || 
+                                        fallbackScreen === 'backstory-screen' || 
+                                        fallbackScreen === 'book-of-passage-screen') ? 'flex' : 'block';
+        
+        // Update state if possible
+        if (window.state) {
+          window.state.currentScreen = fallbackScreen;
+        }
+      }
+    }
+    
+    // Show a subtle notification
+    const notification = document.createElement('div');
+    notification.className = 'navigation-error-notification';
+    notification.textContent = "The Kethaneum's pathways are experiencing fluctuations. Your journey may be redirected.";
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.left = '50%';
+    notification.style.transform = 'translateX(-50%)';
+    notification.style.backgroundColor = 'var(--warm-medium)';
+    notification.style.color = 'var(--accent-main)';
+    notification.style.padding = '10px 15px';
+    notification.style.borderRadius = '5px';
+    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '2000';
+    notification.style.fontSize = '14px';
+    notification.style.maxWidth = '80%';
+    notification.style.textAlign = 'center';
+    
+    // Add to document
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
+  }
   
   // Make functions available globally
   window.showErrorMessage = showErrorMessage;
@@ -259,3 +417,7 @@ function showErrorMessage(title, message, actionText = "Return to Book of Passag
   window.handleSequentialPuzzleError = handleSequentialPuzzleError;
   window.handleGridGenerationError = handleGridGenerationError;
   window.handleInitialLoadErrors = handleInitialLoadErrors;
+  window.handlePuzzleInitializationError = handlePuzzleInitializationError;
+  window.handleTimerError = handleTimerError;
+  window.handleSaveError = handleSaveError;
+  window.handleNavigationError = handleNavigationError;
