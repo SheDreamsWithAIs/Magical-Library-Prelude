@@ -299,13 +299,19 @@
     }
 
     .book-progress-list li.book-complete {
-      background-color: #e0f0e0;
+      background-color: var(--warm-light);
+      /* Changed to match incomplete books */
       border-left: 4px solid var(--accent-main);
       /* Amber accent for completed books */
     }
 
     .book-progress-list li.book-in-progress {
       border-left: 4px solid var(--primary-light);
+    }
+
+    .book-progress-list li.has-uncompleted-puzzle {
+      /* Subtle indicator that this book has an uncompleted puzzle */
+      border-bottom: 2px dashed var(--accent-light);
     }
 
     .book-parts-progress {
@@ -328,12 +334,50 @@
 
     .story-part.complete {
       background-color: var(--accent-main);
-      /* Amber accent for completed parts */
+      /* Main amber for completed parts */
     }
 
     .story-part.incomplete {
       background-color: #ccc;
+      /* Grey for never attempted parts - keeping original */
       color: #666;
+    }
+
+    .story-part.in-progress {
+      background-color: var(--accent-light);
+      /* Lighter amber for in-progress part */
+      box-shadow: 0 0 5px var(--accent-light);
+      /* Glow effect */
+      position: relative;
+    }
+
+    .story-part.in-progress::after {
+      content: "";
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      bottom: -2px;
+      left: -2px;
+      border: 2px solid var(--accent-light);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     .progress-section h4 {
@@ -721,34 +765,34 @@
     }
 
     /* Error panel styling */
-#error-panel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--warm-medium);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  text-align: center;
-  display: none;
-  max-width: 80%;
-  width: 500px;
-  z-index: 2000;
-  color: #333;
-  border-top: 4px solid var(--accent-main);
-}
+    #error-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--warm-medium);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      display: none;
+      max-width: 80%;
+      width: 500px;
+      z-index: 2000;
+      color: #333;
+      border-top: 4px solid var(--accent-main);
+    }
 
-#error-panel h2 {
-  color: var(--primary-dark);
-  margin-bottom: 15px;
-}
+    #error-panel h2 {
+      color: var(--primary-dark);
+      margin-bottom: 15px;
+    }
 
-#error-panel p {
-  font-size: 16px;
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
+    #error-panel p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 
@@ -947,15 +991,15 @@
     });
   </script>
 
-<!-- Error Panel -->
-<div class="panel" id="error-panel">
-  <h2>Archive Error</h2>
-  <p>An error has occurred while accessing the Kethaneum's archives.</p>
-  <button id="error-action-btn" class="accent">Return to Book of Passage</button>
-</div>
+  <!-- Error Panel -->
+  <div class="panel" id="error-panel">
+    <h2>Archive Error</h2>
+    <p>An error has occurred while accessing the Kethaneum's archives.</p>
+    <button id="error-action-btn" class="accent">Return to Book of Passage</button>
+  </div>
 
-<!-- Add this script tag before the wordsearchgame.js script tag -->
-<script src="error-handler.js"></script>
+  <!-- Add this script tag before the wordsearchgame.js script tag -->
+  <script src="error-handler.js"></script>
 
 </body>
 

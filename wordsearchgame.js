@@ -56,6 +56,7 @@ let state = {
   currentGenre: '',     // Current selected genre
   currentPuzzleIndex: -1, // Index of current puzzle
   completedPuzzles: 0,   // Track number of completed puzzles
+  lastUncompletedPuzzle: null, // Store {book, part, genre} for puzzles exited early
 
   // New tracking for books
   books: {},            // Object to track books and their completion: { bookTitle: [bool, bool, bool, bool, bool] }
@@ -114,6 +115,11 @@ document.addEventListener('DOMContentLoaded', function () {
   // Simple navigation function
   function navigateTo(screenId) {
     console.log('Navigating to:', screenId);
+
+    // Validate state when going to specific screens
+    if (screenId === 'book-of-passage-screen' || screenId === 'puzzle-screen') {
+      validateGameState();
+    }
 
     // Hide all screens
     Object.values(screens).forEach(screen => {
@@ -192,6 +198,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Update progress display in Book of Passage
   function updateBookOfPassageProgress() {
+    // Validate state before updating UI
+    validateGameState();
+
     if (elements.completedPuzzlesCount) {
       elements.completedPuzzlesCount.textContent = state.completedPuzzles || 0;
     }
@@ -215,19 +224,65 @@ document.addEventListener('DOMContentLoaded', function () {
         bookTitles.forEach(bookTitle => {
           const storyParts = state.books[bookTitle];
           const completedParts = storyParts.filter(completed => completed).length;
-          const isComplete = completedParts === 5;
+          const isComplete = completedParts === 5 || (storyParts.complete === true);
+
+          // Check if this book has an uncompleted puzzle
+          const hasUncompletedPuzzle = state.lastUncompletedPuzzle &&
+            state.lastUncompletedPuzzle.book === bookTitle;
+
+          // Add appropriate classes
+          let bookClasses = isComplete ? 'book-complete' : 'book-in-progress';
+          if (hasUncompletedPuzzle) {
+            bookClasses += ' has-uncompleted-puzzle';
+          }
 
           progressHTML += `
-            <li class="${isComplete ? 'book-complete' : 'book-in-progress'}">
+            <li class="${bookClasses}">
               <strong>${bookTitle}</strong> - ${completedParts}/5 parts cataloged
+              ${hasUncompletedPuzzle ? '<span class="uncompleted-note">(Contains in-progress puzzle)</span>' : ''}
               <div class="book-parts-progress">
           `;
 
-          // Add indicators for each story part
-          for (let i = 0; i < 5; i++) {
-            const partStatus = storyParts[i] ? 'complete' : 'incomplete';
-            progressHTML += `<span class="story-part ${partStatus}" title="${StoryPart.getName(i)}">${i + 1}</span>`;
+          // Get all available parts for this book
+          const availableParts = [];
+
+          // Search through all genres for parts of this book
+          for (const genre in state.puzzles) {
+            const puzzlesForBook = state.puzzles[genre].filter(p => p.book === bookTitle);
+            const parts = puzzlesForBook.map(p => p.storyPart);
+            parts.forEach(part => {
+              if (!availableParts.includes(part)) {
+                availableParts.push(part);
+              }
+            });
           }
+
+          // Sort parts numerically
+          availableParts.sort((a, b) => a - b);
+
+          // If no parts were found, use standard 0-4 range
+          const partsToShow = availableParts.length > 0 ? availableParts : [0, 1, 2, 3, 4];
+
+          // Add indicators for each story part
+          partsToShow.forEach(i => {
+            let partClass = 'story-part';
+            let partTitle = StoryPart.getName(i);
+
+            // Check if this is the uncompleted puzzle part
+            const isUncompletedPuzzle = hasUncompletedPuzzle &&
+              state.lastUncompletedPuzzle.part === i;
+
+            if (isUncompletedPuzzle) {
+              partClass += ' in-progress';
+              partTitle += ' (In Progress)';
+            } else if (storyParts[i]) {
+              partClass += ' complete';
+            } else {
+              partClass += ' incomplete';
+            }
+
+            progressHTML += `<span class="${partClass}" title="${partTitle}">${i + 1}</span>`;
+          });
 
           progressHTML += '</div></li>';
         });
@@ -357,6 +412,13 @@ document.addEventListener('DOMContentLoaded', function () {
       state.gameOver = true;
 
       if (isWin) {
+        // Clear any saved uncompleted puzzle if this one was completed
+        if (state.lastUncompletedPuzzle &&
+          state.lastUncompletedPuzzle.book === state.currentBook &&
+          state.lastUncompletedPuzzle.part === state.currentStoryPart) {
+          state.lastUncompletedPuzzle = null;
+        }
+
         // Increment completed puzzles count
         state.completedPuzzles++;
 
@@ -370,15 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // Mark the story part as complete
           state.books[state.currentBook][state.currentStoryPart] = true;
 
-          // Add to discovered books if this is new
-          if (!state.discoveredBooks) {
-            state.discoveredBooks = new Set();
-          }
-
-          if (!state.discoveredBooks.has(state.currentBook)) {
-            state.discoveredBooks.add(state.currentBook);
-            state.completedBooks = state.discoveredBooks.size;
-          }
+          // DO NOT modify discoveredBooks here - it's handled in initializePuzzle
 
           // Update the next story part to show for this book
           if (!state.bookProgress) {
@@ -388,12 +442,11 @@ document.addEventListener('DOMContentLoaded', function () {
           // Advance to next part
           state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
 
-          // Check if the book is now complete using our optimized function
+          // Check if the book is now complete
           try {
             checkBookCompletion(state.currentBook);
           } catch (error) {
             console.warn("Error checking book completion:", error);
-            // Non-critical, continue without completion check
           }
         }
 
@@ -402,8 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
           saveGameProgress();
         } catch (saveError) {
           console.warn("Failed to save game progress:", saveError);
-          // Use handle save error function
-          window.handleSaveError(saveError, "Your progress could not be saved. You may need to complete this section again.");
+          window.handleSaveError(saveError, "Your progress could not be saved.");
         }
 
         // Show win panel
@@ -411,6 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
           elements.winPanel.style.display = 'block';
         }
       } else {
+        // The puzzle wasn't completed, so we keep the lastUncompletedPuzzle
         // Show lose panel
         if (elements.losePanel) {
           elements.losePanel.style.display = 'block';
@@ -426,18 +479,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function saveGameProgress() {
     try {
+      // Ensure discoveredBooks exists and is a Set
+      if (!state.discoveredBooks || !(state.discoveredBooks instanceof Set)) {
+        console.warn('discoveredBooks is not a Set during save - reinitializing');
+        state.discoveredBooks = new Set();
+      }
+
+      // Always update completedBooks based on the actual set size
+      state.completedBooks = state.discoveredBooks.size;
+
+      // Create a clean progress object with only the data we need
       const progress = {
         completedPuzzles: state.completedPuzzles,
         completedBooks: state.completedBooks,
-        books: state.books,
-        discoveredBooks: Array.from(state.discoveredBooks || []),
-        bookProgress: state.bookProgress || {},
-        bookPartsMap: state.bookPartsMap || {} // Save the book parts mapping
+        books: JSON.parse(JSON.stringify(state.books)), // Deep copy to avoid reference issues
+        discoveredBooks: Array.from(state.discoveredBooks), // Convert Set to Array
+        bookProgress: JSON.parse(JSON.stringify(state.bookProgress || {})), // Deep copy
+        lastUncompletedPuzzle: state.lastUncompletedPuzzle ?
+          JSON.parse(JSON.stringify(state.lastUncompletedPuzzle)) : null
       };
 
+      // Log what we're about to save
+      console.log('About to save progress:', {
+        discoveredBooks: Array.from(state.discoveredBooks),
+        count: state.completedBooks,
+        books: Object.keys(state.books)
+      });
+
+      // Save to localStorage
       localStorage.setItem('kethaneumProgress', JSON.stringify(progress));
-      console.log('Game progress saved');
+      console.log('Game progress saved successfully');
     } catch (error) {
+      console.error('Error during saveGameProgress:', error);
       window.handleSaveError(error);
     }
   }
@@ -446,32 +519,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function loadGameProgress() {
     try {
+      console.log('Loading game progress...');
+
+      // Start with a clean state
+      resetGameState(false); // Don't clear localStorage, just reset in-memory state
+
       const savedProgress = localStorage.getItem('kethaneumProgress');
+      if (!savedProgress) {
+        console.log('No saved progress found');
+        return;
+      }
 
-      if (savedProgress) {
-        const progress = JSON.parse(savedProgress);
+      // Parse the saved data
+      const progress = JSON.parse(savedProgress);
 
-        state.completedPuzzles = progress.completedPuzzles || 0;
-        state.completedBooks = progress.completedBooks || 0;
-        state.books = progress.books || {};
-        state.discoveredBooks = new Set(progress.discoveredBooks || []);
-        state.bookProgress = progress.bookProgress || {};
-        state.bookPartsMap = progress.bookPartsMap || {}; // Load the book parts mapping
+      // First, initialize the primitive values
+      state.completedPuzzles = progress.completedPuzzles || 0;
 
-        // Ensure completedBooks matches the size of discoveredBooks
-        if (state.discoveredBooks.size !== state.completedBooks) {
-          state.completedBooks = state.discoveredBooks.size;
-        }
+      // Then, initialize the Set with the saved array
+      if (progress.discoveredBooks && Array.isArray(progress.discoveredBooks)) {
+        // Create a new Set with the array contents
+        state.discoveredBooks = new Set(progress.discoveredBooks);
 
-        console.log('Game progress loaded');
+        // Log what we've loaded
+        console.log('Loaded discovered books:', Array.from(state.discoveredBooks));
+      } else {
+        console.warn('No valid discoveredBooks array in saved data - using empty set');
+        state.discoveredBooks = new Set();
+      }
 
-        // Update display if on Book of Passage screen
-        if (state.currentScreen === 'book-of-passage-screen') {
-          updateBookOfPassageProgress();
-        }
+      // Set completedBooks based on the actual Set size, not the saved value
+      state.completedBooks = state.discoveredBooks.size;
+      console.log(`Set completedBooks to ${state.completedBooks} based on discoveredBooks size`);
+
+      // Load other objects (with proper validation)
+      state.books = progress.books || {};
+      state.bookProgress = progress.bookProgress || {};
+      state.lastUncompletedPuzzle = progress.lastUncompletedPuzzle || null;
+
+      console.log('Game progress loaded successfully. Current state:', {
+        discoveredBooks: Array.from(state.discoveredBooks),
+        booksCount: state.completedBooks,
+        completedPuzzles: state.completedPuzzles
+      });
+
+      // Update display if on Book of Passage screen
+      if (state.currentScreen === 'book-of-passage-screen') {
+        updateBookOfPassageProgress();
       }
     } catch (error) {
       console.error('Failed to load game progress:', error);
+
+      // If loading fails, reset to a clean state
+      resetGameState(false);
     }
   }
 
@@ -532,6 +632,18 @@ document.addEventListener('DOMContentLoaded', function () {
   function loadSequentialPuzzle(genre, book) {
     try {
       console.log('Loading sequential puzzle:', { genre, book });
+
+      // Check if we have an uncompleted puzzle to resume
+      if (state.lastUncompletedPuzzle && !genre && !book) {
+        console.log('Resuming previously uncompleted puzzle:', state.lastUncompletedPuzzle);
+
+        // Use the saved book and genre
+        book = state.lastUncompletedPuzzle.book;
+        genre = state.lastUncompletedPuzzle.genre;
+
+        // We don't clear lastUncompletedPuzzle yet - we'll do that when the puzzle is completed
+        // This way it persists across multiple navigation events
+      }
 
       // If no genre is specified, we need to check ALL genres
       let puzzlesInGenre = [];
@@ -768,14 +880,15 @@ document.addEventListener('DOMContentLoaded', function () {
   // Initialize the puzzle with the provided data
   function initializePuzzle(puzzleData) {
     try {
+      // Basic validation
       if (!puzzleData) {
         throw new Error("Cannot initialize puzzle with null data");
       }
-
+      
       if (!puzzleData.words || !Array.isArray(puzzleData.words) || puzzleData.words.length === 0) {
         throw new Error("Puzzle has no words to find");
       }
-
+      
       // Reset game state
       state.wordList = [];
       state.selectedCells = [];
@@ -784,36 +897,51 @@ document.addEventListener('DOMContentLoaded', function () {
       state.timeRemaining = config.timeLimit;
       state.paused = true;
       state.gameOver = false;
-
+  
       // Set current book and story part
       state.currentBook = puzzleData.book || puzzleData.title;
       state.currentStoryPart = puzzleData.storyPart !== undefined ? puzzleData.storyPart : 0;
-
-      // Check if this is a new book discovery
-      if (!state.discoveredBooks) {
+  
+      // Ensure discoveredBooks is initialized
+      if (!state.discoveredBooks || !(state.discoveredBooks instanceof Set)) {
+        console.warn('discoveredBooks not initialized properly in initializePuzzle - creating new Set');
         state.discoveredBooks = new Set();
       }
-
-      if (!state.discoveredBooks.has(state.currentBook)) {
+      
+      // Log before adding
+      console.log('Before adding current book to discoveredBooks:', 
+                  Array.from(state.discoveredBooks), 
+                  'Count:', state.discoveredBooks.size);
+      
+      // Check if this book is already discovered
+      const bookAlreadyDiscovered = state.discoveredBooks.has(state.currentBook);
+      
+      // If not already discovered, add it and update count
+      if (!bookAlreadyDiscovered) {
         state.discoveredBooks.add(state.currentBook);
-        // Update completedBooks count for newly discovered books
         state.completedBooks = state.discoveredBooks.size;
-        // Save progress to persist the discovery
+        
+        console.log(`Added "${state.currentBook}" to discoveredBooks. New set:`,
+                    Array.from(state.discoveredBooks),
+                    'New count:', state.completedBooks);
+                    
+        // Save progress immediately to ensure this discovery persists
         try {
           saveGameProgress();
         } catch (saveError) {
-          console.warn("Failed to save book discovery:", saveError);
-          // Non-critical error, continue without saving
+          console.warn('Failed to save after book discovery:', saveError);
         }
+      } else {
+        console.log(`Book "${state.currentBook}" already in discoveredBooks - not adding again`);
       }
-
+  
       // Update UI
       try {
         // Set book title and show story part
         if (elements.bookTitle) {
           elements.bookTitle.textContent = `${puzzleData.title} (${StoryPart.getName(state.currentStoryPart)})`;
         }
-
+  
         // Set story excerpt
         if (elements.storyExcerpt) {
           elements.storyExcerpt.textContent = puzzleData.storyExcerpt || "No story excerpt available.";
@@ -822,27 +950,27 @@ document.addEventListener('DOMContentLoaded', function () {
         console.warn("UI update error:", uiError);
         // Non-critical error, continue with initialization
       }
-
+  
       // Filter and prepare words
       const validWords = puzzleData.words
         .filter(word => word.length >= config.minWordLength && word.length <= config.maxWordLength)
         .map(word => word.toUpperCase())
         .filter((word, index, self) => self.indexOf(word) === index) // Remove duplicates
         .slice(0, config.maxWords);
-
+  
       if (validWords.length === 0) {
         throw new Error('No valid words provided after filtering');
       }
-
+  
       // Generate grid with words - potential errors handled in generateGrid
       state.grid = generateGrid(validWords);
-
+  
       // Render UI with error handling
       try {
         renderGrid();
         renderWordList();
         renderTimer();
-
+  
         // Set up puzzle game event listeners
         setupPuzzleEventListeners();
       } catch (renderError) {
@@ -850,18 +978,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (error) {
       // Handle errors in puzzle initialization
-      window.showErrorMessage(
-        "Knowledge Construct Error",
-        "The Kethaneum is having difficulty manifesting this knowledge construct. The patterns appear unstable. Please try a different archive section.",
-        "Try Different Section",
-        function () {
-          document.getElementById('error-panel').style.display = 'none';
-          navigateTo('book-of-passage-screen');
-        }
-      );
-
-      // Rethrow to signal that initialization failed
-      throw error;
+      window.handlePuzzleInitializationError(error, navigateTo);
     }
   }
 
@@ -1412,6 +1529,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function resetGameState(fullReset = false) {
+    console.log(`Resetting game state (fullReset: ${fullReset})`);
+
+    // If it's a full reset, clear localStorage
+    if (fullReset) {
+      localStorage.removeItem('kethaneumProgress');
+      console.log('Cleared localStorage');
+    }
+
+    // Create new objects/collections to avoid reference issues
+    state.books = {};
+    state.lastUncompletedPuzzle = null;
+    state.bookProgress = {};
+
+    // Always create a new Set to avoid any reference issues
+    state.discoveredBooks = new Set();
+
+    // Reset counters
+    state.completedPuzzles = 0;
+    state.completedBooks = 0;
+
+    console.log('Game state reset completed. Current discovered books:',
+      Array.from(state.discoveredBooks),
+      'Count:', state.discoveredBooks.size);
+  }
+
   function clearGameProgress() {
     try {
       // Clear localStorage
@@ -1421,9 +1564,18 @@ document.addEventListener('DOMContentLoaded', function () {
       state.completedPuzzles = 0;
       state.completedBooks = 0;
       state.books = {};
-      state.discoveredBooks = new Set();
-      state.bookProgress = {}; // Also clear the book progress
+      state.discoveredBooks = new Set(); // Initialize as empty Set
+      state.bookProgress = {};
+      state.lastUncompletedPuzzle = null;
 
+      // Log the state after clearing to confirm it's reset properly
+      console.log('Game progress cleared. State:', {
+        completedPuzzles: state.completedPuzzles,
+        completedBooks: state.completedBooks,
+        discoveredBooks: state.discoveredBooks ? Array.from(state.discoveredBooks) : null,
+        bookCount: state.discoveredBooks ? state.discoveredBooks.size : 0
+      });
+      resetGameState(true);
       console.log('Game progress cleared');
     } catch (error) {
       console.error('Failed to clear game progress:', error);
@@ -1455,6 +1607,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (returnButton) {
       returnButton.addEventListener('click', function () {
         if (confirm('Return to your Book of Passage? Your progress will be saved.')) {
+          // Save current puzzle state before navigating away
+          if (!state.gameOver) {
+            state.lastUncompletedPuzzle = {
+              book: state.currentBook,
+              part: state.currentStoryPart,
+              genre: state.currentGenre
+            };
+            // Save progress to ensure uncompleted puzzle state persists
+            saveGameProgress();
+            console.log('Saved uncompleted puzzle:', state.lastUncompletedPuzzle);
+          }
           navigateTo('book-of-passage-screen');
         }
       });
@@ -1701,6 +1864,13 @@ document.addEventListener('DOMContentLoaded', function () {
       state.gameOver = true;
 
       if (isWin) {
+        // Clear any saved uncompleted puzzle since this one is now complete
+        if (state.lastUncompletedPuzzle &&
+          state.lastUncompletedPuzzle.book === state.currentBook &&
+          state.lastUncompletedPuzzle.part === state.currentStoryPart) {
+          state.lastUncompletedPuzzle = null;
+        }
+
         // Increment completed puzzles count
         state.completedPuzzles++;
 
@@ -1708,20 +1878,23 @@ document.addEventListener('DOMContentLoaded', function () {
         if (state.currentBook && state.currentStoryPart >= 0) {
           // Initialize book tracking if it doesn't exist
           if (!state.books[state.currentBook]) {
-            state.books[state.currentBook] = [false, false, false, false, false];
+            state.books[state.currentBook] = [];
           }
 
           // Mark the story part as complete
           state.books[state.currentBook][state.currentStoryPart] = true;
 
-          // Add to discovered books if this is new
+          // FIXED: Properly initialize and track discovered books
           if (!state.discoveredBooks) {
             state.discoveredBooks = new Set();
           }
 
+          // Only add to discoveredBooks and update count if this is a new book
           if (!state.discoveredBooks.has(state.currentBook)) {
             state.discoveredBooks.add(state.currentBook);
+            // Update completedBooks based on the actual size of the set
             state.completedBooks = state.discoveredBooks.size;
+            console.log(`Discovered new book: "${state.currentBook}". Total books: ${state.completedBooks}`);
           }
 
           // Update the next story part to show for this book
@@ -1732,7 +1905,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // Advance to next part
           state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
 
-          // Check if the book is now complete
+          // Check if the book is now complete using our optimized function
           try {
             checkBookCompletion(state.currentBook);
           } catch (error) {
@@ -1746,17 +1919,7 @@ document.addEventListener('DOMContentLoaded', function () {
           saveGameProgress();
         } catch (saveError) {
           console.warn("Failed to save game progress:", saveError);
-          // Show a subtle warning to the user
-          const message = document.createElement('div');
-          message.textContent = "Your progress could not be saved. You may need to complete this section again.";
-          message.style.color = "var(--accent-main)";
-          message.style.fontSize = "14px";
-          message.style.padding = "10px";
-
-          // Add to win panel if it exists
-          if (elements.winPanel) {
-            elements.winPanel.appendChild(message);
-          }
+          window.handleSaveError(saveError, "Your progress could not be saved. You may need to complete this section again.");
         }
 
         // Show win panel
@@ -1771,15 +1934,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (error) {
       // Error in game end procedure
-      window.showErrorMessage(
-        "Cataloging Closure Error",
-        "The Kethaneum's cataloging system encountered difficulty while recording your progress. The record may be incomplete.",
-        "Return to Book of Passage",
-        function () {
-          document.getElementById('error-panel').style.display = 'none';
-          navigateTo('book-of-passage-screen');
-        }
-      );
+      window.handlePuzzleInitializationError(error, navigateTo);
     }
   }
 
@@ -1858,7 +2013,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (newGameBtn) {
       newGameBtn.addEventListener('click', function () {
         console.log('New Game button clicked');
-        clearGameProgress(); // Clear progress before starting new game
+
+        // Clear progress and ensure complete state reset
+        resetGameState(true);
+
         navigateTo('backstory-screen');
       });
     }
@@ -1867,7 +2025,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (continueBtn) {
       continueBtn.addEventListener('click', function () {
         console.log('Continue button clicked');
-        // Go directly to Book of Passage instead of library
+
+        // Ensure clean state before loading saved progress
+        resetGameState(false);
+        loadGameProgress();
+
+        // Verify state is valid after loading
+        validateGameState();
+
         navigateTo('book-of-passage-screen');
       });
     }
@@ -1953,11 +2118,23 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
+    // Go to Book button in pause panel
     const goToBookBtn = document.getElementById('go-to-book-btn');
     if (goToBookBtn) {
       goToBookBtn.addEventListener('click', function () {
         if (elements.pausePanel) {
           elements.pausePanel.style.display = 'none';
+        }
+        // Save current puzzle state before navigating away
+        if (!state.gameOver) {
+          state.lastUncompletedPuzzle = {
+            book: state.currentBook,
+            part: state.currentStoryPart,
+            genre: state.currentGenre
+          };
+          // Save progress to ensure uncompleted puzzle state persists
+          saveGameProgress();
+          console.log('Saved uncompleted puzzle from pause menu:', state.lastUncompletedPuzzle);
         }
         navigateTo('book-of-passage-screen');
       });
@@ -2018,6 +2195,42 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 2000); // Check every 2 seconds
     }, 300);
   });
+
+  function validateGameState() {
+    // Ensure discoveredBooks is a Set
+    if (!state.discoveredBooks || !(state.discoveredBooks instanceof Set)) {
+      console.warn('discoveredBooks not a Set during validation - reinitializing');
+      state.discoveredBooks = new Set();
+    }
+
+    // Make sure completedBooks matches the Set size
+    const actualSize = state.discoveredBooks.size;
+    if (state.completedBooks !== actualSize) {
+      console.warn(`completedBooks (${state.completedBooks}) doesn't match discoveredBooks size (${actualSize}) - fixing`);
+      state.completedBooks = actualSize;
+    }
+
+    // Return true if everything was valid, false if fixes were needed
+    return state.discoveredBooks instanceof Set && state.completedBooks === actualSize;
+  }
+
+  function validateGameState() {
+    // Ensure discoveredBooks is a Set
+    if (!state.discoveredBooks || !(state.discoveredBooks instanceof Set)) {
+      console.warn('discoveredBooks not a Set during validation - reinitializing');
+      state.discoveredBooks = new Set();
+    }
+
+    // Make sure completedBooks matches the Set size
+    const actualSize = state.discoveredBooks.size;
+    if (state.completedBooks !== actualSize) {
+      console.warn(`completedBooks (${state.completedBooks}) doesn't match discoveredBooks size (${actualSize}) - fixing`);
+      state.completedBooks = actualSize;
+    }
+
+    // Return true if everything was valid, false if fixes were needed
+    return state.discoveredBooks instanceof Set && state.completedBooks === actualSize;
+  }
 
   // Make key functions available to the error handler
   window.generateGrid = generateGrid;
