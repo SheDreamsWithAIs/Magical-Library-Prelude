@@ -9,11 +9,11 @@
     /* Color Palette */
     :root {
       /* Primary Colors */
-      --primary-dark: #352063;
+      --primary-dark: #3a1143;
       /* Dark purple - backgrounds */
       --primary-medium: #4a3870;
       /* Medium purple - accents */
-      --primary-light: #6e42a3;
+      --primary-light: #794d8e;
       /* Light purple - buttons */
       --primary-lighter: #9a7ecc;
       /* Very light purple - secondary elements */
@@ -111,43 +111,157 @@
       }
     }
 
-    /* Title screen styling */
+    /* Title screen styling - UPDATED */
     #title-screen {
-      background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+      background: linear-gradient(135deg, #794d8e 10%, #3a1143 66%);
       color: white;
       text-align: center;
-      flex-direction: column;
+      height: 100vh;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .title-layout {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      width: 33%;
+      height: 100%;
+      display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      padding: 20px;
+      position: relative;
+    }
+
+    #logo-static,
+    #logo-glow {
+      max-width: 80%;
+      height: auto;
+      max-height: 85%;
+      position: absolute;
+    }
+
+    @media (min-width: 1200px) {
+
+      #logo-static,
+      #logo-glow {
+        max-height: 400px;
+        /* Fixed height for large screens */
+      }
+    }
+
+    /* Media query for very large screens */
+    @media (min-width: 1600px) {
+
+      #logo-static,
+      #logo-glow {
+        max-height: 500px;
+        /* Increased fixed height for very large screens */
+      }
+    }
+
+    #logo-glow {
+      animation: pulseLogo 6s infinite;
+    }
+
+    @keyframes pulseLogo {
+      0% {
+        opacity: 0.1;
+      }
+
+      33% {
+        opacity: 0.8;
+      }
+
+      /* Reveals in 2s (33% of 6s) */
+      100% {
+        opacity: 0.1;
+      }
+
+      /* Fades out over the remaining 4s */
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.1;
+      }
+
+      100% {
+        opacity: 0.7;
+      }
+    }
+
+    .title-content {
+      width: 67%;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     #title-screen h1 {
       font-size: 48px;
       margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      font-style: italic;
       text-align: center;
+      /* Changed from left to center */
       width: 100%;
-      max-width: 800px;
     }
 
     #title-screen h2 {
-      font-size: 24px;
-      margin-bottom: 40px;
-      max-width: 600px;
+      font-size: 28px;
+      margin-bottom: 60px;
       text-align: center;
       width: 100%;
-      color: var(--accent-light);
-      /* Amber accent color for subtitle */
+      color: var(--accent-main);
     }
 
-    /* Button container to group buttons nicely */
-    .button-container {
+    #title-screen .button-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 15px;
+      width: 50%;
+      min-width: 200px;
+    }
+
+    #title-screen button {
+      width: 100%;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: var(--primary-light);
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+      margin: 5px 0;
+      text-align: center;
+    }
+
+    #title-screen button:hover {
+      background-color: var(--primary-medium);
+      transform: translateY(-2px);
+    }
+
+    #title-screen button.large {
+      font-size: 18px;
+      padding: 15px 30px;
+    }
+
+    #title-screen button.secondary {
+      background-color: var(--primary-lighter);
+    }
+
+    #title-screen button.secondary:hover {
+      background-color: var(--primary-light);
     }
 
     /* Backstory screen styling */
@@ -361,23 +475,6 @@
       border: 2px solid var(--accent-light);
       border-radius: 50%;
       animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        opacity: 1;
-      }
-
-      50% {
-        transform: scale(1.1);
-        opacity: 0.7;
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
     }
 
     .progress-section h4 {
@@ -657,8 +754,34 @@
         grid-template-columns: 1fr;
       }
 
-      #title-screen h1 {
-        font-size: 36px;
+      /* Title screen responsive */
+      .title-layout {
+        flex-direction: column;
+      }
+
+      .logo-container {
+        width: 33%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      .title-content {
+        width: 100%;
+        height: 60%;
+        align-items: center;
+        text-align: center;
+      }
+
+      #title-screen h1,
+      #title-screen h2 {
+        text-align: center;
+      }
+
+      #title-screen .button-container {
+        align-items: center;
       }
 
       .book-container {
@@ -805,11 +928,20 @@
   <div id="game-container">
     <!-- Title Screen -->
     <div id="title-screen" class="screen active">
-      <h1 id="game-title">Chronicles of the Kethaneum</h1>
-      <h2 id="game-subtitle">Searching the Cosmic Catalog</h2>
-      <div class="button-container">
-        <button id="new-game-btn" class="large">New Game</button>
-        <button id="continue-btn" class="secondary">Continue</button>
+      <div class="title-layout">
+        <div class="logo-container">
+          <img id="logo-static" src="images/logo-static.png" alt="Kethaneum Logo">
+          <img id="logo-glow" src="images/logo-glow.png" alt="Kethaneum Logo Glow Effect" class="pulsing">
+        </div>
+        <div class="title-content">
+          <h1 id="game-title">Chronicles of the Kethaneum</h1>
+          <h2 id="game-subtitle">Searching the Cosmic Catalog</h2>
+          <div class="button-container">
+            <button id="new-game-btn" class="large">New Game</button>
+            <button id="continue-btn" class="secondary">Continue</button>
+            <button id="options-btn" class="secondary">Options</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -961,12 +1093,20 @@
       <li>Click and drag to select letters in a straight line</li>
       <li>Words can go horizontally, vertically, or diagonally</li>
       <li>Words can also be spelled backwards</li>
-      <li>Further, words can intersect</li>
+      <li>Words can intersect</li>
       <li>Find all words before time expires to complete cataloging</li>
     </ul>
     <button id="start-playing-btn" class="accent">Begin Cataloging</button>
   </div>
 
+  <!-- Error Panel -->
+  <div class="panel" id="error-panel">
+    <h2>Archive Error</h2>
+    <p>An error has occurred while accessing the Kethaneum's archives.</p>
+    <button id="error-action-btn" class="accent">Return to Book of Passage</button>
+  </div>
+
+  <!-- Add these script tags -->
   <script src="error-handler.js"></script>
   <script src="wordsearchgame.js"></script>
 
@@ -990,17 +1130,6 @@
       }
     });
   </script>
-
-  <!-- Error Panel -->
-  <div class="panel" id="error-panel">
-    <h2>Archive Error</h2>
-    <p>An error has occurred while accessing the Kethaneum's archives.</p>
-    <button id="error-action-btn" class="accent">Return to Book of Passage</button>
-  </div>
-
-  <!-- Add this script tag before the wordsearchgame.js script tag -->
-  <script src="error-handler.js"></script>
-
 </body>
 
 </html>
