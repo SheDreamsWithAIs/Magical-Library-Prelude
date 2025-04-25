@@ -1,5 +1,8 @@
 describe('Start New Game', () => {
   it('Verfiy title page', () => {
+    // Clear localStorage to ensure clean state
+    cy.clearLocalStorage();
+    
     cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
 
     // Verify that the title screen is displayed and has the correct text
