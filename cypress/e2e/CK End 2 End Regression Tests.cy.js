@@ -6,9 +6,8 @@ describe('Start New Game', () => {
     // Visit the game URL
     cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/');
   });
+  
   it('Verfiy title page', () => {
-      //cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
-
     // Verify that the title screen is displayed and has the correct text
     cy.get('#title-screen').should('be.visible')
     cy.get('#title-screen h1').should('have.text', 'Chronicles of the Kethaneum')
@@ -22,8 +21,7 @@ describe('Start New Game', () => {
     cy.get('#continue-btn').should('have.text', 'Continue')
   })
 
-  it('Click New Game button and verify the backstory screen', () => {
-    //cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
+  it('Click the New Game button and verify the backstory screen', () => {
     cy.get('#new-game-btn').click()
 
     // Verify that the title screen is no longer visible
@@ -39,14 +37,8 @@ describe('Start New Game', () => {
     cy.get('#continue-to-book-btn').should('have.text', 'Continue to the Book of Passage')
   })
 
-  it('Click Continue and verify the Book of Passage screen', () => {
-    cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
+  it('Click continue on the backstory screen and verify the Book of Passage screen', () => {
     cy.get('#new-game-btn').click()
-
-    // Verify that the backstory screen is displayed
-    cy.get('#backstory-screen').should('be.visible')
-
-    // Advance to the Book of Passage screen
     cy.get('#continue-to-book-btn').click()
 
     // Verify that the backstory screen is no longer visible
@@ -57,13 +49,13 @@ describe('Start New Game', () => {
 
     cy.get('#book-of-passage-screen > div > div.book-pages > h2').should('have.text', 'Your Book of Passage')
     cy.get('#book-of-passage-content').invoke('text').should('not.be.empty')
+    cy.get('#progress-section-container').should('be.visible')
     
     cy.get('#start-cataloging-btn').should('be.visible')
     cy.get('#start-cataloging-btn').should('have.text', 'Begin Cataloging')
   })
 
   it('Click Start Cataloging and verify the puzzle screen', () => {
-    cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
     cy.get('#new-game-btn').click()
     cy.get('#continue-to-book-btn').click()
     cy.get('#start-cataloging-btn').click()
