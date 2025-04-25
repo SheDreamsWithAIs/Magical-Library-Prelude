@@ -1,9 +1,13 @@
 describe('Start New Game', () => {
-  it('Verfiy title page', () => {
+  beforeEach(() => {
     // Clear localStorage to ensure clean state
     cy.clearLocalStorage();
     
-    cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
+    // Visit the game URL
+    cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/');
+  });
+  it('Verfiy title page', () => {
+      //cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
 
     // Verify that the title screen is displayed and has the correct text
     cy.get('#title-screen').should('be.visible')
@@ -19,7 +23,7 @@ describe('Start New Game', () => {
   })
 
   it('Click New Game button and verify the backstory screen', () => {
-    cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
+    //cy.visit('https://shedreamswithais.github.io/Magical-Library-Prelude/')
     cy.get('#new-game-btn').click()
 
     // Verify that the title screen is no longer visible
@@ -30,6 +34,7 @@ describe('Start New Game', () => {
     cy.get('#backstory-screen h2').should('have.text', 'The Kethaneum')
     
     cy.get('#backstory-content').invoke('text').should('not.be.empty')
+    
     cy.get('#continue-to-book-btn').should('be.visible')
     cy.get('#continue-to-book-btn').should('have.text', 'Continue to the Book of Passage')
   })
