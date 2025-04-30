@@ -1,5 +1,5 @@
 // Import the revised word finding functions
-import { findWordsInPuzzle, forceWinCondition } from './revised-word-finder';
+import { findWordsInPuzzle, forceWinCondition, reportTestRunStats } from './revised-word-finder';
 
 describe('Word Search Game Completion', () => {
   beforeEach(() => {
@@ -238,5 +238,10 @@ describe('Word Search Game Completion', () => {
         });
       });
     });
+  });
+
+  afterEach(() => {
+    // Report statistics at the end of each test
+    reportTestRunStats(cy);
   });
 });

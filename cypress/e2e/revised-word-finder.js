@@ -1,12 +1,30 @@
-// Grid-First Word Finding Algorithm
-// This approach prioritizes scanning the grid like a human player would
-// and only falls back to placement data if needed
+/**
+ * Initialize test run statistics in the window object to persist between calls
+ * @param {Object} cy - Cypress object
+ */
+function initializeStats(cy) {
+  cy.window().then((win) => {
+    // Only initialize if it doesn't exist yet
+    if (!win.testRunStats) {
+      win.testRunStats = {
+        wordsFoundByGridScan: 0,
+        wordsFoundByPlacementData: 0,
+        totalWordsAttempted: 0,
+        puzzlesCompleted: 0
+      };
+      cy.log('Test run statistics initialized');
+    }
+  });
+}
 
 /**
  * Simulates finding words in the word search game
  * @param {Object} cy - Cypress object
  */
 function findWordsInPuzzle(cy) {
+  // Initialize statistics if needed
+  initializeStats(cy);
+  
   cy.window().then((win) => {
     // Verify game state is properly initialized
     if (!win.state || !win.state.wordList || !win.state.wordList.length) {
@@ -14,12 +32,17 @@ function findWordsInPuzzle(cy) {
       return;
     }
     
-    // Log words to find for debugging
+    // Count words for this puzzle
+    const unfoundWordsInPuzzle = win.state.wordList.filter(w => !w.found).length;
+    win.testRunStats.totalWordsAttempted += unfoundWordsInPuzzle;
+    
+    // Log words to find for this puzzle
     const wordListText = win.state.wordList.map(w => w.word).join(', ');
-    cy.log(`Words to find: ${wordListText}`);
+    cy.log(`Words to find in this puzzle: ${wordListText}`);
+    cy.log(`Attempting to find ${unfoundWordsInPuzzle} words...`);
     
     // First approach: Scan the grid like a human player would
-    cy.log('Scanning the grid for words like a human player...');
+    cy.log('STRATEGY: Scanning the grid for words like a human player...');
     findWordsUsingGridScan(cy, win);
     
     // After grid scanning, check if any words remain unfound
@@ -27,23 +50,100 @@ function findWordsInPuzzle(cy) {
       const unfoundWords = updatedWin.state.wordList.filter(w => !w.found);
       
       if (unfoundWords.length > 0) {
-        cy.log(`${unfoundWords.length} words still unfound, trying placement data...`);
+        cy.log(`STRATEGY: ${unfoundWords.length} words still unfound, trying placement data...`);
         // Fall back to using placement data for any unfound words
         findWordsUsingPlacementData(cy, updatedWin, unfoundWords);
       }
     });
     
-    // Verify if all words are found
+    // Verify if all words are found for this puzzle
     cy.window().then((finalWin) => {
       const allFound = finalWin.state.wordList.every(w => w.found);
+      finalWin.testRunStats.puzzlesCompleted++;
+      
       if (allFound) {
-        cy.log('All words found successfully!');
+        cy.log('All words found successfully in this puzzle!');
       } else {
         const remainingWords = finalWin.state.wordList.filter(w => !w.found).map(w => w.word);
-        cy.log(`Words still unfound: ${remainingWords.join(', ')}`);
+        cy.log(`Words still unfound in this puzzle: ${remainingWords.join(', ')}`);
       }
     });
   });
+}
+
+/**
+ * Generate distinctive patterns a human might look for in a word
+ * @param {string} word - The word to analyze
+ * @return {Array} - Array of patterns to look for
+ */
+function getDistinctivePatterns(word) {
+  const patterns = [];
+  const length = word.length;
+  
+  // Add distinctive consonant clusters - often easier to spot
+  // Common consonant clusters that stand out in word searches
+  const clusters = ['TH', 'CH', 'SH', 'PH', 'WH', 'GH', 'CK', 'NG', 'QU', 'SP', 'ST', 'TR', 'PL', 'CR'];
+  for (const cluster of clusters) {
+    const index = word.toUpperCase().indexOf(cluster);
+    if (index !== -1) {
+      // Found a cluster, add a pattern around it (3-4 letters including the cluster)
+      const startIdx = Math.max(0, index - 1);
+      const endIdx = Math.min(length, index + cluster.length + 1);
+      patterns.push(word.substring(startIdx, endIdx));
+    }
+  }
+  
+  // Look for unusual letters that stand out (Q, Z, X, J, K)
+  const unusualLetters = ['Q', 'Z', 'X', 'J', 'K'];
+  for (const letter of unusualLetters) {
+    const index = word.toUpperCase().indexOf(letter);
+    if (index !== -1) {
+      // Found an unusual letter, add a pattern around it
+      const startIdx = Math.max(0, index - 1);
+      const endIdx = Math.min(length, index + 2);
+      patterns.push(word.substring(startIdx, endIdx));
+    }
+  }
+  
+  // Add end of word (often more distinctive)
+  if (length >= 3) {
+    patterns.push(word.substring(length - 3));
+  }
+  if (length >= 2) {
+    patterns.push(word.substring(length - 2));
+  }
+  
+  // Add beginning of word
+  if (length >= 3) {
+    patterns.push(word.substring(0, 3));
+  }
+  if (length >= 2) {
+    patterns.push(word.substring(0, 2));
+  }
+  
+  // Add middle section if word is long enough
+  if (length >= 5) {
+    const middleStart = Math.floor(length / 2) - 1;
+    patterns.push(word.substring(middleStart, middleStart + 3));
+  }
+  
+  // If word is very short, just use the whole word
+  if (length <= 3) {
+    patterns.push(word);
+  }
+  
+  // If no patterns were found (unlikely), use single letters
+  if (patterns.length === 0) {
+    for (let i = 0; i < length; i++) {
+      patterns.push(word[i]);
+    }
+  }
+  
+  // Prioritize longer patterns first
+  patterns.sort((a, b) => b.length - a.length);
+  
+  // Remove duplicates
+  return [...new Set(patterns)];
 }
 
 /**
@@ -177,7 +277,7 @@ function findWordsUsingGridScan(cy, win) {
               
               if (fullWordMatch) {
                 // Found the word! Select it
-                cy.log(`Found "${word}" starting at [${wordStartRow},${wordStartCol}] in direction [${dRow},${dCol}]`);
+                cy.log(`GRID SCAN: Found "${word}" starting at [${wordStartRow},${wordStartCol}] in direction [${dRow},${dCol}]`);
                 
                 // Get the DOM elements for start and end cells
                 const startCell = gridCells[wordStartRow][wordStartCol];
@@ -190,6 +290,11 @@ function findWordsUsingGridScan(cy, win) {
                 
                 // Add a wait to allow game to process the selection
                 cy.wait(300);
+                
+                // Track this as found by grid scan
+                cy.window().then((statWin) => {
+                  statWin.testRunStats.wordsFoundByGridScan++;
+                });
                 
                 // Mark this word as found for our algorithm
                 wordFound = true;
@@ -208,81 +313,6 @@ function findWordsUsingGridScan(cy, win) {
       }
     });
   });
-}
-
-/**
- * Generate distinctive patterns a human might look for in a word
- * @param {string} word - The word to analyze
- * @return {Array} - Array of patterns to look for
- */
-function getDistinctivePatterns(word) {
-  const patterns = [];
-  const length = word.length;
-  
-  // Add distinctive consonant clusters - often easier to spot
-  // Common consonant clusters that stand out in word searches
-  const clusters = ['TH', 'CH', 'SH', 'PH', 'WH', 'GH', 'CK', 'NG', 'QU', 'SP', 'ST', 'TR', 'PL', 'CR'];
-  for (const cluster of clusters) {
-    const index = word.toUpperCase().indexOf(cluster);
-    if (index !== -1) {
-      // Found a cluster, add a pattern around it (3-4 letters including the cluster)
-      const startIdx = Math.max(0, index - 1);
-      const endIdx = Math.min(length, index + cluster.length + 1);
-      patterns.push(word.substring(startIdx, endIdx));
-    }
-  }
-  
-  // Look for unusual letters that stand out (Q, Z, X, J, K)
-  const unusualLetters = ['Q', 'Z', 'X', 'J', 'K'];
-  for (const letter of unusualLetters) {
-    const index = word.toUpperCase().indexOf(letter);
-    if (index !== -1) {
-      // Found an unusual letter, add a pattern around it
-      const startIdx = Math.max(0, index - 1);
-      const endIdx = Math.min(length, index + 2);
-      patterns.push(word.substring(startIdx, endIdx));
-    }
-  }
-  
-  // Add end of word (often more distinctive)
-  if (length >= 3) {
-    patterns.push(word.substring(length - 3));
-  }
-  if (length >= 2) {
-    patterns.push(word.substring(length - 2));
-  }
-  
-  // Add beginning of word
-  if (length >= 3) {
-    patterns.push(word.substring(0, 3));
-  }
-  if (length >= 2) {
-    patterns.push(word.substring(0, 2));
-  }
-  
-  // Add middle section if word is long enough
-  if (length >= 5) {
-    const middleStart = Math.floor(length / 2) - 1;
-    patterns.push(word.substring(middleStart, middleStart + 3));
-  }
-  
-  // If word is very short, just use the whole word
-  if (length <= 3) {
-    patterns.push(word);
-  }
-  
-  // If no patterns were found (unlikely), use single letters
-  if (patterns.length === 0) {
-    for (let i = 0; i < length; i++) {
-      patterns.push(word[i]);
-    }
-  }
-  
-  // Prioritize longer patterns first
-  patterns.sort((a, b) => b.length - a.length);
-  
-  // Remove duplicates
-  return [...new Set(patterns)];
 }
 
 /**
@@ -345,6 +375,11 @@ function findWordsUsingPlacementData(cy, win, wordList) {
         
         // Add a brief wait to allow the game to process the selection
         cy.wait(300);
+        
+        // Track this as found by placement data
+        cy.window().then((statWin) => {
+          statWin.testRunStats.wordsFoundByPlacementData++;
+        });
       });
     });
   });
@@ -398,5 +433,58 @@ function forceWinCondition(cy) {
   });
 }
 
-// Export functions for use in tests
-export { findWordsInPuzzle, forceWinCondition };
+/**
+ * Report test run statistics
+ * @param {Object} cy - Cypress object
+ */
+function reportTestRunStats(cy) {
+  cy.window().then((win) => {
+    // Check if stats have been initialized
+    if (!win.testRunStats) {
+      cy.log('No test run statistics available');
+      return;
+    }
+    
+    // Calculate remaining unfound words
+    const totalAttempted = win.testRunStats.totalWordsAttempted;
+    const foundByGrid = win.testRunStats.wordsFoundByGridScan;
+    const foundByPlacement = win.testRunStats.wordsFoundByPlacementData;
+    const notFound = totalAttempted - (foundByGrid + foundByPlacement);
+    
+    // Log the statistics for the entire test run
+    cy.log('=== WORD FINDING TEST RUN STATISTICS ===');
+    cy.log(`Puzzles completed: ${win.testRunStats.puzzlesCompleted}`);
+    cy.log(`Total words attempted: ${totalAttempted}`);
+    cy.log(`Words found by grid scanning: ${foundByGrid} (${calculatePercentage(foundByGrid, totalAttempted)}%)`);
+    cy.log(`Words found by placement data: ${foundByPlacement} (${calculatePercentage(foundByPlacement, totalAttempted)}%)`);
+    cy.log(`Words not found by either method: ${notFound} (${calculatePercentage(notFound, totalAttempted)}%)`);
+    cy.log('=======================================');
+  });
+}
+
+/**
+ * Reset the test run statistics
+ * @param {Object} cy - Cypress object
+ */
+function resetTestRunStats(cy) {
+  cy.window().then((win) => {
+    win.testRunStats = {
+      wordsFoundByGridScan: 0,
+      wordsFoundByPlacementData: 0,
+      totalWordsAttempted: 0,
+      puzzlesCompleted: 0
+    };
+    cy.log('Test run statistics reset');
+  });
+}
+
+/**
+ * Calculate percentage and round to nearest integer
+ */
+function calculatePercentage(part, total) {
+  if (total === 0) return 0;
+  return Math.round((part / total) * 100);
+}
+
+// Export the functions
+export { findWordsInPuzzle, forceWinCondition, reportTestRunStats, resetTestRunStats };
