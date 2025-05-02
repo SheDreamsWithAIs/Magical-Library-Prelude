@@ -7,8 +7,10 @@ This directory contains the modular code structure for the Chronicles of the Ket
 ```
 scripts/
 ├── core/             # Core game functionality
-│   ├── gameState.js  # Game state management
-│   └── saveSystem.js # Save/load game progress
+│   ├── config.js        # Game configuration settings
+│   ├── eventSystem.js   # Event management system
+│   ├── gameState.js     # Game state management
+│   └── saveSystem.js    # Save/load game progress
 |
 ├── data/             # Game data
 │   └── puzzleData/   # Puzzle JSON files
@@ -42,7 +44,7 @@ The game uses a simple module system with ES modules (import/export). Each modul
 
 ### Architecture Overview
 
-- **Core modules**: Handle game state and persistence
+- **Core modules**: Handle game state, configuration, events, and persistence
 - **Interaction modules**: Handle user input and game logic
 - **Puzzle modules**: Handle puzzle generation and loading
 - **UI modules**: Handle navigation and rendering
@@ -77,6 +79,8 @@ During the transition from the monolithic structure to modules:
 ## Specific Module Responsibilities
 
 ### Core Modules
+- **config.js**: Manages game configuration, difficulty levels, and feature flags
+- **eventSystem.js**: Provides a pub/sub system for inter-module communication
 - **gameState.js**: Manages the game state object, initialization, and access
 - **saveSystem.js**: Handles saving and loading game progress from localStorage
 
@@ -98,11 +102,29 @@ During the transition from the monolithic structure to modules:
 - **mathUtils.js**: Provides mathematical utility functions
 - **domUtils.js**: Provides DOM manipulation helper functions
 
+## Key Features
+
+### Configuration System
+The configuration system provides:
+- Centralized game settings management
+- Difficulty level presets
+- Feature flags for conditional functionality
+- Testing mode options for development and QA
+- Import/export capabilities for saving configurations
+
+### Event System
+The event system enables:
+- Loose coupling between modules via pub/sub pattern
+- Centralized event handling
+- Priority-based event processing
+- One-time event subscriptions
+- Predefined game events for common actions
+
 ## Module Usage Examples
 
 ### Loading a Module
 ```javascript
-import * as InputHandler from './interaction/inputHandler.js';
+import * as Config from './core/config.js';
 ```
 
 ### Using a Module Function
@@ -115,7 +137,36 @@ navigateToScreen('puzzle-screen');
 window.game.ui.navigation.navigateToScreen('puzzle-screen');
 ```
 
-### Properly Structured New Code
+### Using the Event System
+```javascript
+// Subscribe to an event
+import { subscribe, GameEvents } from './core/eventSystem.js';
+
+subscribe(GameEvents.WORD_FOUND, (wordData) => {
+  console.log(`Player found the word: ${wordData.word}`);
+});
+
+// Emit an event
+import { emit, GameEvents } from './core/eventSystem.js';
+
+emit(GameEvents.WORD_FOUND, { word: 'EXAMPLE', points: 10 });
+```
+
+### Configuration Example
+```javascript
+// Get a configuration value
+import { get } from './core/config.js';
+
+const timeLimit = get('timeLimit');
+const isDebugMode = get('system.debugMode');
+
+// Set a configuration value
+import { set } from './core/config.js';
+
+set('features.soundEffects', true);
+```
+
+## Properly Structured New Code
 ```javascript
 // In new modules, add functionality like this:
 function newFeature() {
@@ -131,9 +182,10 @@ window.newFeature = newFeature;
 
 ## Future Improvements
 
-- Add a proper config module for game settings
-- Create an event system for inter-module communication
-- Implement unit testing for individual modules
 - Create a component system for UI elements
-- Add accessibility improvements
-- Support alternate input methods (keyboard, gamepad)
+- Implement unit testing for individual modules
+- Add support for alternate input methods (keyboard, gamepad)
+- Create specialized screen handler modules
+- Add internationalization support
+- Implement audio module for sound effects
+- Create animation system for visual effects

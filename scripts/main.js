@@ -4,8 +4,14 @@
  */
 
 // Import core modules
+import * as Config from './core/config.js';
+import * as EventSystem from './core/eventSystem.js';
 import * as GameState from './core/gameState.js';
 import * as SaveSystem from './core/saveSystem.js';
+
+// Import interaction modules
+import * as InputHandler from './interaction/inputHandler.js';
+import * as GameLogic from './interaction/gameLogic.js';
 
 // Import UI modules
 import * as Navigation from './ui/navigation.js';
@@ -14,6 +20,7 @@ import * as RenderSystem from './ui/renderSystem.js';
 
 // Import puzzle modules
 import * as PuzzleLoader from './puzzle/puzzleLoader.js';
+import * as PuzzleGenerator from './puzzle/puzzleGenerator.js';
 
 // Import utility modules
 import * as ErrorHandler from './utils/errorHandler.js';
@@ -24,8 +31,15 @@ import * as DomUtils from './utils/domUtils.js';
 window.game = {
   // Module references
   core: {
+    config: Config,
+    eventSystem: EventSystem,
     gameState: GameState,
     saveSystem: SaveSystem
+  },
+  
+  interaction: {
+    inputHandler: InputHandler,
+    gameLogic: GameLogic
   },
   
   ui: {
@@ -35,7 +49,8 @@ window.game = {
   },
   
   puzzle: {
-    puzzleLoader: PuzzleLoader
+    puzzleLoader: PuzzleLoader,
+    puzzleGenerator: PuzzleGenerator
   },
   
   utils: {
@@ -45,11 +60,12 @@ window.game = {
   },
   
   // Module system metadata
-  version: '0.2',
+  version: '0.4',
   modulesLoaded: [
-    'gameState', 'saveSystem',
+    'config', 'eventSystem', 'gameState', 'saveSystem',
+    'inputHandler', 'gameLogic',
     'navigation', 'panelManager', 'renderSystem',
-    'puzzleLoader',
+    'puzzleLoader', 'puzzleGenerator',
     'errorHandler', 'mathUtils', 'domUtils'
   ],
   
@@ -63,40 +79,67 @@ window.game = {
       // Initialize core game state
       await GameState.initializeGame();
       
-      // Initialize navigation
+      // Initialize navigation and UI systems
       Navigation.setupScreenNavigation();
       Navigation.setupNavigationProtection();
+      
+      // Register initial event handlers
+      this.registerEventHandlers();
+      
+      // Emit initialization event
+      EventSystem.emit(EventSystem.GameEvents.GAME_INITIALIZED, {
+        version: this.version,
+        timestamp: new Date()
+      });
       
       console.log('%cInitialization complete', 'color: #E6A817; font-weight: bold;');
       return true;
     } catch (error) {
       console.error('Error during initialization:', error);
+      EventSystem.emit(EventSystem.GameEvents.ERROR, {
+        context: 'initialization',
+        error: error
+      });
       return false;
     }
   },
   
-  // Configuration (to be moved to a config module later)
-  config: {
-    gridSize: 10,           // Square grid dimension
-    timeLimit: 180,         // Time limit in seconds
-    minWordLength: 3,       // Minimum word length
-    maxWordLength: 10,      // Maximum word length
-    maxWords: 10,           // Maximum words to include
-    directions: [
-      [0, 1],   // right
-      [1, 0],   // down
-      [1, 1],   // diagonal down-right
-      [0, -1],  // left
-      [-1, 0],  // up
-      [-1, -1], // diagonal up-left
-      [1, -1],  // diagonal down-left
-      [-1, 1]   // diagonal up-right
-    ]
+  /**
+   * Register primary event handlers
+   */
+  registerEventHandlers: function() {
+    // Word found event
+    EventSystem.subscribe(EventSystem.GameEvents.WORD_FOUND, (wordData) => {
+      console.log(`Word found: ${wordData.word}`);
+    });
+    
+    // Puzzle completed event
+    EventSystem.subscribe(EventSystem.GameEvents.PUZZLE_COMPLETED, (data) => {
+      console.log(`Puzzle completed: ${data.book} - Part ${data.part}`);
+      SaveSystem.saveGameProgress();
+    });
+    
+    // Book completed event
+    EventSystem.subscribe(EventSystem.GameEvents.BOOK_COMPLETED, (bookTitle) => {
+      console.log(`Book completed: ${bookTitle}`);
+    });
+    
+    // Screen change event
+    EventSystem.subscribe(EventSystem.GameEvents.SCREEN_CHANGED, (screenId) => {
+      console.log(`Screen changed: ${screenId}`);
+    });
+    
+    // Error event
+    EventSystem.subscribe(EventSystem.GameEvents.ERROR, (errorData) => {
+      if (Config.get('system.debugMode')) {
+        console.error(`Error in ${errorData.context}:`, errorData.error);
+      }
+    });
   }
 };
 
 // Assign config to window for transition period
-window.config = window.game.config;
+window.config = Config.getConfig();
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
