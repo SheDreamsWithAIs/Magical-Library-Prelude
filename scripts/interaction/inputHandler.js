@@ -7,6 +7,7 @@ import { handleSelectionError } from '../utils/errorHandler.js';
 import { debounce, throttle, getRelativeCoordinates } from '../utils/domUtils.js';
 import { updateSelectedCells } from '../ui/renderSystem.js';
 import { checkForWord, confirmReturn } from './gameLogic.js';
+import * as GameState from '../core/gameState.js';
 
 // Store active event listener removers for cleanup
 const activeListeners = [];
@@ -16,6 +17,8 @@ const activeListeners = [];
  */
 function setupPuzzleEventListeners() {
   try {
+    console.log('Setting up puzzle event listeners');
+    
     // Clean up any existing event listeners first
     removeAllEventListeners();
     
@@ -73,7 +76,15 @@ function setupPuzzleEventListeners() {
           if (pausePanel) {
             pausePanel.style.display = 'none';
           }
-          window.resetCurrentPuzzle();
+          
+          // Dynamic import for gameLogic
+          import('./gameLogic.js')
+            .then(GameLogic => {
+              GameLogic.resetCurrentPuzzle();
+            })
+            .catch(error => {
+              console.error('Error importing gameLogic:', error);
+            });
         })
       );
     }
@@ -138,7 +149,7 @@ function removeAllEventListeners() {
  */
 function handleSelectionStart(e) {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     if (state.paused || state.gameOver) return;
     
     const cell = e.target.closest('.grid-cell');
@@ -162,7 +173,7 @@ function handleSelectionStart(e) {
  */
 function handleTouchStart(e) {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     if (state.paused || state.gameOver) return;
     
     const touch = e.touches[0];
@@ -190,7 +201,7 @@ function handleTouchStart(e) {
  */
 function handleSelectionMove(e) {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     if (!state.startCell || state.paused || state.gameOver) return;
     
     const cell = e.target.closest('.grid-cell');
@@ -248,7 +259,7 @@ function handleSelectionMove(e) {
  */
 function handleTouchMove(e) {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     if (!state.startCell || state.paused || state.gameOver) return;
     
     const touch = e.touches[0];
@@ -311,7 +322,7 @@ function handleTouchMove(e) {
  */
 function handleSelectionEnd() {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     if (!state.startCell || state.paused || state.gameOver) return;
     
     // Check if selected cells form a valid word
@@ -335,7 +346,7 @@ function handleSelectionEnd() {
  */
 function togglePause() {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     state.paused = !state.paused;
     
     const pauseBtn = document.getElementById('pause-btn');
@@ -366,7 +377,7 @@ function togglePause() {
  */
 function resumeGame() {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     state.paused = false;
     
     const pausePanel = document.getElementById('pause-panel');
@@ -410,28 +421,11 @@ function setupMobileInputHandling() {
  * Setup haptic feedback for mobile devices
  */
 function setupHapticFeedback() {
-  // Only initialize once
-  if (window.hapticFeedbackSetup) return;
-  
   // Check if device supports vibration
   if (navigator.vibrate) {
-    window.hapticFeedbackSetup = true;
     console.log('Haptic feedback initialized');
   }
 }
-
-// Install key functions to window for backward compatibility during transition
-window.setupPuzzleEventListeners = setupPuzzleEventListeners;
-window.handleSelectionStart = handleSelectionStart;
-window.handleTouchStart = handleTouchStart;
-window.handleSelectionMove = handleSelectionMove;
-window.handleTouchMove = handleTouchMove;
-window.handleSelectionEnd = handleSelectionEnd;
-window.togglePause = togglePause;
-window.resumeGame = resumeGame;
-window.removeAllEventListeners = removeAllEventListeners;
-window.setupMobileInputHandling = setupMobileInputHandling;
-window.setupHapticFeedback = setupHapticFeedback;
 
 // Export functions for module system
 export {

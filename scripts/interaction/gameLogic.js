@@ -6,8 +6,10 @@
 import { handleSelectionError } from '../utils/errorHandler.js';
 import { showWinPanel, showLosePanel } from '../ui/panelManager.js';
 import { navigateToScreen } from '../ui/navigation.js';
-import { saveGameProgress } from '../core/saveSystem.js';
-import { markCellsAsCorrect } from '../ui/renderSystem.js';
+import * as SaveSystem from '../core/saveSystem.js';
+import * as RenderSystem from '../ui/renderSystem.js';
+import * as GameState from '../core/gameState.js';
+import * as Config from '../core/config.js';
 
 /**
  * Check if the selected cells form a word in the puzzle
@@ -15,8 +17,8 @@ import { markCellsAsCorrect } from '../ui/renderSystem.js';
  */
 function checkForWord() {
   try {
-    const state = window.state;
-    const config = window.config;
+    const state = GameState.getGameState();
+    const config = Config.getConfig();
     
     if (state.selectedCells.length < config.minWordLength) return false;
     
@@ -70,13 +72,13 @@ function checkForWord() {
  */
 function markWordAsFound(wordData) {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     
     // Mark word as found
     wordData.found = true;
     
     // Mark cells as correctly found
-    markCellsAsCorrect(state.selectedCells);
+    RenderSystem.markCellsAsCorrect(state.selectedCells);
     
     // Update word list display - desktop
     const wordListElement = document.getElementById('word-list');
@@ -122,7 +124,7 @@ function markWordAsFound(wordData) {
  */
 function checkWinCondition() {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     const allWordsFound = state.wordList.every(wordData => wordData.found);
     
     if (allWordsFound) {
@@ -140,7 +142,7 @@ function checkWinCondition() {
  */
 function endGame(isWin) {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     
     // Stop the timer
     clearInterval(state.timer);
@@ -192,7 +194,7 @@ function endGame(isWin) {
       }
       
       // Save progress
-      saveGameProgress();
+      SaveSystem.saveGameProgress();
       
       // Show win panel
       showWinPanel();
@@ -212,7 +214,7 @@ function endGame(isWin) {
  */
 function checkBookCompletion(bookTitle) {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     
     // Return false if the book doesn't exist in state
     if (!state.books[bookTitle]) return false;
@@ -256,7 +258,8 @@ function checkBookCompletion(bookTitle) {
  */
 function startTimer() {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
+    const config = Config.getConfig();
     
     // Clear any existing timer
     clearInterval(state.timer);
@@ -270,7 +273,7 @@ function startTimer() {
       // Update timer display
       const timerBar = document.getElementById('timer-bar');
       if (timerBar) {
-        const percentRemaining = (state.timeRemaining / window.config.timeLimit) * 100;
+        const percentRemaining = (state.timeRemaining / config.timeLimit) * 100;
         timerBar.style.width = `${percentRemaining}%`;
         
         // Change color as time runs low
@@ -300,21 +303,28 @@ function startTimer() {
  */
 function resetCurrentPuzzle() {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     
     // Get current puzzle data
     const puzzleData = state.puzzles[state.currentGenre][state.currentPuzzleIndex];
     
-    // Re-initialize the puzzle
-    window.initializePuzzle(puzzleData);
-    
-    // Show instructions again
-    const instructionsPanel = document.getElementById('instructions-panel');
-    if (instructionsPanel) {
-      instructionsPanel.style.display = 'block';
-    }
-    
-    console.log('Current puzzle reset');
+    // Dynamic import for puzzle generator
+    import('../puzzle/puzzleGenerator.js')
+      .then(PuzzleGenerator => {
+        // Re-initialize the puzzle using the module
+        PuzzleGenerator.initializePuzzle(puzzleData);
+        
+        // Show instructions again
+        const instructionsPanel = document.getElementById('instructions-panel');
+        if (instructionsPanel) {
+          instructionsPanel.style.display = 'block';
+        }
+        
+        console.log('Current puzzle reset');
+      })
+      .catch(error => {
+        console.error('Error importing puzzle generator:', error);
+      });
   } catch (error) {
     handleSelectionError(error, 'reset-puzzle');
   }
@@ -325,25 +335,33 @@ function resetCurrentPuzzle() {
  */
 function loadNextPuzzle() {
   try {
-    // Load a new sequential puzzle
-    window.loadSequentialPuzzle();
-    
-    // Show instructions panel
-    const instructionsPanel = document.getElementById('instructions-panel');
-    if (instructionsPanel) {
-      instructionsPanel.style.display = 'block';
-    }
-    
-    // Ensure game is paused until instructions are closed
-    state.paused = true;
-    
-    // Reset game state that might be causing issues
-    state.gameOver = false;
-    state.selectedCells = [];
-    state.startCell = null;
-    state.currentCell = null;
-    
-    console.log('Next puzzle loaded');
+    // Dynamic import for moduleBootstrap
+    import('../moduleBootstrap.js')
+      .then(ModuleBootstrap => {
+        // Load a new sequential puzzle using the module
+        ModuleBootstrap.loadSequentialPuzzle();
+        
+        // Show instructions panel
+        const instructionsPanel = document.getElementById('instructions-panel');
+        if (instructionsPanel) {
+          instructionsPanel.style.display = 'block';
+        }
+        
+        // Ensure game is paused until instructions are closed
+        const state = GameState.getGameState();
+        state.paused = true;
+        
+        // Reset game state that might be causing issues
+        state.gameOver = false;
+        state.selectedCells = [];
+        state.startCell = null;
+        state.currentCell = null;
+        
+        console.log('Next puzzle loaded');
+      })
+      .catch(error => {
+        console.error('Error importing moduleBootstrap:', error);
+      });
   } catch (error) {
     handleSelectionError(error, 'load-next-puzzle');
   }
@@ -356,7 +374,7 @@ function confirmReturn() {
   try {
     if (confirm('Return to your Book of Passage? Your progress will be saved.')) {
       // Save current puzzle state before navigating away
-      const state = window.state;
+      const state = GameState.getGameState();
       
       if (!state.gameOver) {
         state.lastUncompletedPuzzle = {
@@ -365,7 +383,7 @@ function confirmReturn() {
           genre: state.currentGenre
         };
         // Save progress to ensure uncompleted puzzle state persists
-        saveGameProgress();
+        SaveSystem.saveGameProgress();
         console.log('Saved uncompleted puzzle:', state.lastUncompletedPuzzle);
       }
       
@@ -382,7 +400,7 @@ function confirmReturn() {
  */
 function startPuzzleGame() {
   try {
-    const state = window.state;
+    const state = GameState.getGameState();
     
     if (state.gameOver) {
       throw new Error("Cannot start game that is already over");
@@ -403,18 +421,6 @@ function startPuzzleGame() {
     handleSelectionError(error, 'start-game');
   }
 }
-
-// Install key functions to window for backward compatibility during transition
-window.checkForWord = checkForWord;
-window.markWordAsFound = markWordAsFound;
-window.checkWinCondition = checkWinCondition;
-window.endGame = endGame;
-window.checkBookCompletion = checkBookCompletion;
-window.startTimer = startTimer;
-window.resetCurrentPuzzle = resetCurrentPuzzle;
-window.loadNextPuzzle = loadNextPuzzle;
-window.confirmReturn = confirmReturn;
-window.startPuzzleGame = startPuzzleGame;
 
 // Export functions for module system
 export {
