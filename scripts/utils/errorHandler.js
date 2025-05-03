@@ -78,7 +78,7 @@ function createFallbackGrid(fallbackWords, config) {
     const row = i + 1;
     const col = i + 1;
     
-    // Check if pattern would fit in this direction
+    // Make sure pattern would fit in this direction
     const endRow = row + (word.length - 1) * dRow;
     const endCol = col + (word.length - 1) * dCol;
     
@@ -461,19 +461,71 @@ function handleNavigationError(error, targetScreen, fallbackScreen = 'title-scre
   }, 3000);
 }
 
-// Temporarily continue making functions available globally 
-// These will be converted to proper exports once the module system is fully implemented
-window.showErrorMessage = showErrorMessage;
-window.createFallbackGrid = createFallbackGrid;
-window.handlePuzzleLoadError = handlePuzzleLoadError;
-window.handleRandomPuzzleError = handleRandomPuzzleError;
-window.handleSequentialPuzzleError = handleSequentialPuzzleError;
-window.handleGridGenerationError = handleGridGenerationError;
-window.handleInitialLoadErrors = handleInitialLoadErrors;
-window.handlePuzzleInitializationError = handlePuzzleInitializationError;
-window.handleTimerError = handleTimerError;
-window.handleSaveError = handleSaveError;
-window.handleNavigationError = handleNavigationError;
+/**
+ * Handle user interaction errors during selection
+ * @param {Error} error - The error that occurred
+ * @param {string} context - Context where the error occurred
+ */
+function handleSelectionError(error, context) {
+  console.error(`Selection error in ${context}:`, error);
+  
+  // Only show error notification for significant errors
+  if (error.message && (
+      error.message.includes('initialization') || 
+      error.message.includes('critical') ||
+      error.message.includes('fatal'))) {
+    
+    // Create a subtle notification
+    const notification = document.createElement('div');
+    notification.className = 'selection-error-notification';
+    notification.textContent = "The Kethaneum's pattern recognition matrix experienced a fluctuation. Please try again.";
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.left = '50%';
+    notification.style.transform = 'translateX(-50%)';
+    notification.style.backgroundColor = 'var(--warm-medium)';
+    notification.style.color = 'var(--accent-main)';
+    notification.style.padding = '10px 15px';
+    notification.style.borderRadius = '5px';
+    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '2000';
+    notification.style.fontSize = '14px';
+    notification.style.maxWidth = '80%';
+    notification.style.textAlign = 'center';
+    
+    // Add to document
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
+  }
+  
+  // Try to recover state if possible
+  try {
+    const state = window.state;
+    if (state) {
+      // Clear any selection
+      if (state.selectedCells && state.selectedCells.length > 0) {
+        state.selectedCells.forEach(cell => {
+          if (cell && cell.classList) {
+            cell.classList.remove('selected');
+          }
+        });
+      }
+      
+      // Reset selection state
+      state.startCell = null;
+      state.currentCell = null;
+      state.selectedCells = [];
+    }
+  } catch (recoveryError) {
+    console.error('Error during selection error recovery:', recoveryError);
+  }
+}
 
 // Export functions for module system
 export {
@@ -487,5 +539,6 @@ export {
   handlePuzzleInitializationError,
   handleTimerError,
   handleSaveError,
-  handleNavigationError
+  handleNavigationError,
+  handleSelectionError
 };

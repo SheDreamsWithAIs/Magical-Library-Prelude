@@ -3,8 +3,14 @@
  * This module handles creating word search puzzles and placing words
  */
 
-import { handleGridGenerationError } from '../utils/errorHandler.js';
+import { handleGridGenerationError, handlePuzzleInitializationError } from '../utils/errorHandler.js';
 import { shuffleArray } from '../utils/mathUtils.js';
+import * as Config from '../core/config.js';
+import * as GameState from '../core/gameState.js';
+import * as RenderSystem from '../ui/renderSystem.js';
+import * as InputHandler from '../interaction/inputHandler.js';
+import * as SaveSystem from '../core/saveSystem.js';
+import { navigateToScreen } from '../ui/navigation.js';
 
 /**
  * Generate word search grid
@@ -13,8 +19,12 @@ import { shuffleArray } from '../utils/mathUtils.js';
  */
 function generateGrid(words) {
   try {
+    // Get game state and config
+    const state = GameState.getGameState();
+    const config = Config.getConfig();
+    
     // Get grid size from config
-    const gridSize = window.config?.gridSize || 10;
+    const gridSize = config.gridSize || 10;
     
     // Sort words by length (longest first for easier placement)
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
@@ -39,8 +49,8 @@ function generateGrid(words) {
         const col = Math.floor(Math.random() * gridSize);
 
         // Random direction
-        const dirIndex = Math.floor(Math.random() * window.config.directions.length);
-        const [dRow, dCol] = window.config.directions[dirIndex];
+        const dirIndex = Math.floor(Math.random() * config.directions.length);
+        const [dRow, dCol] = config.directions[dirIndex];
 
         // Check if word fits in this position and direction
         if (canPlaceWord(grid, word, row, col, dRow, dCol, gridSize)) {
@@ -66,7 +76,7 @@ function generateGrid(words) {
     }
 
     // Save word placements to game state
-    window.state.wordList = placements;
+    state.wordList = placements;
 
     // Fill remaining empty cells with random letters
     fillEmptyCells(grid);
@@ -74,7 +84,7 @@ function generateGrid(words) {
     return grid;
   } catch (error) {
     // Use the error handler function
-    return handleGridGenerationError(error, words, window.config, fillEmptyCells);
+    return handleGridGenerationError(error, words, Config.getConfig(), fillEmptyCells);
   }
 }
 
@@ -233,6 +243,12 @@ function getDistinctivePatterns(word) {
  */
 function initializePuzzle(puzzleData) {
   try {
+    console.log('Initializing puzzle with data:', puzzleData);
+    
+    // Get state and config
+    const state = GameState.getGameState();
+    const config = Config.getConfig();
+    
     // Basic validation
     if (!puzzleData) {
       throw new Error("Cannot initialize puzzle with null data");
@@ -243,37 +259,37 @@ function initializePuzzle(puzzleData) {
     }
     
     // Reset game state
-    window.state.wordList = [];
-    window.state.selectedCells = [];
-    window.state.startCell = null;
-    window.state.currentCell = null;
-    window.state.timeRemaining = window.config.timeLimit;
-    window.state.paused = true;
-    window.state.gameOver = false;
+    state.wordList = [];
+    state.selectedCells = [];
+    state.startCell = null;
+    state.currentCell = null;
+    state.timeRemaining = config.timeLimit;
+    state.paused = true;
+    state.gameOver = false;
 
     // Set current book and story part
-    window.state.currentBook = puzzleData.book || puzzleData.title;
-    window.state.currentStoryPart = puzzleData.storyPart !== undefined ? puzzleData.storyPart : 0;
+    state.currentBook = puzzleData.book || puzzleData.title;
+    state.currentStoryPart = puzzleData.storyPart !== undefined ? puzzleData.storyPart : 0;
 
     // Ensure discoveredBooks is initialized
-    if (!window.state.discoveredBooks || !(window.state.discoveredBooks instanceof Set)) {
+    if (!state.discoveredBooks || !(state.discoveredBooks instanceof Set)) {
       console.warn('discoveredBooks not initialized properly in initializePuzzle - creating new Set');
-      window.state.discoveredBooks = new Set();
+      state.discoveredBooks = new Set();
     }
     
     // Check if this book is already discovered
-    const bookAlreadyDiscovered = window.state.discoveredBooks.has(window.state.currentBook);
+    const bookAlreadyDiscovered = state.discoveredBooks.has(state.currentBook);
     
     // If not already discovered, add it and update count
     if (!bookAlreadyDiscovered) {
-      window.state.discoveredBooks.add(window.state.currentBook);
-      window.state.completedBooks = window.state.discoveredBooks.size;
+      state.discoveredBooks.add(state.currentBook);
+      state.completedBooks = state.discoveredBooks.size;
       
-      console.log(`Added "${window.state.currentBook}" to discoveredBooks. New count:`, window.state.completedBooks);
+      console.log(`Added "${state.currentBook}" to discoveredBooks. New count:`, state.completedBooks);
       
       // Save progress immediately to ensure this discovery persists
       try {
-        window.saveGameProgress();
+        SaveSystem.saveGameProgress();
       } catch (saveError) {
         console.warn('Failed to save after book discovery:', saveError);
       }
@@ -284,7 +300,7 @@ function initializePuzzle(puzzleData) {
       // Set book title and show story part
       const bookTitle = document.getElementById('book-title');
       if (bookTitle) {
-        bookTitle.textContent = `${puzzleData.title} (${getStoryPartName(window.state.currentStoryPart)})`;
+        bookTitle.textContent = `${puzzleData.title} (${getStoryPartName(state.currentStoryPart)})`;
       }
 
       // Set story excerpt
@@ -299,31 +315,39 @@ function initializePuzzle(puzzleData) {
 
     // Filter and prepare words
     const validWords = puzzleData.words
-      .filter(word => word.length >= window.config.minWordLength && word.length <= window.config.maxWordLength)
+      .filter(word => word.length >= config.minWordLength && word.length <= config.maxWordLength)
       .map(word => word.toUpperCase())
       .filter((word, index, self) => self.indexOf(word) === index) // Remove duplicates
-      .slice(0, window.config.maxWords);
+      .slice(0, config.maxWords);
 
     if (validWords.length === 0) {
       throw new Error('No valid words provided after filtering');
     }
 
     // Generate grid with words
-    window.state.grid = generateGrid(validWords);
+    state.grid = generateGrid(validWords);
 
     // Render UI
     try {
-      window.renderGrid();
-      window.renderWordList();
-      window.renderTimer();
+      RenderSystem.renderGrid();
+      RenderSystem.renderWordList();
+      RenderSystem.renderTimer();
+      
+      // Key addition: Set up event listeners for the puzzle
+      console.log('Setting up puzzle event listeners');
+      InputHandler.setupPuzzleEventListeners();
+      console.log('Puzzle event listeners set up successfully');
     } catch (renderError) {
+      console.error('Render error:', renderError);
       throw new Error(`Failed to render puzzle: ${renderError.message}`);
     }
     
+    console.log('Puzzle initialization complete');
     return true;
   } catch (error) {
     // Handle errors in puzzle initialization
-    window.handlePuzzleInitializationError(error, window.navigateToScreen);
+    console.error('Puzzle initialization error:', error);
+    handlePuzzleInitializationError(error, navigateToScreen);
     return false;
   }
 }
@@ -343,16 +367,6 @@ function getStoryPartName(value) {
     default: return "Unknown";
   }
 }
-
-// Temporarily continue making functions available globally
-// These will be converted to proper exports once the module system is fully implemented
-window.generateGrid = generateGrid;
-window.canPlaceWord = canPlaceWord;
-window.placeWord = placeWord;
-window.fillEmptyCells = fillEmptyCells;
-window.getDistinctivePatterns = getDistinctivePatterns;
-window.initializePuzzle = initializePuzzle;
-window.getStoryPartName = getStoryPartName;
 
 // Export functions for module system
 export {

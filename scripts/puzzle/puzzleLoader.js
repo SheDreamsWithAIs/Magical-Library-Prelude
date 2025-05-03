@@ -66,6 +66,62 @@ async function loadAllPuzzles() {
 }
 
 /**
+ * Load puzzles from files with custom paths
+ * @param {Object} puzzlePaths - Mapping of genre names to file paths
+ * @returns {Promise} - Promise resolving when all puzzles are loaded
+ */
+async function loadAllPuzzlesWithPaths(puzzlePaths) {
+  console.log('Loading puzzles with custom paths:', puzzlePaths);
+  
+  // Show loading indicator
+  const loadingIndicator = document.getElementById('loading-indicator');
+  if (loadingIndicator) {
+    loadingIndicator.style.display = 'flex';
+  }
+  
+  try {
+    // Initialize puzzle storage if needed
+    if (!state.puzzles) {
+      state.puzzles = {};
+    }
+    
+    // Load all genres in parallel
+    const loadPromises = Object.entries(puzzlePaths).map(([genre, filePath]) => 
+      loadGenrePuzzles(genre, filePath)
+    );
+    
+    // Wait for all puzzles to load
+    await Promise.all(loadPromises);
+    
+    console.log('All puzzles loaded successfully');
+    console.log('Available genres:', Object.keys(state.puzzles));
+    
+    // Build book-to-parts mapping for easier navigation
+    buildBookPartsMapping();
+    
+    // Hide loading indicator
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'none';
+    }
+    
+    // Set up error handling for initial load
+    handleInitialLoadErrors(state);
+    
+    return state.puzzles;
+  } catch (error) {
+    console.error('Failed to load puzzles:', error);
+    handlePuzzleLoadError(error);
+    
+    // Hide loading indicator
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'none';
+    }
+    
+    return {};
+  }
+}
+
+/**
  * Load puzzles for a specific genre
  * @param {string} genre - Genre name
  * @param {string} filePath - Path to JSON file
@@ -170,5 +226,6 @@ window.buildBookPartsMapping = buildBookPartsMapping;
 export {
   loadAllPuzzles,
   loadGenrePuzzles,
-  buildBookPartsMapping
+  buildBookPartsMapping,
+  loadAllPuzzlesWithPaths 
 };

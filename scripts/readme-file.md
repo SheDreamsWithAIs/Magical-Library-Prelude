@@ -35,7 +35,7 @@ scripts/
 │   ├── errorHandler.js  # Error handling
 │   └── mathUtils.js     # Math utilities
 │
-└── main.js           # Main entry point and module orchestration
+└── moduleBootstrap.js           # Main entry point and module orchestration
 ```
 
 ## Module System
@@ -74,7 +74,7 @@ During the transition from the monolithic structure to modules:
 
 1. Each module temporarily assigns its functions to `window` for backward compatibility
 2. A global `window.game` object maintains references to all modules
-3. The `main.js` file orchestrates module loading and initialization
+3. The `moduleBootstrap.js` file orchestrates module loading and initialization
 
 ## Specific Module Responsibilities
 

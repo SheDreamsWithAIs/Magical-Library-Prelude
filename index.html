@@ -1170,9 +1170,9 @@
     <button id="error-action-btn" class="accent">Return to Book of Passage</button>
   </div>
 
-  <!-- Add these script tags -->
-  <script src="error-handler.js"></script>
-  <script src="wordsearchgame.js"></script>
+  <!-- Single script entry point using ES modules -->
+  <script type="module" src="scripts/moduleBootstrap.js"></script>
+  <script nomodule src="moduleBootstrap.js  "></script>
 
   <!-- Updated JavaScript for screen display management -->
   <script>
