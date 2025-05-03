@@ -3,6 +3,8 @@
  * This module provides mathematical helper functions
  */
 
+// adding a comment to justify a new commit.
+
 /**
  * Calculate percentage of a part relative to a total
  * @param {number} part - The part value
