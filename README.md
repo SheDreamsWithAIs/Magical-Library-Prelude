@@ -1,191 +1,115 @@
-# Chronicles of the Kethaneum - Module System
+# Chronicles of the Kethaneum
 
-This directory contains the modular code structure for the Chronicles of the Kethaneum word search game.
+[![Release Version](https://img.shields.io/github/v/release/your-org/your-repo)](https://github.com/your-org/your-repo/releases)
 
-## Directory Structure
+*A co-creative word-puzzle adventure across realms.*
 
-```
-scripts/
-├── core/             # Core game functionality
-│   ├── config.js        # Game configuration settings
-│   ├── eventSystem.js   # Event management system
-│   ├── gameState.js     # Game state management
-│   └── saveSystem.js    # Save/load game progress
-|
-├── data/             # Game data
-│   └── puzzleData/   # Puzzle JSON files
-│       ├── kethaneum.json  # Kethaneum genre puzzles
-│       └── nature.json     # Nature genre puzzles
-│
-├── interaction/      # User interaction
-│   ├── gameLogic.js     # Game mechanics and rules
-│   └── inputHandler.js  # User input processing
-│
-├── puzzle/           # Puzzle-related functionality
-│   ├── puzzleGenerator.js  # Puzzle generation
-│   └── puzzleLoader.js     # Puzzle data loading
-│
-├── ui/               # User interface components
-│   ├── navigation.js    # Screen navigation
-│   ├── panelManager.js  # Panel/modal management
-│   └── renderSystem.js  # UI rendering
-│
-├── utils/            # Utility functions
-│   ├── domUtils.js      # DOM utilities
-│   ├── errorHandler.js  # Error handling
-│   └── mathUtils.js     # Math utilities
-│
-└── moduleBootstrap.js           # Main entry point and module orchestration
-```
+---
 
-## Module System
+## 📖 Overview
 
-The game uses a simple module system with ES modules (import/export). Each module is responsible for a specific aspect of the game and exports only what other modules need.
+Chronicles of the Kethaneum is a browser-based narrative puzzle game built in plain ES modules.  
+Players explore themed “realms,” solve word-search puzzles, and unlock new story passages.  
+Our architecture now cleanly separates:
 
-### Architecture Overview
+- **Engine** (`src/gameLogic.js`, `src/puzzleGenerator.js`)  
+- **UI** (`src/renderSystem.js`, `src/navigation.js`, `src/panelManager.js`)  
+- **State & Persistence** (`src/gameState.js`, `src/saveSystem.js`)  
+- **Utilities** (`src/domUtils.js`, `src/errorHandler.js`, `src/MathUtils.js`)  
 
-- **Core modules**: Handle game state, configuration, events, and persistence
-- **Interaction modules**: Handle user input and game logic
-- **Puzzle modules**: Handle puzzle generation and loading
-- **UI modules**: Handle navigation and rendering
-- **Utility modules**: Provide helper functions used by other modules
+---
 
-### Module Dependencies
+## ▶️ Getting Started
 
-```
-┌───────────┐     ┌───────────┐     ┌───────────┐
-│   Utils   │◄────┤    UI     │◄────┤   Core    │
-└───────────┘     └───────────┘     └───────────┘
-      ▲                 ▲                 ▲
-      │                 │                 │
-      │           ┌───────────┐           │
-      └───────────┤Interaction│◄──────────┘
-                  └───────────┘
-                        ▲
-                        │
-                  ┌───────────┐
-                  │  Puzzle   │
-                  └───────────┘
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) ≥ 16  
+- A static-file server (e.g. `npm install -g http-server`) or VS Code Live Server  
+
+### Install & Run Locally
+
+```bash
+git clone https://github.com/your-org/kethaneum.git
+cd kethaneum
+npm install            # installs Cypress & any build tools
+npm start              # e.g. `http-server . -c-1` or your custom script
+# then open http://localhost:8080 (or port shown)
+````
+
+### Run the Tests
+
+```bash
+npx cypress run --browser chrome --headless
 ```
 
-### Transition Approach
+---
 
-During the transition from the monolithic structure to modules:
+## 🗂️ Project Structure
 
-1. Each module temporarily assigns its functions to `window` for backward compatibility
-2. A global `window.game` object maintains references to all modules
-3. The `moduleBootstrap.js` file orchestrates module loading and initialization
-
-## Specific Module Responsibilities
-
-### Core Modules
-- **config.js**: Manages game configuration, difficulty levels, and feature flags
-- **eventSystem.js**: Provides a pub/sub system for inter-module communication
-- **gameState.js**: Manages the game state object, initialization, and access
-- **saveSystem.js**: Handles saving and loading game progress from localStorage
-
-### Interaction Modules
-- **inputHandler.js**: Processes user input (mouse, touch) and manages event listeners
-- **gameLogic.js**: Implements game rules, checks for win conditions, manages game flow
-
-### Puzzle Modules
-- **puzzleGenerator.js**: Creates word search puzzles with placed words
-- **puzzleLoader.js**: Loads puzzle data from JSON files, manages puzzle selection
-
-### UI Modules
-- **navigation.js**: Manages screen transitions and display
-- **panelManager.js**: Controls modal panels (win, lose, pause)
-- **renderSystem.js**: Updates visual elements based on game state
-
-### Utility Modules
-- **errorHandler.js**: Provides error handling, recovery, and user-friendly messages
-- **mathUtils.js**: Provides mathematical utility functions
-- **domUtils.js**: Provides DOM manipulation helper functions
-
-## Key Features
-
-### Configuration System
-The configuration system provides:
-- Centralized game settings management
-- Difficulty level presets
-- Feature flags for conditional functionality
-- Testing mode options for development and QA
-- Import/export capabilities for saving configurations
-
-### Event System
-The event system enables:
-- Loose coupling between modules via pub/sub pattern
-- Centralized event handling
-- Priority-based event processing
-- One-time event subscriptions
-- Predefined game events for common actions
-
-## Module Usage Examples
-
-### Loading a Module
-```javascript
-import * as Config from './core/config.js';
+```
+/
+├── public/                 # Static assets & story JSON packs
+│   ├── kethaneumPuzzles.json
+│   └── naturePuzzles.json
+└── src/
+    ├── app.js              # Single entry-point bootstrap
+    ├── configModule.js     # Game settings (grid sizes, time limits)
+    ├── gameState.js        # Core state singleton
+    ├── saveSystem.js       # localStorage persistence
+    ├── gameLogic.js        # Puzzle & timer logic
+    ├── puzzleLoader.js     # JSON fetch & parse
+    ├── puzzleGenerator.js  # Word-list generation
+    ├── renderSystem.js     # DOM updates & templates
+    ├── navigation.js       # Screen transitions
+    ├── inputHandler.js     # Click & key listeners
+    ├── errorHandler.js     # Central error-panel UI
+    ├── domUtils.js         # Helper functions for DOM ops
+    └── MathUtils.js        # Shared math helpers
 ```
 
-### Using a Module Function
-```javascript
-// Direct import
-import { navigateToScreen } from './ui/navigation.js';
-navigateToScreen('puzzle-screen');
+---
 
-// Via game object
-window.game.ui.navigation.navigateToScreen('puzzle-screen');
-```
+## ⚙️ Configuration
 
-### Using the Event System
-```javascript
-// Subscribe to an event
-import { subscribe, GameEvents } from './core/eventSystem.js';
+* Edit `src/configModule.js` to tweak puzzle sizes, time limits, theme colors, etc.
+* JSON story packs live in `public/`; new packs auto-loaded if named in `app.js`’s `customPaths`.
 
-subscribe(GameEvents.WORD_FOUND, (wordData) => {
-  console.log(`Player found the word: ${wordData.word}`);
-});
+---
 
-// Emit an event
-import { emit, GameEvents } from './core/eventSystem.js';
+## 🚀 Deployment
 
-emit(GameEvents.WORD_FOUND, { word: 'EXAMPLE', points: 10 });
-```
+1. Build (if you add bundling later):
 
-### Configuration Example
-```javascript
-// Get a configuration value
-import { get } from './core/config.js';
+   ```bash
+   npm run build         # e.g. Rollup/Vite → `dist/app.bundle.js`
+   ```
+2. Push to GitHub → GitHub Pages auto-deploy on `main`.
+3. (Optional) Tag a release and use Butler to push to Itch.io.
 
-const timeLimit = get('timeLimit');
-const isDebugMode = get('system.debugMode');
+---
 
-// Set a configuration value
-import { set } from './core/config.js';
+## 🔧 Troubleshooting
 
-set('features.soundEffects', true);
-```
+* **404 on puzzle JSON** → ensure your story files are in `public/` (same folder as `index.html`), or adjust `import.meta.url` paths.
+* **Module import errors** → check import paths in `src/app.js` and that your server serves `type="module"` scripts.
+* **Test flakiness** → try resizing your test runner viewport or adding small timeouts around animations.
 
-## Properly Structured New Code
-```javascript
-// In new modules, add functionality like this:
-function newFeature() {
-  // Implementation
-}
+---
 
-// Export for module system
-export { newFeature };
+## 📋 Roadmap
 
-// Temporarily add to window for transition
-window.newFeature = newFeature;
-```
+* [ ] CI pipeline with Cypress + dev deploy
+* [ ] Bundling & tree-shaking via Rollup or Vite
+* [ ] Patreon-driven story pack loader
+* [ ] Mobile-friendly layout & controls
+* [ ] Confluence Workshop prototype integration
 
-## Future Improvements
+---
 
-- Create a component system for UI elements
-- Implement unit testing for individual modules
-- Add support for alternate input methods (keyboard, gamepad)
-- Create specialized screen handler modules
-- Add internationalization support
-- Implement audio module for sound effects
-- Create animation system for visual effects
+## 👥 Team
+
+* **Seraphine** (Creative Lead & Senior QA)
+* **Sonny** (Lead Dev & Test Automation Wrangler)
+* **Paper Pusher** (Technical Reviewer and Tech Lead)
+* **Assembly** (Architecture Lead)
+* **Blueberry** (Automation & Build Scripts)
