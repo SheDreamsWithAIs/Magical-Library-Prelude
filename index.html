@@ -56,7 +56,9 @@
       margin: 0 auto;
       min-height: 100vh;
       position: relative;
-    }
+      overflow: hidden;           
+      contain: layout paint;      
+      }
 
     /* Screen styling - base for all game screens */
     .screen {
@@ -70,12 +72,13 @@
       box-sizing: border-box;
       z-index: 1;
       /* Baseline z-index */
+      inset: 0;                   /* shorthand for top:0; right:0; bottom:0; left:0; */
     }
 
     /* Active screen */
     .screen.active {
+      display: flex !important;   
       z-index: 10;
-      /* Active screen appears on top */
     }
 
     /* Loading Indicator */
@@ -1179,20 +1182,12 @@
     // This script ensures the screens display properly on initial load
     // It should be added after the main game script to override any conflicting settings
 
-    document.addEventListener('DOMContentLoaded', function () {
-      // Make sure only title screen is visible initially
-      document.querySelectorAll('.screen').forEach(screen => {
-        screen.style.display = 'none';
-        screen.classList.remove('active');
-      });
-
-      // Show title screen
-      const titleScreen = document.getElementById('title-screen');
-      if (titleScreen) {
-        titleScreen.classList.add('active');
-        titleScreen.style.display = 'flex';
-      }
-    });
+    document.addEventListener('DOMContentLoaded', () => {
+    // Remove .active from all screens…
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    // …then add it only to the title screen
+    document.getElementById('title-screen').classList.add('active');
+  });
   </script>
 </body>
 
