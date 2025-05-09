@@ -11,6 +11,7 @@ import * as RenderSystem from '../ui/renderSystem.js';
 import * as InputHandler from '../interaction/inputHandler.js';
 import * as SaveSystem from '../core/saveSystem.js';
 import { navigateToScreen } from '../ui/navigation.js';
+import { createSeededRandom } from '../utils/mathUtils.js';
 
 /**
  * Generate word search grid
@@ -23,11 +24,28 @@ function generateGrid(words) {
     const state = GameState.getGameState();
     const config = Config.getConfig();
     
+    // Create a seeded random generator
+    const projectSeed = "Kethaneum".split('')
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const seededRandom = createSeededRandom(projectSeed + Date.now() % 10000);
+    
     // Get grid size from config
     const gridSize = config.gridSize || 10;
     
+    // Validate directions array
+    const validDirections = verifyDirections(config.directions);
+    
+    // Ensure valid words array
+    const validWords = words
+      .filter(word => word && typeof word === 'string' && word.length > 0)
+      .map(word => word.toUpperCase());
+    
+    if (validWords.length === 0) {
+      throw new Error("No valid words provided for grid generation");
+    }
+    
     // Sort words by length (longest first for easier placement)
-    const sortedWords = [...words].sort((a, b) => b.length - a.length);
+    const sortedWords = [...validWords].sort((a, b) => b.length - a.length);
 
     // Create empty grid filled with empty spaces
     const grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
@@ -37,20 +55,22 @@ function generateGrid(words) {
 
     // Try to place each word
     for (const word of sortedWords) {
+      console.log(`Attempting to place word: ${word}`);
       let placed = false;
       let attempts = 0;
-      const maxAttempts = 100; // Prevent infinite loops
+      const maxRandomAttempts = 100;
 
-      while (!placed && attempts < maxAttempts) {
+      // PHASE 1: Try random placement
+      while (!placed && attempts < maxRandomAttempts) {
         attempts++;
 
-        // Random starting position
-        const row = Math.floor(Math.random() * gridSize);
-        const col = Math.floor(Math.random() * gridSize);
+        // Random starting position using seeded random
+        const row = Math.floor(seededRandom() * gridSize);
+        const col = Math.floor(seededRandom() * gridSize);
 
         // Random direction
-        const dirIndex = Math.floor(Math.random() * config.directions.length);
-        const [dRow, dCol] = config.directions[dirIndex];
+        const dirIndex = Math.floor(seededRandom() * validDirections.length);
+        const [dRow, dCol] = validDirections[dirIndex];
 
         // Check if word fits in this position and direction
         if (canPlaceWord(grid, word, row, col, dRow, dCol, gridSize)) {
@@ -67,11 +87,39 @@ function generateGrid(words) {
           });
 
           placed = true;
+          console.log(`Successfully placed word: ${word} after ${attempts} random attempts`);
+        }
+      }
+      
+      // PHASE 2: If random placement failed, try systematic placement
+      if (!placed) {
+        console.warn(`Random placement failed for "${word}" - trying systematic placement`);
+        
+        // Try each position and direction systematically
+        for (let r = 0; r < gridSize && !placed; r++) {
+          for (let c = 0; c < gridSize && !placed; c++) {
+            for (const [dRow, dCol] of validDirections) {
+              if (canPlaceWord(grid, word, r, c, dRow, dCol, gridSize)) {
+                placeWord(grid, word, r, c, dRow, dCol);
+                placements.push({
+                  word,
+                  found: false,
+                  row: r,
+                  col: c,
+                  direction: [dRow, dCol]
+                });
+                placed = true;
+                console.log(`Successfully placed word: ${word} using systematic placement at [${r},${c}]`);
+                break;
+              }
+            }
+          }
         }
       }
 
+      // If still not placed after both attempts, throw error
       if (!placed) {
-        throw new Error(`Could not place word: ${word}`);
+        throw new Error(`Could not place word: ${word} after random and systematic attempts`);
       }
     }
 
@@ -80,12 +128,53 @@ function generateGrid(words) {
 
     // Fill remaining empty cells with random letters
     fillEmptyCells(grid);
+    
+    console.log("Grid generation successful with", placements.length, "words placed");
 
     return grid;
   } catch (error) {
     // Use the error handler function
     return handleGridGenerationError(error, words, Config.getConfig(), fillEmptyCells);
   }
+}
+
+/**
+ * Helper function to verify directions array integrity
+ * @param {Array} directions - Array of direction vectors
+ * @returns {Array} - Validated directions array
+ */
+function verifyDirections(directions) {
+  // Default directions if missing or invalid
+  const defaultDirections = [
+    [0, 1],   // right
+    [1, 0],   // down
+    [1, 1],   // diagonal down-right
+    [0, -1],  // left
+    [-1, 0],  // up
+    [-1, -1], // diagonal up-left
+    [1, -1],  // diagonal down-left
+    [-1, 1]   // diagonal up-right
+  ];
+  
+  // Verify directions array is valid
+  if (!Array.isArray(directions) || directions.length === 0) {
+    console.warn('Invalid directions array, using defaults');
+    return defaultDirections;
+  }
+  
+  // Verify each direction is valid
+  const validDirections = directions.filter(dir => 
+    Array.isArray(dir) && dir.length === 2 && 
+    Number.isInteger(dir[0]) && Number.isInteger(dir[1]) &&
+    (dir[0] !== 0 || dir[1] !== 0) // Prevent [0,0] direction
+  );
+  
+  if (validDirections.length === 0) {
+    console.warn('No valid directions found, using defaults');
+    return defaultDirections;
+  }
+  
+  return validDirections;
 }
 
 /**
@@ -376,5 +465,6 @@ export {
   fillEmptyCells,
   getDistinctivePatterns,
   initializePuzzle,
-  getStoryPartName
+  getStoryPartName,
+  verifyDirections
 };

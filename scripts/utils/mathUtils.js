@@ -101,6 +101,20 @@ function calculateAverage(values) {
   return sum / values.length;
 }
 
+/**
+ * Create a seeded random number generator
+ * @param {number} seed - Seed value for the generator
+ * @returns {Function} - Function that returns random numbers between 0 and 1
+ */
+function createSeededRandom(seed) {
+  let state = seed || Math.floor(Math.random() * 10000);
+  
+  return function() {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+}
+
 // Temporarily continue making functions available globally
 // These will be converted to proper exports once the module system is fully implemented
 window.calculatePercentage = calculatePercentage;
@@ -121,5 +135,6 @@ export {
   shuffleArray,
   clamp,
   lerp,
-  calculateAverage
+  calculateAverage,
+  createSeededRandom
 };

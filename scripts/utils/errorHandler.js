@@ -208,48 +208,96 @@ function handleSequentialPuzzleError(error, state) {
  * @returns {Array} - Fallback grid
  */
 function handleGridGenerationError(error, words, config, fillEmptyCellsFunction) {
-  console.error('Error generating grid:', error);
+  console.error('Error during grid generation:', error);
   
-  // Try again with fewer words if possible
-  if (words.length > 3) {
-    console.log('Retrying grid generation with fewer words');
-    // Try with 75% of the words
-    const reducedWords = words.slice(0, Math.max(3, Math.floor(words.length * 0.75)));
+  // Create fallback grid directly, don't try to call generateGrid again
+  return createResilientFallbackGrid(words, config, fillEmptyCellsFunction);
+}
+
+/**
+ * Create a reliable fallback grid that doesn't depend on other functions
+ * @param {Array} words - Original words (not used directly)
+ * @param {Object} config - Grid configuration
+ * @param {Function} fillEmptyCellsFunction - Function to fill empty cells
+ * @returns {Array} - 2D grid array
+ */
+function createResilientFallbackGrid(words, config, fillEmptyCellsFunction) {
+  // Use simple, guaranteed-to-work fallback words
+  const fallbackWords = ['BOOK', 'PAGE', 'WORD', 'FIND', 'READ'];
+  const gridSize = config?.gridSize || 10;
+  const grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
+  const placements = [];
+  
+  // Set up directions for placement
+  const directions = [
+    [0, 1],  // right
+    [1, 0],  // down 
+    [1, 1],  // diagonal down-right
+    [0, -1], // left
+    [-1, 0]  // up
+  ];
+  
+  // Place words in predictable patterns
+  for (let i = 0; i < fallbackWords.length && i < 3; i++) {
+    const word = fallbackWords[i].toUpperCase();
+    const row = i + 1;
+    const col = i + 1;
+    const direction = directions[i % directions.length];
     
-    try {
-      // Try to generate grid with fewer words directly
-      return generateGrid(reducedWords);
-    } catch (retryError) {
-      console.error('Retry failed:', retryError);
-      // Continue to fallback
+    // Check if word fits
+    const endRow = row + (word.length - 1) * direction[0];
+    const endCol = col + (word.length - 1) * direction[1];
+    
+    if (endRow >= 0 && endRow < gridSize && endCol >= 0 && endCol < gridSize) {
+      // Place word
+      for (let j = 0; j < word.length; j++) {
+        const r = row + j * direction[0];
+        const c = col + j * direction[1];
+        grid[r][c] = word[j];
+      }
+      
+      // Add to placements
+      placements.push({
+        word,
+        found: false,
+        row,
+        col,
+        direction
+      });
     }
   }
   
-  // If we can't reduce words further, show error and provide fallback grid
+  // Fill empty cells
+  if (typeof fillEmptyCellsFunction === 'function') {
+    fillEmptyCellsFunction(grid);
+  } else {
+    // Fallback if fillEmptyCellsFunction isn't available
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (grid[r][c] === '') {
+          grid[r][c] = letters[Math.floor(Math.random() * letters.length)];
+        }
+      }
+    }
+  }
+  
+  // Ensure state.wordList is updated
+  if (window.state) {
+    window.state.wordList = placements;
+  }
+  
+  // Show user-friendly message
   showErrorMessage(
-    "Grid Generation Error", 
-    "The Kethaneum's word pattern generator encountered unexpected interference. A simpler pattern has been substituted.",
-    "Proceed with Simplified Pattern",
+    "Grid Generation Adjusted",
+    "The Kethaneum's indexing matrix encountered interference. A simplified knowledge pattern has been substituted.",
+    "Continue with Alternate Pattern",
     function() {
       document.getElementById('error-panel').style.display = 'none';
     }
   );
   
-  // Create an emergency fallback grid with simple words
-  const fallback = createFallbackGrid(['BOOK', 'PAGE', 'WORD', 'READ'], config);
-  
-  // Fill empty cells with random letters
-  for (let row = 0; row < config.gridSize; row++) {
-    for (let col = 0; col < config.gridSize; col++) {
-      if (fallback.grid[row][col] === '') {
-        fillEmptyCellsFunction(fallback.grid);
-        break; // Only need to call once
-      }
-    }
-  }
-  
-  // Return grid
-  return fallback.grid;
+  return grid;
 }
 
 /**
@@ -540,5 +588,6 @@ export {
   handleTimerError,
   handleSaveError,
   handleNavigationError,
-  handleSelectionError
+  handleSelectionError,
+  createResilientFallbackGrid
 };
