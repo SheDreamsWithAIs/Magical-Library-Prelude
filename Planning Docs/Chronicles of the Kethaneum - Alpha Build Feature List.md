@@ -227,4 +227,21 @@ ___
   - [ ] Character Dialogue Handler
   - [ ] Dialogue Navigation
   - [ ] Event triggers 
-
+___
+## .:: Event System ::.
+- [x] Core Event Publication/Subscription Architecture
+- [x] Game State Event Handlers
+  - [x] Puzzle Completion Events
+  - [x] Word Discovery Events
+  - [x] Book Completion Events
+- [ ] UI Event Handlers
+  - [x] Screen Navigation Events
+  - [ ] Button Click Events
+  - [ ] Hover State Events
+- [ ] Narrative Event Triggers
+  - [ ] Character Dialogue Triggers
+  - [ ] Story Progression Triggers
+- [ ] Audio Event Triggers
+  - [ ] Music Change Events
+  - [ ] Sound Effect Events
+- [ ] Achievement/Progress Event Tracking
