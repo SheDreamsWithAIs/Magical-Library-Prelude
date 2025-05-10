@@ -95,8 +95,16 @@ ___
 - [x] Word list loading and storage
 - [x] Recognition of Word Selection
 - [x] Win and Lose State Management
+- [x] Puzzle Caching for loading
+- [ ] 4 Genres and 10 books for each Genre:
+  - [ ] Sci Fi
+  - [ ] Fantasy
+  - [ ] Romance
+  - [ ] kethaneum
 ___
 ## .:: Narrative Delivery ::.
+- [ ] Easy Narrative File Swap Out
+- [x] Easy Puzzle File Swap Out
 
 ### Backstory Screen
 - [x] Kethaneum Backstory Placeholder Text
@@ -245,3 +253,8 @@ ___
   - [ ] Music Change Events
   - [ ] Sound Effect Events
 - [ ] Achievement/Progress Event Tracking
+___
+## .:: Test Set Up ::.
+- [x] End to End Automated Test
+- [x] Word Search Happy Path Automated Test
+- [ ] Early Playtesting
