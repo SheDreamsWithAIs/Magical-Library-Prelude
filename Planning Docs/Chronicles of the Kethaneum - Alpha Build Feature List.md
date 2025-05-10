@@ -4,17 +4,17 @@
 
 ### Title Screen
 - [x] Title and Subtitle
-- [ ] New Game Button
-- [ ] Continue Game Button
-- [ ] Options Button
+- [x] New Game Button
+- [x] Continue Game Button
+- [x] Options Button
 - [ ] Option Menu Panel
   - [ ] Background Music Volume Slider
   - [ ] Voice Acting Volume Slider
   - [ ] Sound Effects Volume Slider
   - [ ] Mute Everything Button
   - [ ] Back to Title Screen Button
-- [ ] Credits Button
-- [ ] Game Logo Area
+- [x] Credits Button
+- [x] Game Logo Area
 
 ### Credits Screen
 - [ ] Credits Text Area
@@ -22,9 +22,9 @@
 - [ ] Back to Title Screen Button
 
 ### Backstory Screen
-- [ ] Backstory Blurb Area
-- [ ] Scrollbar
-- [ ] Continue Game Button
+- [x] Backstory Blurb Area
+- [x] Scrollbar
+- [x] Continue Game Button
 
 ### Library Screen
 - [ ] Genre Selection Buttons
@@ -36,46 +36,49 @@
   - [ ] Dialogue Navigation Buttons
 
 ### Book of Passage Screen
-- [ ] Book of Passage Title
-- [ ] Story and Progress Container
-  - [ ] The Archivist's story so far text
+- [x] Book of Passage Title
+- [x] Story and Progress Container
+  - [x] The Archivist's story so far text
   - [ ] Archivist's story history Area
     - [ ] Archivist's story history text
     - [ ] History Navigation Buttons
-  - [ ] Books Discovered counter
-  - [ ] Books Cataloged counter
+  - [x] Books Discovered counter
+  - [x] Books Cataloged counter
   - [ ] Book Progress tracker 
     - [ ] Book Progress Navigation Buttons
-    - [ ] Completed Books
-    - [ ] In Progress Books
+    - [x] Completed Books
+    - [x] In Progress Books
   - [ ] Book of Passage Art Container
     - [ ] Book of Passage Art
     - [ ] Book of Passage Text Area
 - [ ] Story and Progress Navigation Buttons (Get to different sections in the Book of Passage)
 - [ ] Scrollbar
-- [ ] Start Cataloging Button
+- [x] Start Cataloging Button
 - [ ] Return to Library Button
 - [ ] Return to Title Screen Button
 - [ ] Options Menu Button
 - [ ] Options Menu Panel
   - [ ] Menu Title 
-  - [ ] Volume Slider
+  - [ ] Volume Sliders
   - [ ] Mute Button
   - [ ] Back to Library Screen Button
 
 ### Word Puzzle Screen
-- [ ] Book Title
-- [ ] Story excerpt
-- [ ] Word Puzzle grid
-- [ ] Word List
-- [ ] Pause Cataloging Button (Open pause menu)
+- [x] Book Title
+- [x] Story excerpt Area
+- [x] Word Puzzle grid
+- [x] Word List
+- [x] Pause Cataloging Button (Open pause menu)
 - [ ] Pause Menu
-  - [ ] Resume Button
-  - [ ] Restart Puzzle Button
+  - [x] Resume Button
+  - [x] Restart Puzzle Button
   - [ ] Return to Library Button
   - [ ] Quit to Title Screen Button
-  - [ ] Options Menu Button
 - [ ] Option Menu Button
+- [ ] Options Menu Panel
+  - [ ] Menu Title 
+  - [ ] Volume Sliders
+  - [ ] Mute Button
 
 ### End of Game Screen
 - [ ] End of Game text Area
@@ -87,28 +90,28 @@ ___
 ## .:: Word Puzzle ::.
 
 ### Word Puzzle Screen
-- [ ] Programmatic Word placement
-- [ ] Programmatic Word grid filling
-- [ ] Word list loading and storage
-- [ ] Recognition of Word Selection
-- [ ] Win and Lose State Management
+- [x] Programmatic Word placement
+- [x] Programmatic Word grid filling
+- [x] Word list loading and storage
+- [x] Recognition of Word Selection
+- [x] Win and Lose State Management
 ___
 ## .:: Narrative Delivery ::.
 
 ### Backstory Screen
-- [ ] Kethaneum Backstory Text Content
+- [x] Kethaneum Backstory Placeholder Text
 
 ### Library Screen
-- [ ] Placeholder Character Dialogue Text Content
+- [ ] Placeholder Character Dialogue Text
 
 ### Book of Passage Screen
-- [ ] The Archivist's story so far Text Content
-- [ ] Archivist's story history Text Content
-- [ ] Placeholder Character Dialogue Text Content
+- [x] The Archivist's story so far Placeholder Text
+- [ ] Archivist's story history Placeholder Text 
+- [ ] Placeholder Character Dialogue Placeholder Text
 
 ### Word Puzzle Screen
 - [ ] Placeholder Character Dialogue Text Content
-- [ ] Word Puzzle Excerpt Text Content (especially Kethaneum related)
+- [x] Word Puzzle Excerpt Text Content (especially Kethaneum related)
 
 ### End of Game Screen
 - [ ] End of Game Text Content
@@ -121,8 +124,8 @@ ___
 ## .:: Navigation ::.
 
 ### Title Screen
-- [ ] Start a new Game
-- [ ] Load a saved game
+- [x] Start a new Game (Go to Backstory Screen)
+- [x] Load a saved game (Go to Book of Passage)
 - [ ] Navigate to credits screen
 
 ### Credits Screen
@@ -136,11 +139,11 @@ ___
 - [ ] Navigate to Word Puzzle Screen through Genre Selection
 
 ### Book of Passage Screen
-- [ ] Navigate to word puzzle screen through start cataloging button
+- [x] Navigate to word puzzle screen through start cataloging button
 - [ ] Navigate to library screen
 
 ### Word Puzzle Screen
-- [ ] Navigate to Book of Passage Screen through pause menu
+- [x] Navigate to Book of Passage Screen through pause menu
 - [ ] Navigate to Library Screen through pause menu
 - [ ] Navigate to Title Screen through pause menu
 
@@ -156,9 +159,9 @@ ___
 
 ### Concept Art
 - [ ] Character Concept Art
-- [ ] Title Screen Concept Art
+- [x] Title Screen Concept Art
 - [ ] Credits Screen Concept Art
-- [ ] Backstory Screen Concept Art
+- [x] Backstory Screen Concept Art
 - [ ] Book of Passage Concept Art
 - [ ] Library Concept Art
 - [ ] Word Puzzle Concept Art
@@ -174,7 +177,7 @@ ___
 - [ ] Twinkling Stars background animation
 
 ### Backstory Screen
-- [ ] Themed Scrollbar
+- [ ] Styled Scrollbar
 - [ ] Border Art placeholders
 - [ ] Twinkling Stars background animation
 
@@ -182,6 +185,7 @@ ___
 - [ ] Library Art Placeholder
 
 ### Book of Passage Screen
+- [ ] Styled Scrollbar
 - [ ] Border Art placeholders
 - [ ] Twinkling Stars background animation
 
@@ -190,12 +194,12 @@ ___
 - [ ] Twinkling Stars background animation
 ___
 ## .:: Save System ::.
-- [ ] Local Storage Implementation
-  - [ ] Player Story progress
-  - [ ] Completed books tracking
-  - [ ] Book part completion status
-  - [ ] Game state serialization and restoration
-- [ ] Auto-save on book/puzzle completion
+- [x] Local Storage Implementation
+  - [x] Player Story progress
+  - [x] Completed books tracking
+  - [x] Book part completion status
+  - [x] Game state serialization and restoration
+- [x] Auto-save on book/puzzle completion
 - [ ] Manual save through pause menu
 - [ ] Manual save through options menu
 - [ ] Save data integrity validation
@@ -217,3 +221,10 @@ ___
   - [ ] Puzzle Completion
   - [ ] Puzzle Failure
 - [ ] Voice Acting Placeholders
+___
+## .:: Character Dialogue System ::.
+  - [ ] Character Image Handler
+  - [ ] Character Dialogue Handler
+  - [ ] Dialogue Navigation
+  - [ ] Event triggers 
+
