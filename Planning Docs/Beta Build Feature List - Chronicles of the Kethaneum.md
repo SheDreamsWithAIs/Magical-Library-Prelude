@@ -46,9 +46,12 @@ ___
   - [ ] Support for Puzzle Pack DLC or Expansions
 
 ### Final Word Puzzle Modes
-- [ ] Story Mode (No Timer)
-- [ ] Challenge Mode (Complete as many puzzles as possible against the clock)
-- [ ] Endless Puzzle Mode (Complete as many puzzles a you like but puzzles are individually timed)
+- [ ] Story Mode (contains story excerpts, No Timer)
+- [ ] Challenge Mode (No story excerpts, Complete as many puzzles as possible against the clock)
+
+### Optional Game Modes that Make not Make it into Beta
+- [ ] Endless Puzzle Mode (No story excerpts, Complete as many puzzles a you like but puzzles are individually timed)
+- [ ] Calm Mode (No story excerpts, complete puzzles one after the other)
 ___
 ## .:: Narrative Delivery ::.
 

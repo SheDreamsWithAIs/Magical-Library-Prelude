@@ -96,6 +96,7 @@ ___
 - [x] Recognition of Word Selection
 - [x] Win and Lose State Management
 - [x] Puzzle Caching for loading
+- [x] Timer System
 - [ ] 4 Genres and 10 books for each Genre:
   - [ ] Sci Fi
   - [ ] Fantasy
