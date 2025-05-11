@@ -1,5 +1,45 @@
 /* Mobile-specific styles */
 @media (max-width: 768px) {
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+  }
+
+  .screen {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Remove this to prevent screen-level scrolling conflicts */
+  /* .screen.active {
+    overflow-y: auto;
+  } */
+
+  /* Backstory screen specific fix */
+  #backstory-screen {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  #backstory-screen .story-container {
+    min-height: 80vh;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding-top: 5vh;
+    box-sizing: border-box;
+  }
+
   /* Title screen adjustments */
   .title-layout {
     flex-direction: column;
@@ -49,7 +89,8 @@
   }
 
   .words-container {
-    display: none; /* Hide desktop word list */
+    display: none;
+    /* Hide desktop word list */
   }
 
   /* Mobile word list */
