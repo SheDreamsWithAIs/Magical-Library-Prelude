@@ -19,26 +19,26 @@ function checkForWord() {
   try {
     const state = GameState.getGameState();
     const config = Config.getConfig();
-    
+
     if (state.selectedCells.length < config.minWordLength) return false;
-    
+
     // Extract the word from selected cells
     const selectedWord = state.selectedCells.map(cell => cell.textContent).join('');
-    
+
     // Get start and end coordinates
     const startRow = parseInt(state.selectedCells[0].dataset.row);
     const startCol = parseInt(state.selectedCells[0].dataset.col);
     const endRow = parseInt(state.selectedCells[state.selectedCells.length - 1].dataset.row);
     const endCol = parseInt(state.selectedCells[state.selectedCells.length - 1].dataset.col);
-    
+
     // Calculate direction
     const dRow = endRow === startRow ? 0 : (endRow - startRow) / Math.abs(endRow - startRow);
     const dCol = endCol === startCol ? 0 : (endCol - startCol) / Math.abs(endCol - startCol);
-    
+
     // Check against word list
     for (const wordData of state.wordList) {
       if (wordData.found) continue;
-      
+
       // Check if word matches in either direction
       if (
         (selectedWord === wordData.word &&
@@ -57,7 +57,7 @@ function checkForWord() {
         return true;
       }
     }
-    
+
     return false;
   } catch (error) {
     handleSelectionError(error, 'check-word');
@@ -73,45 +73,25 @@ function checkForWord() {
 function markWordAsFound(wordData) {
   try {
     const state = GameState.getGameState();
-    
+
     // Mark word as found
     wordData.found = true;
-    
+
     // Mark cells as correctly found
     RenderSystem.markCellsAsCorrect(state.selectedCells);
-    
-    // Update word list display - desktop
-    const wordListElement = document.getElementById('word-list');
-    if (wordListElement) {
-      const listItems = wordListElement.querySelectorAll('li');
-      for (const item of listItems) {
-        if (item.textContent === wordData.word) {
-          item.classList.add('found');
-          break;
-        }
-      }
-    }
-    
-    // Update mobile word list if it exists
-    const mobileWordList = document.getElementById('mobile-word-list');
-    if (mobileWordList) {
-      const mobileItems = mobileWordList.querySelectorAll('li');
-      for (const item of mobileItems) {
-        if (item.textContent === wordData.word) {
-          item.classList.add('found');
-          break;
-        }
-      }
-    }
-    
+
+    // Update word list display by re-rendering the entire list
+    // This ensures found words are sorted to the bottom
+    RenderSystem.renderWordList();
+
     // Trigger haptic feedback on mobile if available
     if (navigator.vibrate) {
       navigator.vibrate(50); // Short 50ms vibration
     }
-    
+
     // Check if all words are found
     checkWinCondition();
-    
+
     return true;
   } catch (error) {
     handleSelectionError(error, 'mark-word');
@@ -126,7 +106,7 @@ function checkWinCondition() {
   try {
     const state = GameState.getGameState();
     const allWordsFound = state.wordList.every(wordData => wordData.found);
-    
+
     if (allWordsFound) {
       // End the game with a win
       endGame(true);
@@ -143,59 +123,59 @@ function checkWinCondition() {
 function endGame(isWin) {
   try {
     const state = GameState.getGameState();
-    
+
     // Stop the timer
     clearInterval(state.timer);
     state.gameOver = true;
-    
+
     if (isWin) {
       // Clear any saved uncompleted puzzle since this one is now complete
       if (state.lastUncompletedPuzzle &&
-          state.lastUncompletedPuzzle.book === state.currentBook &&
-          state.lastUncompletedPuzzle.part === state.currentStoryPart) {
+        state.lastUncompletedPuzzle.book === state.currentBook &&
+        state.lastUncompletedPuzzle.part === state.currentStoryPart) {
         state.lastUncompletedPuzzle = null;
       }
-      
+
       // Increment completed puzzles count
       state.completedPuzzles++;
-      
+
       // Update book completion status
       if (state.currentBook && state.currentStoryPart >= 0) {
         // Initialize book tracking if it doesn't exist
         if (!state.books[state.currentBook]) {
           state.books[state.currentBook] = [];
         }
-        
+
         // Mark the story part as complete
         state.books[state.currentBook][state.currentStoryPart] = true;
-        
+
         // Ensure discoveredBooks exists and is a Set
         if (!state.discoveredBooks || !(state.discoveredBooks instanceof Set)) {
           state.discoveredBooks = new Set();
         }
-        
+
         // Add to discoveredBooks if this is a new book
         if (!state.discoveredBooks.has(state.currentBook)) {
           state.discoveredBooks.add(state.currentBook);
           // Update completedBooks based on the actual set size
           state.completedBooks = state.discoveredBooks.size;
         }
-        
+
         // Update the next story part to show for this book
         if (!state.bookProgress) {
           state.bookProgress = {};
         }
-        
+
         // Advance to next part
         state.bookProgress[state.currentBook] = state.currentStoryPart + 1;
-        
+
         // Check if the book is now complete
         checkBookCompletion(state.currentBook);
       }
-      
+
       // Save progress
       SaveSystem.saveGameProgress();
-      
+
       // Show win panel
       showWinPanel();
     } else {
@@ -215,37 +195,37 @@ function endGame(isWin) {
 function checkBookCompletion(bookTitle) {
   try {
     const state = GameState.getGameState();
-    
+
     // Return false if the book doesn't exist in state
     if (!state.books[bookTitle]) return false;
-    
+
     // Get available parts from the mapping 
     const availableParts = state.bookPartsMap[bookTitle];
-    
+
     // If no parts mapping exists, we can't determine completion
     if (!availableParts || availableParts.length === 0) return false;
-    
+
     // Check if ALL available parts are complete
     const allPartsComplete = availableParts.every(part =>
       state.books[bookTitle][part] === true
     );
-    
+
     // Only mark as complete if all available parts are complete
     if (allPartsComplete) {
       // Only increment counter if this book wasn't already marked complete
       if (!state.books[bookTitle].complete) {
         state.books[bookTitle].complete = true;
-        
+
         // Show a celebration message in win panel
         const winMessage = document.querySelector('#win-panel p');
         if (winMessage) {
           winMessage.innerHTML = `You've successfully organized all the words in this knowledge construct!<br><br><strong>Congratulations! You've completed all parts of "${bookTitle}"!</strong>`;
         }
       }
-      
+
       return true;
     }
-    
+
     return false;
   } catch (error) {
     console.error('Error checking book completion:', error);
@@ -260,22 +240,22 @@ function startTimer() {
   try {
     const state = GameState.getGameState();
     const config = Config.getConfig();
-    
+
     // Clear any existing timer
     clearInterval(state.timer);
-    
+
     // Set up new timer
     state.timer = setInterval(() => {
       if (state.paused) return;
-      
+
       state.timeRemaining--;
-      
+
       // Update timer display
       const timerBar = document.getElementById('timer-bar');
       if (timerBar) {
         const percentRemaining = (state.timeRemaining / config.timeLimit) * 100;
         timerBar.style.width = `${percentRemaining}%`;
-        
+
         // Change color as time runs low
         if (percentRemaining < 20) {
           timerBar.style.backgroundColor = 'var(--accent-main)';
@@ -285,13 +265,13 @@ function startTimer() {
           timerBar.style.backgroundColor = 'var(--primary-light)';
         }
       }
-      
+
       // Check for time's up
       if (state.timeRemaining <= 0) {
         endGame(false);
       }
     }, 1000);
-    
+
     console.log('Game timer started');
   } catch (error) {
     handleSelectionError(error, 'start-timer');
@@ -304,22 +284,22 @@ function startTimer() {
 function resetCurrentPuzzle() {
   try {
     const state = GameState.getGameState();
-    
+
     // Get current puzzle data
     const puzzleData = state.puzzles[state.currentGenre][state.currentPuzzleIndex];
-    
+
     // Dynamic import for puzzle generator
     import('../puzzle/puzzleGenerator.js')
       .then(PuzzleGenerator => {
         // Re-initialize the puzzle using the module
         PuzzleGenerator.initializePuzzle(puzzleData);
-        
+
         // Show instructions again
         const instructionsPanel = document.getElementById('instructions-panel');
         if (instructionsPanel) {
           instructionsPanel.style.display = 'block';
         }
-        
+
         console.log('Current puzzle reset');
       })
       .catch(error => {
@@ -340,23 +320,23 @@ function loadNextPuzzle() {
       .then(ModuleBootstrap => {
         // Load a new sequential puzzle using the module
         ModuleBootstrap.loadSequentialPuzzle();
-        
+
         // Show instructions panel
         const instructionsPanel = document.getElementById('instructions-panel');
         if (instructionsPanel) {
           instructionsPanel.style.display = 'block';
         }
-        
+
         // Ensure game is paused until instructions are closed
         const state = GameState.getGameState();
         state.paused = true;
-        
+
         // Reset game state that might be causing issues
         state.gameOver = false;
         state.selectedCells = [];
         state.startCell = null;
         state.currentCell = null;
-        
+
         console.log('Next puzzle loaded');
       })
       .catch(error => {
@@ -375,7 +355,7 @@ function confirmReturn() {
     if (confirm('Return to your Book of Passage? Your progress will be saved.')) {
       // Save current puzzle state before navigating away
       const state = GameState.getGameState();
-      
+
       if (!state.gameOver) {
         state.lastUncompletedPuzzle = {
           book: state.currentBook,
@@ -386,7 +366,7 @@ function confirmReturn() {
         SaveSystem.saveGameProgress();
         console.log('Saved uncompleted puzzle:', state.lastUncompletedPuzzle);
       }
-      
+
       // Navigate to Book of Passage
       navigateToScreen('book-of-passage-screen');
     }
@@ -401,21 +381,21 @@ function confirmReturn() {
 function startPuzzleGame() {
   try {
     const state = GameState.getGameState();
-    
+
     if (state.gameOver) {
       throw new Error("Cannot start game that is already over");
     }
-    
+
     if (!state.wordList || state.wordList.length === 0) {
       throw new Error("Cannot start game with empty word list");
     }
-    
+
     // Set game state
     state.paused = false;
-    
+
     // Start the timer
     startTimer();
-    
+
     console.log('Puzzle game started');
   } catch (error) {
     handleSelectionError(error, 'start-game');
