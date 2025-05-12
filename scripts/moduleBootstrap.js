@@ -164,14 +164,18 @@ function setupRemainingScreenHandlers() {
         if (success) {
           // Use our local function, not window.loadSequentialPuzzle
           loadSequentialPuzzle();
-          Navigation.navigateToScreen('puzzle-screen');
+          navigateToScreen('puzzle-screen');
+          
+          // Initialize mobile enhancements after navigation
+          if (window.innerWidth <= 768) {
+            import('./ui/renderSystem.js')
+              .then(RenderSystem => {
+                RenderSystem.setupMobileEnhancements();
+              });
+          }
         } else {
           // Data loading failed, show error
-          ErrorHandler.showErrorMessage(
-            "Data Loading Error",
-            "The Kethaneum's archives are currently unavailable. Please try again later.",
-            "Return to Book of Passage"
-          );
+          handleError();
         }
       });
     });
