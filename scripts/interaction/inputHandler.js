@@ -8,7 +8,6 @@ import { debounce, throttle, getRelativeCoordinates } from '../utils/domUtils.js
 import { updateSelectedCells } from '../ui/renderSystem.js';
 import { checkForWord, confirmReturn } from './gameLogic.js';
 import * as GameState from '../core/gameState.js';
-import * as MobilePanels from '../ui/mobilePanels.js';
 
 // Store active event listener removers for cleanup
 const activeListeners = [];
@@ -107,121 +106,6 @@ function setupPuzzleEventListeners() {
     console.log('All puzzle event listeners set up successfully');
   } catch (error) {
     console.error('Error setting up puzzle event listeners:', error);
-  }
-
-  // Add mobile event listeners
-  setupMobileEventListeners();
-}
-
-/**
- * Setup mobile-specific event listeners
- */
-function setupMobileEventListeners() {
-  // Only set up on mobile
-  if (window.innerWidth > 768) return;
-  
-  // Unified control button
-  const unifiedBtn = document.getElementById('unified-control-btn');
-  if (unifiedBtn) {
-    activeListeners.push(
-      addEventListenerWithCleanup(unifiedBtn, 'click', function() {
-        MobilePanels.openSlidePanel();
-      })
-    );
-  }
-  
-  // Word list header
-  const wordListHeader = document.querySelector('.word-list-header');
-  if (wordListHeader) {
-    activeListeners.push(
-      addEventListenerWithCleanup(wordListHeader, 'click', function() {
-        MobilePanels.toggleWordList();
-      })
-    );
-  }
-  
-  // Tab buttons
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  tabButtons.forEach(btn => {
-    activeListeners.push(
-      addEventListenerWithCleanup(btn, 'click', function() {
-        const tabName = this.getAttribute('data-tab');
-        MobilePanels.switchTab(tabName);
-      })
-    );
-  });
-  
-  // Close panel button
-  const closeBtn = document.querySelector('.close-panel-btn');
-  if (closeBtn) {
-    activeListeners.push(
-      addEventListenerWithCleanup(closeBtn, 'click', function() {
-        MobilePanels.closeSlidePanel();
-      })
-    );
-  }
-  
-  // Overlay click to close
-  const overlay = document.querySelector('.slide-panel-overlay');
-  if (overlay) {
-    activeListeners.push(
-      addEventListenerWithCleanup(overlay, 'click', function() {
-        MobilePanels.closeSlidePanel();
-      })
-    );
-  }
-  
-  // Mobile menu buttons
-  setupMobileMenuButtons();
-}
-
-/**
- * Setup mobile menu button handlers
- */
-function setupMobileMenuButtons() {
-  // Restart button
-  const mobileRestartBtn = document.getElementById('mobile-restart-btn');
-  if (mobileRestartBtn) {
-    activeListeners.push(
-      addEventListenerWithCleanup(mobileRestartBtn, 'click', function() {
-        MobilePanels.closeSlidePanel();
-        // Import dynamically to avoid circular dependencies
-        import('./gameLogic.js')
-          .then(GameLogic => {
-            GameLogic.resetCurrentPuzzle();
-          })
-          .catch(error => {
-            console.error('Error importing gameLogic:', error);
-          });
-      })
-    );
-  }
-  
-  // Book of Passage button
-  const mobilePassageBtn = document.getElementById('mobile-passage-btn');
-  if (mobilePassageBtn) {
-    activeListeners.push(
-      addEventListenerWithCleanup(mobilePassageBtn, 'click', function() {
-        MobilePanels.closeSlidePanel();
-        import('./gameLogic.js')
-          .then(GameLogic => {
-            GameLogic.confirmReturn();
-          })
-          .catch(error => {
-            console.error('Error importing gameLogic:', error);
-          });
-      })
-    );
-  }
-  
-  // Library button (disabled)
-  const mobileLibraryBtn = document.getElementById('mobile-library-btn');
-  if (mobileLibraryBtn) {
-    activeListeners.push(
-      addEventListenerWithCleanup(mobileLibraryBtn, 'click', function() {
-        alert('The Library will be available in a future update');
-      })
-    );
   }
 }
 
@@ -555,7 +439,5 @@ export {
   resumeGame,
   removeAllEventListeners,
   setupMobileInputHandling,
-  setupHapticFeedback,
-  setupMobileEventListeners,
-  setupMobileMenuButtons
+  setupHapticFeedback
 };

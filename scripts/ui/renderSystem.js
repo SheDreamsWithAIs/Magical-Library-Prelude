@@ -3,9 +3,6 @@
  * This module handles updating the UI based on game state
  */
 
-import * as MobilePanels from './mobilePanels.js';
-
-
 /**
  * Render the grid to the DOM
  */
@@ -81,10 +78,6 @@ function renderWordList() {
 
       mobileWordList.appendChild(mobileItem);
     }
-  }
-  
-  if (window.innerWidth <= 768) {
-    MobilePanels.refreshMobileWordList();
   }
 }
 
@@ -198,58 +191,58 @@ function setupMobileTimerWithAnimation(callback) {
 }
 
 /**
- * Set up mobile-specific enhancements with error handling
+ * Set up mobile-specific enhancements for the puzzle screen
  */
 function setupMobileEnhancements() {
-  try {
-    // Check if we're on a mobile device
-    const isMobile = window.innerWidth <= 768;
-    
-    if (!isMobile) {
-      console.log('Not mobile - skipping mobile enhancements');
-      return;
+  // Check if we're on a mobile device
+  const isMobile = window.innerWidth <= 768;
+
+  if (isMobile) {
+    // Don't create the timer yet - wait for instruction panel close
+
+    // Create collapsible story toggle if not already present
+    const storyContainer = document.querySelector('.story-container');
+    if (storyContainer && !storyContainer.querySelector('.story-toggle')) {
+      const toggleButton = document.createElement('button');
+      toggleButton.className = 'story-toggle';
+      toggleButton.textContent = 'Show More';
+      toggleButton.addEventListener('click', function () {
+        storyContainer.classList.toggle('expanded');
+        this.textContent = storyContainer.classList.contains('expanded') ? 'Show Less' : 'Show More';
+      });
+      storyContainer.appendChild(toggleButton);
     }
-    
-    // Initialize mobile panels UI with error handling
-    if (typeof MobilePanels !== 'undefined' && MobilePanels.initializeMobilePanelsUI) {
-      MobilePanels.initializeMobilePanelsUI();
-    } else {
-      console.warn('Mobile panels module not available');
-    }
-    
-    // Only create mobile word list if it doesn't exist
-    if (!document.querySelector('.mobile-word-list') && 
-        !document.querySelector('.collapsible-word-list')) {
-      
+
+    // Create mobile word list if it doesn't exist
+    if (!document.querySelector('.mobile-word-list')) {
       const mobileWordList = document.createElement('ul');
       mobileWordList.className = 'mobile-word-list';
       mobileWordList.id = 'mobile-word-list';
-      
+
       // Hide the desktop word list
       const desktopWordList = document.querySelector('.words-container');
       if (desktopWordList) {
         desktopWordList.style.display = 'none';
       }
-      
+
       // Place mobile word list after the grid
       const gridContainer = document.querySelector('.grid-container');
       if (gridContainer && gridContainer.parentNode) {
         gridContainer.parentNode.insertBefore(mobileWordList, gridContainer.nextSibling);
       }
+
+      // Re-render the word list to populate the mobile list
+      renderWordList();
     }
-    
-    // Set up haptic feedback
+
+    // Set up haptic feedback for word finding
     setupHapticFeedback();
-    
-    // Scroll to title if it exists
+
+    // Make sure book title is visible
     const bookTitle = document.getElementById('book-title');
     if (bookTitle) {
       bookTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    
-  } catch (error) {
-    console.error('Error setting up mobile enhancements:', error);
-    // Game continues without mobile enhancements
   }
 }
 

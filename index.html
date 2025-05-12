@@ -118,7 +118,7 @@
               Senior Archivists have noticed your particular talent for pattern recognition—a gift that will serve you
               well as you bring order to chaos, one word at a time."</p>
 
-            <div id="progress-section-container" class="progress-section">
+            <div id="progress-section-container" class="progress-section"> <!-- I'm trying to make this section have an id for the tests but the tests can't find it. :( )-->
               <h3>Your Archives Progress:</h3>
               <p>Cataloging Completed: <span id="completed-puzzles-count">0</span></p>
               <p>Books Discovered: <span id="completed-books-count">0</span></p>
@@ -185,11 +185,6 @@
         <button id="pause-btn">Pause</button>
         <button id="return-book-of-passage-btn" class="secondary">Book of Passage</button>
       </div>
-      
-      <!-- Mobile-only controls -->
-      <div class="mobile-controls">
-        <button id="unified-control-btn" class="unified-button">Story - Pause Menu</button>
-      </div>
     </div>
   </div>
 
@@ -237,38 +232,10 @@
     <p>An error has occurred while accessing the Kethaneum's archives.</p>
     <button id="error-action-btn" class="accent">Return to Book of Passage</button>
   </div>
-  
-  <!-- Mobile Slide-out Panel -->
-  <div id="mobile-slide-panel" class="slide-panel left">
-    <div class="panel-header">
-      <div class="tab-buttons">
-        <button class="tab-btn active" data-tab="story">Story</button>
-        <button class="tab-btn" data-tab="menu">Menu</button>
-      </div>
-      <button class="close-panel-btn">×</button>
-    </div>
-    
-    <div class="panel-content">
-      <div class="tab-content active" data-content="story">
-        <div class="story-content" id="mobile-story-excerpt">
-          <!-- Story content will be copied here dynamically -->
-        </div>
-      </div>
-      
-      <div class="tab-content" data-content="menu">
-        <div class="menu-options">
-          <button class="menu-btn restart-btn" id="mobile-restart-btn">Restart</button>
-          <button class="menu-btn library-btn" id="mobile-library-btn">Return to The Library</button>
-          <button class="menu-btn passage-btn" id="mobile-passage-btn">Return to Book of Passage</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="slide-panel-overlay"></div>
 
   <!-- Single script entry point using ES modules -->
   <script type="module" src="scripts/moduleBootstrap.js"></script>
-  <script nomodule src="moduleBootstrap.js"></script>
+  <script nomodule src="moduleBootstrap.js  "></script>
 
   <!-- Updated JavaScript for screen display management -->
   <script>
@@ -276,11 +243,11 @@
     // It should be added after the main game script to override any conflicting settings
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Remove .active from all screens…
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      // …then add it only to the title screen
-      document.getElementById('title-screen').classList.add('active');
-    });
+    // Remove .active from all screens…
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    // …then add it only to the title screen
+    document.getElementById('title-screen').classList.add('active');
+  });
   </script>
 </body>
 
