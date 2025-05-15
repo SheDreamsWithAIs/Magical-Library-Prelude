@@ -427,30 +427,60 @@
   margin-top: 20px;
 }
 
-/* Library Screen Base Styling */
+/* Library Screen styling */
 #library-screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: var(--neutral-dark); /* Temporary until we add the SVG */
-  display: none; /* Hidden by default, navigation will show it */
+  background-color: var(--neutral-dark);
+  color: var(--warm-light);
+  text-align: center;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
 }
 
-/* Main navigation panel */
+#library-screen.active {
+  display: flex;
+}
+
+/* Screen title styling */
+.screen-title {
+  font-size: 36px;
+  color: var(--accent-main);
+  margin-bottom: 20px;
+  text-shadow: 0 0 15px rgba(230, 168, 23, 0.3);
+}
+
+/* Library container */
+.library-container {
+  box-sizing: border-box; /* Force consistent box model */
+  width: 100%;
+  max-width: 900px;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto; 
+  height: 70%;
+  background: rgba(77, 35, 97, 0.5); /* Temporary to see container */
+  border-radius: 10px;
+  position: relative;
+}
+
+/* Main library navigation panel */
 .main-nav-panel {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
+  width: 100%;
+  max-width: 900px;
+  padding-left: 0; 
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
   background: rgba(77, 35, 97, 0.95);
+  border-radius: 10px;
   border-top: 3px solid var(--accent-main);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 30px;
-  z-index: 100;
 }
 
 .nav-button {
