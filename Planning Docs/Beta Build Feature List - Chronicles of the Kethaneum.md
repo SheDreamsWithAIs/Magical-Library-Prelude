@@ -20,6 +20,7 @@
 - [ ] Option Menu
 - [ ] Pause Menu
 - [ ] Character Dialogue System
+- [ ] Genre Card System
 
 ### Advanced Animations
 - [ ] Screen transitions
