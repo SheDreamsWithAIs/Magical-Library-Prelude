@@ -98,7 +98,7 @@ function validateGameState() {
  */
 function updateBookOfPassageScreen() {
   const bookOfPassageContent = document.getElementById('book-of-passage-content');
-  
+
   if (bookOfPassageContent) {
     bookOfPassageContent.innerHTML = `
       <p><em>The pages of your Book of Passage shimmer as new words appear, chronicling your arrival:</em></p>
@@ -287,7 +287,16 @@ function setupScreenNavigation() {
   const continueToBookBtn = document.getElementById('continue-to-book-btn');
   if (continueToBookBtn) {
     continueToBookBtn.addEventListener('click', function () {
-      console.log('Continue to book clicked');
+      console.log('Continue to library clicked');
+      navigateToScreen('library-screen'); 
+    });
+  }
+
+  // Library screen 
+  const bookOfPassageNavBtn = document.getElementById('book-of-passage-nav-btn');
+  if (bookOfPassageNavBtn) {
+    bookOfPassageNavBtn.addEventListener('click', function () {
+      console.log('Book of Passage button clicked from Library');
       navigateToScreen('book-of-passage-screen');
     });
   }

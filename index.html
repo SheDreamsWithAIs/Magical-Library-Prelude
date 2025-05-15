@@ -12,6 +12,7 @@
       padding: 0;
       background-color: #f4efe7;
     }
+
     #loading-indicator {
       position: fixed;
       top: 0;
@@ -24,6 +25,7 @@
       align-items: center;
       z-index: 9999;
     }
+
     .loader {
       border: 5px solid #f3f3f3;
       border-top: 5px solid #E6A817;
@@ -32,12 +34,18 @@
       height: 50px;
       animation: spin 2s linear infinite;
     }
+
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
-  
+
   <!-- Modular CSS -->
   <link rel="stylesheet" href="styles/cssVariables.css">
   <link rel="stylesheet" href="styles/baseCSS.css">
@@ -96,7 +104,7 @@
             follow in your footsteps.</p>
         </div>
       </div>
-      <button id="continue-to-book-btn">Continue to the Book of Passage</button>
+      <button id="continue-to-book-btn">Enter to the Library</button> <!-- refactor this button to a more generic id later.-->
     </div>
 
     <!-- Book of Passage Screen -->
@@ -118,7 +126,8 @@
               Senior Archivists have noticed your particular talent for pattern recognition—a gift that will serve you
               well as you bring order to chaos, one word at a time."</p>
 
-            <div id="progress-section-container" class="progress-section"> <!-- I'm trying to make this section have an id for the tests but the tests can't find it. :( )-->
+            <div id="progress-section-container" class="progress-section">
+              <!-- I'm trying to make this section have an id for the tests but the tests can't find it. :( )-->
               <h3>Your Archives Progress:</h3>
               <p>Cataloging Completed: <span id="completed-puzzles-count">0</span></p>
               <p>Books Discovered: <span id="completed-books-count">0</span></p>
@@ -135,25 +144,13 @@
 
     <!-- Library Screen (Genre Selection) - Hidden for now but kept for future -->
     <div id="library-screen" class="screen">
-      <h2>The Great Library</h2>
-      <p>Choose a section of the library to explore:</p>
-      <div class="genre-container">
-        <div class="genre-card" data-genre="nature">
-          <h3>Nature</h3>
-          <p>Explore the natural world through words about animals, plants, and landscapes.</p>
-        </div>
-        <div class="genre-card" data-genre="fantasy">
-          <h3>Fantasy</h3>
-          <p>Discover magical creatures, enchanted places, and heroic adventures.</p>
-        </div>
-        <div class="genre-card" data-genre="science">
-          <h3>Science</h3>
-          <p>Uncover terms from astronomy, chemistry, biology, and more.</p>
-        </div>
-        <div class="genre-card" data-genre="history">
-          <h3>History</h3>
-          <p>Find words related to historical events, figures, and places.</p>
-        </div>
+      <h2>The Library Archives</h2>
+      
+      <!-- We'll add the SVG background later -->
+
+      <!-- Main navigation panel -->
+      <div class="main-nav-panel">
+        <button id="book-of-passage-nav-btn" class="nav-button">Book of Passage</button>
       </div>
     </div>
 
@@ -243,11 +240,11 @@
     // It should be added after the main game script to override any conflicting settings
 
     document.addEventListener('DOMContentLoaded', () => {
-    // Remove .active from all screens…
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    // …then add it only to the title screen
-    document.getElementById('title-screen').classList.add('active');
-  });
+      // Remove .active from all screens…
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      // …then add it only to the title screen
+      document.getElementById('title-screen').classList.add('active');
+    });
   </script>
 </body>
 
