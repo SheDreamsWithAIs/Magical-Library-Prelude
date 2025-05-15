@@ -530,6 +530,48 @@ document.addEventListener('DOMContentLoaded', function () {
 // Import GameState for loadSequentialPuzzle
 import * as GameState from './core/gameState.js';
 
+/**
+ * Register navigation handlers for a specific screen
+ * @param {string} screenId - ID of the screen
+ * @param {Object} handlers - Map of button IDs to handler functions
+ */
+function registerScreenNavigationHandlers(screenId, handlers) {
+  console.log(`Registering navigation handlers for screen: ${screenId}`);
+  
+  // Process each handler
+  Object.entries(handlers).forEach(([buttonId, handlerFn]) => {
+    const button = document.getElementById(buttonId);
+    if (button) {
+      // For safety, remove any existing handler first
+      if (button.navigationHandler) {
+        button.removeEventListener('click', button.navigationHandler);
+      }
+      
+      // Store reference to handler for potential cleanup later
+      button.navigationHandler = handlerFn;
+      
+      // Add the new handler
+      button.addEventListener('click', handlerFn);
+      console.log(`- Registered handler for button: ${buttonId}`);
+    } else {
+      console.warn(`- Button not found: ${buttonId}`);
+    }
+  });
+}
+
+/**
+ * Initialize library screen navigation
+ */
+function initializeLibraryNavigation() {
+  registerScreenNavigationHandlers('library-screen', {
+    'book-of-passage-nav-btn': function() {
+      console.log('Navigating from Library to Book of Passage');
+      navigateToScreen('book-of-passage-screen');
+    }
+    // Future buttons will be added here
+  });
+}
+
 // Export functions for module access
 export {
   APP_VERSION,
@@ -538,5 +580,7 @@ export {
   loadGameData,
   initializeFullGame,
   loadSequentialPuzzle,
-  setupRemainingScreenHandlers
+  setupRemainingScreenHandlers,
+  registerScreenNavigationHandlers,
+  initializeLibraryNavigation
 };
