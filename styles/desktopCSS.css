@@ -460,7 +460,7 @@
   padding-right: 0;
   margin-left: auto;
   margin-right: auto; 
-  height: 70%;
+  height: 65%;
   background: rgba(77, 35, 97, 0.5); /* Temporary to see container */
   border-radius: 10px;
   position: relative;
@@ -470,17 +470,18 @@
 .main-library-nav-panel {
   width: 100%;
   max-width: 900px;
-  padding-left: 0; 
-  padding-right: 0;
+  padding: 0px;
   margin-left: auto;
   margin-right: auto;
   background: rgba(77, 35, 97, 0.95);
   border-radius: 10px;
   border-top: 3px solid var(--accent-main);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 30px;
+  row-gap: 0px;
+  column-gap: 15px;
 }
 
 .nav-button {
@@ -500,4 +501,10 @@
   color: var(--primary-dark);
   transform: scale(1.05);
   box-shadow: 0 0 20px rgba(230, 168, 23, 0.4);
+}
+
+/* Make active buttons stand out */
+.nav-button.active {
+  background: var(--accent-main);
+  color: var(--primary-dark);
 }

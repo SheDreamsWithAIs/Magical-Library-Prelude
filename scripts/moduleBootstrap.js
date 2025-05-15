@@ -176,13 +176,22 @@ function setupRemainingScreenHandlers() {
       });
     });
   }
-  // Library screen navigation button
-  const bookOfPassageNavBtn = document.getElementById('book-of-passage-nav-btn');
-  if (bookOfPassageNavBtn) {
-    bookOfPassageNavBtn.addEventListener('click', function () {
-      console.log('Navigating from Library to Book of Passage');
-      navigateToScreen('book-of-passage-screen');
-    });
+  // Call our navigation function from the library screen navigation panel
+  try {
+    Navigation.initializeLibraryNavigation();
+    console.log('Library navigation initialized via API');
+  } catch (navError) {
+    console.error('Error initializing library navigation via API:', navError);
+
+    // Fallback for backward compatibility
+    console.log('Using fallback for library navigation');
+    const bookOfPassageNavBtn = document.getElementById('book-of-passage-nav-btn');
+    if (bookOfPassageNavBtn) {
+      bookOfPassageNavBtn.addEventListener('click', function () {
+        console.log('Navigating from Library to Book of Passage (fallback)');
+        Navigation.navigateToScreen('book-of-passage-screen');
+      });
+    }
   }
   // Instructions panel
   const startPlayingBtn = document.getElementById('start-playing-btn');
@@ -537,7 +546,7 @@ import * as GameState from './core/gameState.js';
  */
 function registerScreenNavigationHandlers(screenId, handlers) {
   console.log(`Registering navigation handlers for screen: ${screenId}`);
-  
+
   // Process each handler
   Object.entries(handlers).forEach(([buttonId, handlerFn]) => {
     const button = document.getElementById(buttonId);
@@ -546,10 +555,10 @@ function registerScreenNavigationHandlers(screenId, handlers) {
       if (button.navigationHandler) {
         button.removeEventListener('click', button.navigationHandler);
       }
-      
+
       // Store reference to handler for potential cleanup later
       button.navigationHandler = handlerFn;
-      
+
       // Add the new handler
       button.addEventListener('click', handlerFn);
       console.log(`- Registered handler for button: ${buttonId}`);
@@ -564,11 +573,22 @@ function registerScreenNavigationHandlers(screenId, handlers) {
  */
 function initializeLibraryNavigation() {
   registerScreenNavigationHandlers('library-screen', {
-    'book-of-passage-nav-btn': function() {
+    'book-of-passage-nav-btn': function () {
       console.log('Navigating from Library to Book of Passage');
       navigateToScreen('book-of-passage-screen');
+    },
+    'return-to-menu-btn': function () {
+      console.log('Returning to main menu from Library');
+      navigateToScreen('title-screen');
+    },
+    'browse-archives-btn': function () {
+      console.log('Browse Archives button clicked - functionality coming soon');
+      // Functionality will be added later
+    },
+    'speak-to-archivist-btn': function () {
+      console.log('Speak to Archivist button clicked - functionality coming soon');
+      // Functionality will be added later
     }
-    // Future buttons will be added here
   });
 }
 
