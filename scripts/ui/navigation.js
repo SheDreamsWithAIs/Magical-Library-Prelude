@@ -4,6 +4,7 @@
  */
 
 import { handleNavigationError } from '../utils/errorHandler.js';
+import { getGameState } from '../core/gameState.js';
 
 /**
  * Navigates to a specific screen by ID
@@ -288,7 +289,7 @@ function setupScreenNavigation() {
   if (continueToBookBtn) {
     continueToBookBtn.addEventListener('click', function () {
       console.log('Continue to library clicked');
-      navigateToScreen('library-screen'); 
+      navigateToScreen('library-screen');
     });
   }
 
@@ -479,20 +480,77 @@ function registerScreenNavigationHandlers(screenId, handlers) {
  */
 function initializeLibraryNavigation() {
   registerScreenNavigationHandlers('library-screen', {
-    'book-of-passage-nav-btn': function() {
+    'book-of-passage-nav-btn': function () {
       console.log('Navigating from Library to Book of Passage');
       navigateToScreen('book-of-passage-screen');
     },
-    'return-to-menu-btn': function() {
+    'return-to-menu-btn': function () {
       console.log('Returning to main menu from Library');
       navigateToScreen('title-screen');
     },
-    'browse-archives-btn': function() {
+    'browse-archives-btn': function () {
       console.log('Browse Archives button clicked');
-      const genrePanel = document.getElementById('genre-panel');
-      if (genrePanel) {
-        genrePanel.style.display = 'flex'; // Use flex to center content
+
+      // Show loading indicator
+      const loadingIndicator = document.getElementById('loading-indicator');
+      if (loadingIndicator) {
+        loadingIndicator.style.display = 'flex';
       }
+
+      // Import moduleBootstrap to access loadGameData
+      import('../moduleBootstrap.js')
+        .then(ModuleBootstrap => {
+          // Load game data first - this is the shared functionality
+          ModuleBootstrap.loadGameData().then(success => {
+            // Hide loading indicator
+            if (loadingIndicator) {
+              loadingIndicator.style.display = 'none';
+            }
+
+            if (success) {
+              // Show the genre panel
+              const genrePanel = document.getElementById('genre-panel');
+              if (genrePanel) {
+                genrePanel.style.display = 'flex';
+
+                // Generate cards
+                const container = genrePanel.querySelector('.genre-container');
+                if (container) {
+                  import('../ui/renderSystem.js')
+                    .then(RenderSystem => {
+                      const state = getGameState();
+                      if (state && state.puzzles) {
+                        console.log('Generating cards for genres:', Object.keys(state.puzzles));
+                        RenderSystem.generateGenreCards(container, state.puzzles);
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Error importing renderSystem:', error);
+                    });
+                }
+              }
+            } else {
+              // Show error if data loading fails - consistent with existing pattern
+              import('../utils/errorHandler.js')
+                .then(ErrorHandler => {
+                  ErrorHandler.showErrorMessage(
+                    "Data Loading Error",
+                    "The Kethaneum's archives are currently unavailable. Please try again later.",
+                    "Return to Library View"
+                  );
+                })
+                .catch(err => console.error('Error importing errorHandler:', err));
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error importing moduleBootstrap:', error);
+
+          // Hide loading indicator on error
+          if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+          }
+        });
     },
     'start-conversation-btn': function() {
       console.log('Speak to Archivist button clicked - functionality coming soon');
@@ -501,7 +559,7 @@ function initializeLibraryNavigation() {
   });
   // Add handlers for the genre panel itself
   registerScreenNavigationHandlers('genre-panel', {
-    'close-genre-panel-btn': function() {
+    'close-genre-panel-btn': function () {
       console.log('Closing genre panel');
       const genrePanel = document.getElementById('genre-panel');
       if (genrePanel) {

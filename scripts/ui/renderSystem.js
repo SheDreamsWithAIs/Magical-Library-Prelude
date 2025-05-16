@@ -275,6 +275,84 @@ function setupHapticFeedback() {
   }
 }
 
+/**
+ * Generate genre cards based on available puzzle data
+ * @param {HTMLElement} container - The container to add cards to
+ * @param {Object} puzzles - The puzzles object from game state
+ */
+function generateGenreCards(container, puzzles) {
+  if (!container || !puzzles) {
+    console.log('Missing container or puzzles data for genre cards');
+    return;
+  }
+  
+  // Clear existing cards
+  container.innerHTML = '';
+  
+  // Generate a card for each genre
+  Object.keys(puzzles).forEach(genre => {
+    if (puzzles[genre] && puzzles[genre].length > 0) {
+      const card = createGenreCard(genre);
+      container.appendChild(card);
+    }
+  });
+}
+
+/**
+ * Create a genre card element
+ * @param {string} genre - The genre name
+ * @returns {HTMLElement} - The genre card element
+ */
+function createGenreCard(genre) {
+  const card = document.createElement('div');
+  card.className = 'genre-card';
+  card.dataset.genre = genre;
+  
+  // Get display info for this genre
+  const displayInfo = getGenreDisplayInfo(genre);
+  
+  card.innerHTML = `
+    <div class="card-glow"></div>
+    <div class="card-content">
+      <h3>${displayInfo.title}</h3>
+      <p>${displayInfo.description}</p>
+      <div class="card-icon">${displayInfo.icon}</div>
+    </div>
+  `;
+  
+  return card;
+}
+
+/**
+ * Get display information for a genre
+ * @param {string} genre - The genre name
+ * @returns {Object} - The display information
+ */
+function getGenreDisplayInfo(genre) {
+  // Default display info
+  const defaultInfo = {
+    title: genre.charAt(0).toUpperCase() + genre.slice(1),
+    description: "Knowledge constructs from across realms",
+    icon: "✦"
+  };
+  
+  // Genre-specific display info
+  const genreInfo = {
+    "Kethaneum": {
+      title: "Kethaneum Lore",
+      description: "Chronicles of the nexus between realms",
+      icon: "✦"
+    },
+    "nature": {
+      title: "Natural Wisdom",
+      description: "Words of the living world",
+      icon: "🍃"
+    }
+  };
+  
+  return genreInfo[genre] || defaultInfo;
+}
+
 // Temporarily continue making functions available globally
 // These will be converted to proper exports once the module system is fully implemented
 window.renderGrid = renderGrid;
@@ -295,5 +373,8 @@ export {
   markCellsAsCorrect,
   setupMobileTimerWithAnimation,
   setupMobileEnhancements,
-  setupHapticFeedback
+  setupHapticFeedback,
+  generateGenreCards,
+  createGenreCard,
+  getGenreDisplayInfo
 };
