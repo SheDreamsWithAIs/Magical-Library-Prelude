@@ -488,12 +488,25 @@ function initializeLibraryNavigation() {
       navigateToScreen('title-screen');
     },
     'browse-archives-btn': function() {
-      console.log('Browse Archives button clicked - functionality coming soon');
-      // Functionality will be added later
+      console.log('Browse Archives button clicked');
+      const genrePanel = document.getElementById('genre-panel');
+      if (genrePanel) {
+        genrePanel.style.display = 'flex'; // Use flex to center content
+      }
     },
     'start-conversation-btn': function() {
       console.log('Speak to Archivist button clicked - functionality coming soon');
       // Functionality will be added later
+    }
+  });
+  // Add handlers for the genre panel itself
+  registerScreenNavigationHandlers('genre-panel', {
+    'close-genre-panel-btn': function() {
+      console.log('Closing genre panel');
+      const genrePanel = document.getElementById('genre-panel');
+      if (genrePanel) {
+        genrePanel.style.display = 'none';
+      }
     }
   });
 }
