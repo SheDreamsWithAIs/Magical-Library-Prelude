@@ -453,7 +453,8 @@ async function loadGameData() {
       // Adjust puzzle file paths to match actual location
       const puzzlePaths = {
         'Kethaneum': 'scripts/data/puzzleData/kethaneumPuzzles.json', // Complete path
-        'nature': 'scripts/data/puzzleData/naturePuzzles.json'        // Complete path
+        'nature': 'scripts/data/puzzleData/naturePuzzles.json',        // Complete path
+        'test artifact': 'scripts/data/puzzleData/testPuzzles.json' 
       };
 
       await PuzzleLoader.loadAllPuzzlesWithPaths(puzzlePaths);
