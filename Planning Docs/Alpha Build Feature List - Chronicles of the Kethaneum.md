@@ -27,13 +27,14 @@
 - [x] Continue Game Button
 
 ### Library Screen
-- [ ] Genre Selection cards
-- [ ] Library Art Container
+- [x] Library Art Container
 - [ ] Library Navigation buttons
-- [ ] Character dialog start button
-- [ ] Go to Main Menu button
-- [ ] Go to Book of Passage Button
-- [ ] Genre Selection UI button
+- [x] Character dialog start button
+- [x] Go to Main Menu button
+- [x] Go to Book of Passage Button
+- [x] Genre Selection UI button
+  - [x] Genre card container
+  - [x] Genre Selection cards
 - [ ] Character Container/overlay
   - [ ] Character dialogue area
   - [ ] Character Portrait area
@@ -119,7 +120,7 @@ ___
 - [ ] Character dialogue system
   - [ ] Event driven dialogue
   - [ ] Banter dialogue
-- [ ] Genre Cards that are organize by topic
+- [ ] Genre Cards
 
 ### Book of Passage Screen
 - [x] The Archivist's story so far Placeholder Text
@@ -153,12 +154,14 @@ ___
 - [ ] Navigate to Library Screen
 
 ### Library Screen
-- [ ] Navigate to Book of Passage Screen
+- [x] Navigate to Book of Passage Screen
 - [ ] Navigate to Word Puzzle Screen through Genre Selection
+- [x] Navigate to Title Screen
 
 ### Book of Passage Screen
 - [x] Navigate to word puzzle screen through start cataloging button
 - [ ] Navigate to library screen
+- [ ] Navigate to Title Screen
 
 ### Word Puzzle Screen
 - [x] Navigate to Book of Passage Screen through pause menu
