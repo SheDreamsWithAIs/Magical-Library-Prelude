@@ -590,7 +590,8 @@ function initializeLibraryNavigation() {
 
         console.log('Genre card clicked:', selectedGenre);
         
-        // TODO: Step 2 - Call startPuzzleFromGenre(selectedGenre);
+        // Step 2 - Call the flow control function
+        startPuzzleFromGenre(selectedGenre);
         
       } catch (error) {
         console.error('Error handling genre card click:', error);
@@ -600,6 +601,93 @@ function initializeLibraryNavigation() {
     console.log('Genre card click handler installed successfully');
   } else {
     console.warn('Genre container not found - genre card clicks will not work');
+  }
+}
+
+/**
+ * Flow control function to start puzzle from selected genre
+ * @param {string} selectedGenre - The genre selected from the genre card
+ */
+function startPuzzleFromGenre(selectedGenre) {
+  try {
+    console.log('Starting puzzle from genre:', selectedGenre);
+    
+    // Step 2a: Explicitly close the genre panel
+    const genrePanel = document.getElementById('genre-panel');
+    if (genrePanel) {
+      genrePanel.style.display = 'none';
+      console.log('Genre panel closed');
+    } else {
+      console.warn('Genre panel not found during close attempt');
+    }
+    
+    // Step 2b: Show loading indicator for puzzle loading
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'flex';
+    }
+    
+    // Step 2c: Load puzzle with selected genre
+    import('../puzzle/puzzleLoader.js')
+      .then(PuzzleLoader => {
+        console.log('Attempting to load sequential puzzle for genre:', selectedGenre);
+        
+        // Call loadSequentialPuzzle with the selected genre
+        const success = PuzzleLoader.loadSequentialPuzzle(selectedGenre);
+        
+        if (success) {
+          console.log('Puzzle loaded successfully, navigating to puzzle screen');
+          
+          // Step 2d: Navigate to puzzle screen
+          navigateToScreen('puzzle-screen');
+        } else {
+          console.error('Failed to load puzzle for genre:', selectedGenre);
+          
+          // Show error message if puzzle loading fails
+          import('../utils/errorHandler.js')
+            .then(ErrorHandler => {
+              ErrorHandler.showErrorMessage(
+                "Puzzle Loading Error",
+                `Unable to load a puzzle from the "${selectedGenre}" archives. Please try a different category.`,
+                "Return to Archives"
+              );
+            })
+            .catch(err => console.error('Error importing errorHandler:', err));
+        }
+        
+        // Hide loading indicator
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
+      })
+      .catch(error => {
+        console.error('Error importing puzzleLoader:', error);
+        
+        // Hide loading indicator on error
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
+        
+        // Show error message
+        import('../utils/errorHandler.js')
+          .then(ErrorHandler => {
+            ErrorHandler.showErrorMessage(
+              "System Error",
+              "The Kethaneum's puzzle loading system is experiencing difficulties. Please try again later.",
+              "Return to Library"
+            );
+          })
+          .catch(err => console.error('Error importing errorHandler:', err));
+      });
+      
+  } catch (error) {
+    console.error('Error in startPuzzleFromGenre:', error);
+    
+    // Hide loading indicator if there was an error
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'none';
+    }
   }
 }
 
