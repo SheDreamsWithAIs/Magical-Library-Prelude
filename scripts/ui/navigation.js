@@ -557,6 +557,7 @@ function initializeLibraryNavigation() {
       // Functionality will be added later
     }
   });
+  
   // Add handlers for the genre panel itself
   registerScreenNavigationHandlers('genre-panel', {
     'close-genre-panel-btn': function () {
@@ -567,6 +568,39 @@ function initializeLibraryNavigation() {
       }
     }
   });
+
+  // Add event delegation for genre card clicks - STEP 1 IMPLEMENTATION
+  const genreContainer = document.querySelector('.genre-container');
+  if (genreContainer) {
+    genreContainer.addEventListener('click', function(event) {
+      try {
+        // Check if clicked element is a genre card
+        const genreCard = event.target.closest('.genre-card');
+        if (!genreCard) {
+          console.log('Click was not on a genre card');
+          return;
+        }
+
+        // Extract genre from data attribute
+        const selectedGenre = genreCard.dataset.genre;
+        if (!selectedGenre) {
+          console.error('Genre card missing data-genre attribute');
+          return;
+        }
+
+        console.log('Genre card clicked:', selectedGenre);
+        
+        // TODO: Step 2 - Call startPuzzleFromGenre(selectedGenre);
+        
+      } catch (error) {
+        console.error('Error handling genre card click:', error);
+      }
+    });
+    
+    console.log('Genre card click handler installed successfully');
+  } else {
+    console.warn('Genre container not found - genre card clicks will not work');
+  }
 }
 
 // Temporarily continue making functions available globally
