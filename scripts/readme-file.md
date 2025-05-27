@@ -54,6 +54,7 @@ The game uses a simple module system with ES modules (import/export). Each modul
 ### Architecture Overview
 
 - **Core modules**: Handle game state, configuration, events, and persistence
+- **Dialogue modules**: Handle loading dialogue and managing dialogue triggers
 - **Interaction modules**: Handle user input and game logic
 - **Puzzle modules**: Handle puzzle generation and loading
 - **UI modules**: Handle navigation and rendering

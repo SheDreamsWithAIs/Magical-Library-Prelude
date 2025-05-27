@@ -1,0 +1,50 @@
+{
+  "system": {
+    "version": "1.0.0",
+    "enableLogging": true,
+    "fallbackOnError": true
+  },
+  "paths": {
+    "charactersDirectory": "scripts/dialogue/characters/",
+    "storyEventsDirectory": "scripts/dialogue/story-events/",
+    "characterPortraitsDirectory": "images/portraits/"
+  },
+  "display": {
+    "textLimits": {
+      "mobile": {
+        "maxCharsPerScreen": 120,
+        "estimatedWordsPerScreen": 20
+      },
+      "tablet": {
+        "maxCharsPerScreen": 200,
+        "estimatedWordsPerScreen": 35
+      },
+      "desktop": {
+        "maxCharsPerScreen": 300,
+        "estimatedWordsPerScreen": 50
+      }
+    },
+    "animationSettings": {
+      "textRevealSpeed": "medium",
+      "panelTransitionDuration": 500,
+      "characterPortraitFadeTime": 300
+    }
+  },
+  "behavior": {
+    "banterSelection": {
+      "method": "random",
+      "avoidRepeats": true,
+      "resetAfterAllSeen": true
+    },
+    "storyEvents": {
+      "triggerMethod": "external",
+      "autoAdvanceDelay": 0,
+      "allowSkipping": true
+    },
+    "errorHandling": {
+      "missingCharacterAction": "useDefault",
+      "missingStoryAction": "skipGracefully",
+      "corruptFileAction": "logAndContinue"
+    }
+  }
+}
