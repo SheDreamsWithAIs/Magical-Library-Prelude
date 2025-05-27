@@ -13,9 +13,18 @@ scripts/
 │   └── saveSystem.js    # Save/load game progress
 |
 ├── data/             # Game data
-│   └── puzzleData/   # Puzzle JSON files
-│       ├── kethaneum.json  # Kethaneum genre puzzles
-│       └── nature.json     # Nature genre puzzles
+│   ├── puzzleData/      # Puzzle JSON files
+│   │   ├── kethaneum.json
+│   │   └── nature.json
+│   └── dialogue/        # Dialogue JSON files
+│       ├── characters/     # Character banter data
+│       └── story-events/   # Story event scripts
+│
+├── dialogue/            # NEW - Dialogue system data and logic
+│   ├── characters/         # Character-specific banter files
+│   ├── story-events/       # Sequential story dialogue files
+│   ├── dialogueManager.js  # Core dialogue system
+│   └── dialogueUI.js       # Dialogue user interface
 │
 ├── interaction/      # User interaction
 │   ├── gameLogic.js     # Game mechanics and rules
@@ -84,6 +93,10 @@ During the transition from the monolithic structure to modules:
 - **gameState.js**: Manages the game state object, initialization, and access
 - **saveSystem.js**: Handles saving and loading game progress from localStorage
 
+### Dialogue Modules
+- **dialogueManager.js**: Manages dialogue state, loads character and story files, handles dialogue flow and selection logic
+- **dialogueUI.js**: Creates and manages dialogue overlay panels, character portrait display, responsive text sizing, and user interaction controls
+
 ### Interaction Modules
 - **inputHandler.js**: Processes user input (mouse, touch) and manages event listeners
 - **gameLogic.js**: Implements game rules, checks for win conditions, manages game flow
@@ -111,6 +124,15 @@ The configuration system provides:
 - Feature flags for conditional functionality
 - Testing mode options for development and QA
 - Import/export capabilities for saving configurations
+
+### Dialogue System (NEW)
+The dialogue system provides:
+- Character-based idle banter with random selection
+- Sequential story event dialogues with multiple characters  
+- Responsive text display adapting to screen size
+- Integration with library screen and future cross-screen compatibility
+- JSON-based dialogue data structure for easy content management
+- Character portrait system for visual character representation
 
 ### Event System
 The event system enables:
@@ -182,10 +204,10 @@ window.newFeature = newFeature;
 
 ## Future Improvements
 
-- Create a component system for UI elements
+- Create a component system for swappable UI elements
 - Implement unit testing for individual modules
 - Add support for alternate input methods (keyboard, gamepad)
 - Create specialized screen handler modules
-- Add internationalization support
+- Add localization support
 - Implement audio module for sound effects
 - Create animation system for visual effects

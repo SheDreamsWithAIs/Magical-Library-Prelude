@@ -31,6 +31,27 @@
 - [ ] Keyboard Navigation
 - [ ] Text description of screens for screen readers
 ___
+## .:: Character Dialogue System Expansion ::.
+
+### Cross-Screen Integration
+- [ ] Dialogue system callable from any screen
+- [ ] Tutorial integration preparation
+- [ ] Contextual dialogue triggers
+- [ ] Global dialogue state management
+
+### Advanced Dialogue Features  
+- [ ] Dialogue history/review system
+- [ ] Character relationship tracking
+- [ ] Dynamic dialogue based on player progress
+- [ ] Advanced character portrait animations
+
+## .:: Tutorial System ::.
+- [ ] Tutorial Library Screen
+- [ ] Tutorial Book of Passage Screen  
+- [ ] Tutorial Word Puzzle Screen
+- [ ] Tutorial Navigation and Flow
+- [ ] Tutorial Progress Tracking
+___
 ## .:: Word Puzzle ::.
 
 ### Word Puzzle Screen
@@ -45,10 +66,17 @@ ___
 - [ ] Performance Improvements and Optimization
   - [ ] Easy swap out of puzzles 
   - [ ] Support for Puzzle Pack DLC or Expansions
+- [ ] Dialogue System Integration 
 
 ### Final Word Puzzle Modes
 - [ ] Story Mode (contains story excerpts, No Timer)
 - [ ] Challenge Mode (No story excerpts, Complete as many puzzles as possible against the clock)
+
+### All Screens (NEW SECTION)
+- [ ] Universal dialogue system access
+- [ ] Consistent navigation patterns
+- [ ] Cross-screen state preservation
+- [ ] Universal options menu access
 
 ### Optional Game Modes that Make not Make it into Beta
 - [ ] Endless Puzzle Mode (No story excerpts, Complete as many puzzles a you like but puzzles are individually timed)
@@ -159,3 +187,9 @@ ___
 - [ ] Beefed Up Automated Regression Testing
 - [ ] Beta testing with players (playtesting)
 - [ ] Mobile Device Testing
+
+## .:: Final Polish Checklist ::.
+- [ ] Playtesting plan
+- [ ] Performance optimization across all systems
+- [ ] Accessibility features finalization
+- [ ] Cross-browser compatibility testing

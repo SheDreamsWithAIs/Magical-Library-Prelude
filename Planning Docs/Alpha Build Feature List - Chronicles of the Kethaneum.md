@@ -28,17 +28,17 @@
 
 ### Library Screen
 - [x] Library Art Container
-- [ ] Library Navigation buttons
 - [x] Character dialog start button
 - [x] Go to Main Menu button
 - [x] Go to Book of Passage Button
 - [x] Genre Selection UI button
   - [x] Genre card container
   - [x] Genre Selection cards
-- [ ] Character Container/overlay
-  - [ ] Character dialogue area
-  - [ ] Character Portrait area
-  - [ ] Dialogue Navigation Buttons
+- [ ] Character Dialogue System Integration 
+  - [ ] Dialogue overlay container
+  - [ ] Character portrait area
+  - [ ] Dialogue text display area
+  - [ ] Dialogue navigation controls
 
 ### Book of Passage Screen
 - [x] Book of Passage Title
@@ -120,7 +120,34 @@ ___
 - [ ] Character dialogue system
   - [ ] Event driven dialogue
   - [ ] Banter dialogue
-- [ ] Genre Cards
+- [x] Genre Cards
+
+### Core Dialogue Foundation
+- [ ] Dialogue folder structure and file organization
+  - [ ] `/dialogue/characters/` directory
+  - [ ] `/dialogue/story-events/` directory  
+  - [ ] `dialogue-config.json` configuration file
+- [ ] Basic DialogueManager module
+  - [ ] File loading system
+  - [ ] Error handling and validation
+  - [ ] Module integration with existing architecture
+- [ ] Character Banter System
+  - [ ] Random character selection logic
+  - [ ] Banter dialogue file structure (JSON)
+  - [ ] Character-specific dialogue loading
+- [ ] Story Event System  
+  - [ ] Sequential dialogue file structure (JSON)
+  - [ ] Multi-character conversation handling
+  - [ ] Story event triggering system
+- [ ] Dialogue UI Implementation
+  - [ ] Basic dialogue overlay panel
+  - [ ] Character portrait placeholder system
+  - [ ] Text display with responsive sizing
+  - [ ] Continue/advance dialogue controls
+- [ ] Library Screen Integration
+  - [ ] "Speak to Archivist" button functionality
+  - [ ] Dialogue panel show/hide management
+  - [ ] Integration with existing library navigation
 
 ### Book of Passage Screen
 - [x] The Archivist's story so far Placeholder Text
@@ -133,7 +160,7 @@ ___
 - [x] Word Puzzle Excerpt Text Content (especially Kethaneum related)
 
 ### End of Game Screen
-- [ ] End of Game Text Content
+- [ ] End of Game Placeholder Content
 
 ### Tutorial Screens
 - [ ] Tutorial Library Screen (deactivated until tutorial system implementation)
@@ -155,7 +182,7 @@ ___
 
 ### Library Screen
 - [x] Navigate to Book of Passage Screen
-- [ ] Navigate to Word Puzzle Screen through Genre Selection
+- [x] Navigate to Word Puzzle Screen through Genre Selection
 - [x] Navigate to Title Screen
 
 ### Book of Passage Screen
