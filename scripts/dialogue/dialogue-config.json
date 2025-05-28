@@ -30,6 +30,31 @@
       "characterPortraitFadeTime": 300
     }
   },
+  "storyStructure": {
+    "storyBeats": {
+      "HOOK": "hook",
+      "FIRST_PLOT_POINT": "first_plot_point", 
+      "FIRST_PINCH_POINT": "first_pinch_point",
+      "MIDPOINT": "midpoint",
+      "SECOND_PINCH_POINT": "second_pinch_point", 
+      "SECOND_PLOT_POINT": "second_plot_point",
+      "CLIMAX": "climax",
+      "RESOLUTION": "resolution"
+    },
+    "defaultStoryBeat": "hook",
+    "enableSeasonalDialogue": true,
+    "characterRetirement": {
+      "introduction_characters": "never",
+      "regular_contacts": "never", 
+      "essential_library_staff": "never",
+      "extended_library_staff": "never",
+      "long_term_scholars": "never",
+      "visiting_scholars": "second_plot_point",
+      "visiting_dignitaries": "resolution",
+      "knowledge_contributors": "midpoint",
+      "special_event_characters": "varies"
+    }
+  },
   "behavior": {
     "banterSelection": {
       "method": "random",

@@ -3,35 +3,35 @@
     "id": "first-visit",
     "title": "First Steps in the Kethaneum",
     "triggerCondition": "player-enters-library-first-time",
-    "priority": "high"
+    "storyBeat": "hook"
   },
   "dialogue": [
     {
       "sequence": 1,
       "speaker": "archivist-lumina",
       "text": "Ah, you must be our new Assistant Archivist! I am Lumina, Senior Archivist of Interdimensional Collections.",
-      "emotion": "welcoming",
+      "emotion": ["welcoming", "formal"],
       "pauseAfter": true
     },
     {
       "sequence": 2,
       "speaker": "keeper-valdris",
       "text": "Welcome, young seeker. I am Valdris, Keeper of the Ancient Texts. Your arrival has been long anticipated.",
-      "emotion": "formal-warm",
+      "emotion": ["formal", "warm", "mystical"],
       "pauseAfter": true
     },
     {
       "sequence": 3,
       "speaker": "archivist-lumina",
       "text": "The knowledge constructs await your attention. Each one contains scattered words that, when properly organized, reveal wisdom from across the multiverse.",
-      "emotion": "explanatory",
+      "emotion": ["explanatory", "encouraging"],
       "pauseAfter": true
     },
     {
       "sequence": 4,
       "speaker": "keeper-valdris",
       "text": "Do not be overwhelmed by the vastness of what lies before you. Every master archivist began with a single word, a single pattern recognized.",
-      "emotion": "reassuring",
+      "emotion": ["reassuring", "wise"],
       "pauseAfter": false,
       "isLastInSequence": true
     }
@@ -50,6 +50,6 @@
     "estimatedDuration": "medium",
     "storyImportance": "introduction",
     "unlocks": ["library-navigation", "genre-browsing"],
-    "lastUpdated": "2024-01-01"
+    "lastUpdated": "2025-05-27"
   }
 }
