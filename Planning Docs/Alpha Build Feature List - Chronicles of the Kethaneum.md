@@ -123,18 +123,18 @@ ___
 - [x] Genre Cards
 
 ### Core Dialogue Foundation
-- [ ] Dialogue folder structure and file organization
-  - [ ] `/dialogue/characters/` directory
-  - [ ] `/dialogue/story-events/` directory  
-  - [ ] `dialogue-config.json` configuration file
-- [ ] Basic DialogueManager module
-  - [ ] File loading system
-  - [ ] Error handling and validation
-  - [ ] Module integration with existing architecture
-- [ ] Character Banter System
-  - [ ] Random character selection logic
-  - [ ] Banter dialogue file structure (JSON)
-  - [ ] Character-specific dialogue loading
+- [x] Dialogue folder structure and file organization
+  - [x] `/dialogue/characters/` directory
+  - [x] `/dialogue/story-events/` directory  
+  - [x] `dialogue-config.json` configuration file
+- [x] Basic DialogueManager module
+  - [x] File loading system
+  - [x] Error handling and validation
+  - [x] Module integration with existing architecture
+- [x] Character Banter System
+  - [x] Random character selection logic
+  - [x] Banter dialogue file structure (JSON)
+  - [x] Character-specific dialogue loading
 - [ ] Story Event System  
   - [ ] Sequential dialogue file structure (JSON)
   - [ ] Multi-character conversation handling
@@ -178,7 +178,7 @@ ___
 - [ ] Navigate back to title screen
 
 ### Backstory Screen
-- [ ] Navigate to Library Screen
+- [x] Navigate to Library Screen
 
 ### Library Screen
 - [x] Navigate to Book of Passage Screen

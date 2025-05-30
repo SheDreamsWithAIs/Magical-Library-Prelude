@@ -21,13 +21,13 @@ class DialogueManager {
   async initialize() {
     try {
       console.log('Initializing DialogueManager...');
-      
+
       // Load configuration first
       await this.loadConfiguration();
-      
+
       // Load initial character groups
       await this.loadCharacterGroup('introduction_characters');
-      
+
       this.isInitialized = true;
       console.log('DialogueManager initialized successfully');
       return true;
@@ -48,7 +48,7 @@ class DialogueManager {
       if (!response.ok) {
         throw new Error(`Failed to load config: ${response.status}`);
       }
-      
+
       this.config = await response.json();
       console.log('Dialogue configuration loaded');
     } catch (error) {
@@ -78,7 +78,8 @@ class DialogueManager {
       behavior: {
         banterSelection: {
           method: 'random',
-          avoidRepeats: true
+          avoidRepeats: true,
+          recentAvoidanceWindow: 3
         },
         errorHandling: {
           missingCharacterAction: 'useDefault',
@@ -101,10 +102,10 @@ class DialogueManager {
 
     try {
       console.log(`Loading character group: ${groupName}`);
-      
+
       // Load character manifest to discover available files
       const filenames = await this.loadCharacterManifest();
-      
+
       // Load each file and check if it belongs to this group
       const groupCharacters = [];
       for (const filename of filenames) {
@@ -119,7 +120,7 @@ class DialogueManager {
           console.warn(`Skipping invalid character file: ${filename}`, error);
         }
       }
-      
+
       this.loadedGroups.add(groupName);
       console.log(`Character group '${groupName}' loaded successfully with ${groupCharacters.length} characters`);
     } catch (error) {
@@ -136,23 +137,23 @@ class DialogueManager {
     try {
       const manifestPath = this.config.paths.charactersDirectory + 'character-manifest.json';
       const response = await fetch(manifestPath);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to load character manifest: ${response.status}`);
       }
-      
+
       const filenames = await response.json();
-      
+
       // Validate manifest is an array
       if (!Array.isArray(filenames)) {
         throw new Error('Invalid manifest structure: expected array of filenames');
       }
-      
+
       console.log(`Loaded character manifest with ${filenames.length} character files`);
       return filenames;
     } catch (error) {
       console.error('Error loading character manifest:', error);
-      
+
       // Return fallback array for our existing character
       return ["archivist-lumina.json"];
     }
@@ -167,13 +168,13 @@ class DialogueManager {
     try {
       const basePath = this.config.paths.charactersDirectory;
       const response = await fetch(`${basePath}${filename}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to load character file: ${response.status}`);
       }
 
       const characterData = await response.json();
-      
+
       // Validate character data structure
       if (!this.validateCharacterData(characterData)) {
         throw new Error(`Invalid character data structure in ${filename}`);
@@ -219,26 +220,210 @@ class DialogueManager {
   }
 
   /**
-   * Get random character banter
-   * @returns {Object|null} - Banter dialogue object or null
+ * Filter dialogue entries based on current story beat availability
+ * @param {Array} dialogueEntries - Array of dialogue objects
+ * @param {string} currentStoryBeat - Current story beat
+ * @returns {Array} - Filtered dialogue entries
+ */
+  filterDialogueByStoryBeat(dialogueEntries, currentStoryBeat) {
+    if (!Array.isArray(dialogueEntries)) {
+      return [];
+    }
+
+    return dialogueEntries.filter(entry => {
+      // If no availableFrom specified, assume always available
+      const availableFrom = entry.availableFrom || 'hook';
+
+      // If no availableUntil specified, assume available indefinitely
+      const availableUntil = entry.availableUntil;
+
+      // Check if current story beat meets the availability window
+      const isAvailable = this.isStoryBeatInRange(currentStoryBeat, availableFrom, availableUntil);
+
+      return isAvailable;
+    });
+  }
+
+  /**
+   * Check if current story beat falls within availability range
+   * @param {string} currentBeat - Current story beat
+   * @param {string} availableFrom - Starting availability beat
+   * @param {string} availableUntil - Ending availability beat (optional)
+   * @returns {boolean} - Whether current beat is in range
    */
-  getRandomBanter() {
+  isStoryBeatInRange(currentBeat, availableFrom, availableUntil) {
+    // Story beat order from config
+    const beatOrder = Object.values(this.config.storyStructure.storyBeats);
+
+    const currentIndex = beatOrder.indexOf(currentBeat);
+    const fromIndex = beatOrder.indexOf(availableFrom);
+
+    // If availableUntil not specified, available indefinitely
+    if (!availableUntil) {
+      return currentIndex >= fromIndex;
+    }
+
+    const untilIndex = beatOrder.indexOf(availableUntil);
+    return currentIndex >= fromIndex && currentIndex <= untilIndex;
+  }
+
+  /**
+ * Get random character banter for the current story beat
+ * This is the main function that the game will call
+ * @param {string} storyBeat - Optional story beat (uses current if not provided)
+ * @returns {Object|null} - Complete banter object ready for UI or null if none available
+ */
+getRandomBanter(storyBeat = null) {
+  try {
     if (!this.isInitialized) {
-      console.warn('DialogueManager not initialized');
+      console.warn('DialogueManager not initialized - cannot get random banter');
+      return null;
+    }
+    
+    // Get available characters for current story beat
+    const availabilityResult = this.getAvailableCharacters(storyBeat);
+    
+    if (!availabilityResult.availableCharacters || availabilityResult.availableCharacters.length === 0) {
+      console.log('No characters available for banter at current story beat');
+      return null;
+    }
+    
+    // Select character using weighted random selection
+    const selectedCharacter = this.selectCharacterWeighted(availabilityResult.availableCharacters);
+    
+    if (!selectedCharacter) {
+      console.log('Character selection failed');
+      return null;
+    }
+    
+    // Random dialogue selection from available dialogue
+    const availableDialogue = selectedCharacter.availableDialogue;
+    const randomDialogueIndex = Math.floor(Math.random() * availableDialogue.length);
+    const selectedDialogue = availableDialogue[randomDialogueIndex];
+    
+    // Add character to recently used list
+    this.addToRecentlyUsed(selectedCharacter.characterId);
+    
+    // Return complete banter object ready for UI
+    return {
+      characterId: selectedCharacter.characterId,
+      characterName: selectedCharacter.characterData.character.name,
+      characterTitle: selectedCharacter.characterData.character.title,
+      portraitFile: selectedCharacter.characterData.character.portraitFile,
+      dialogue: {
+        id: selectedDialogue.id,
+        text: selectedDialogue.text,
+        emotion: selectedDialogue.emotion,
+        category: selectedDialogue.category
+      },
+      storyBeat: availabilityResult.debugInfo.currentStoryBeat,
+      timestamp: new Date().toISOString()
+    };
+    
+  } catch (error) {
+    this.handleError('random-banter-generation', error);
+    return null;
+  }
+}
+
+  /**
+ * Get characters available for the current story beat
+ * @param {string} storyBeat - Current story beat (optional, uses current if not provided)
+ * @returns {Object} - Available characters with debug info
+ */
+  getAvailableCharacters(storyBeat = null) {
+    const currentBeat = storyBeat || this.currentStoryBeat;
+    const availableCharacters = [];
+    const debugInfo = {
+      totalCharactersChecked: this.characters.size,
+      excludedByGroup: [],
+      excludedByDialogue: [],
+      loadedGroups: Array.from(this.loadedGroups),
+      currentStoryBeat: currentBeat
+    };
+
+    for (const [characterId, characterData] of this.characters) {
+      const loadingGroup = characterData.character.loadingGroup;
+
+      if (!this.loadedGroups.has(loadingGroup)) {
+        debugInfo.excludedByGroup.push({ characterId, reason: `Group '${loadingGroup}' not loaded` });
+        continue;
+      }
+
+      const availableDialogue = this.filterDialogueByStoryBeat(
+        characterData.banterDialogue,
+        currentBeat
+      );
+
+      if (availableDialogue.length === 0) {
+        debugInfo.excludedByDialogue.push({ characterId, reason: `No dialogue available at '${currentBeat}'` });
+        continue;
+      }
+
+      availableCharacters.push({
+        characterId,
+        characterData,
+        availableDialogue
+      });
+    }
+
+    return {
+      availableCharacters,
+      debugInfo
+    };
+  }
+
+  /**
+   * Add a character to the recently used list
+   * @param {string} characterId - Character ID to add
+   */
+  addToRecentlyUsed(characterId) {
+    // Remove if already exists (to update position)
+    this.recentlyUsedCharacters.delete(characterId);
+
+    // Add to the set
+    this.recentlyUsedCharacters.add(characterId);
+
+    // Get avoidance window from config (default to 3)
+    const avoidanceWindow = this.config?.behavior?.banterSelection?.recentAvoidanceWindow || 3;
+
+    // Keep only the most recent characters within the window
+    if (this.recentlyUsedCharacters.size > avoidanceWindow) {
+      const charactersArray = Array.from(this.recentlyUsedCharacters);
+      const oldestCharacter = charactersArray[0];
+      this.recentlyUsedCharacters.delete(oldestCharacter);
+    }
+  }
+
+  /**
+   * Select character using weighted random selection that avoids recent characters
+   * @param {Array} availableCharacters - Array of available character objects
+   * @returns {Object|null} - Selected character object or null
+   */
+  selectCharacterWeighted(availableCharacters) {
+    if (!availableCharacters || availableCharacters.length === 0) {
       return null;
     }
 
-    try {
-      // Placeholder implementation - will be expanded in later steps
-      console.log('Getting random banter...');
-      
-      // This will be implemented when we have actual character data loaded
-      return null;
-    } catch (error) {
-      console.error('Error getting random banter:', error);
-      this.handleError('banter-selection', error);
-      return null;
+    if (availableCharacters.length === 1) {
+      return availableCharacters[0];
     }
+
+    // Create weighted selection array (no logging)
+    const weightedChoices = [];
+
+    availableCharacters.forEach(character => {
+      const isRecent = this.recentlyUsedCharacters.has(character.characterId);
+      const weight = isRecent ? 1 : 3;
+
+      for (let i = 0; i < weight; i++) {
+        weightedChoices.push(character);
+      }
+    });
+
+    // Random selection
+    const randomIndex = Math.floor(Math.random() * weightedChoices.length);
+    return weightedChoices[randomIndex];
   }
 
   /**
@@ -254,7 +439,7 @@ class DialogueManager {
 
     try {
       console.log(`Triggering story event: ${eventId}`);
-      
+
       // Placeholder implementation - will be expanded in later steps
       return null;
     } catch (error) {
@@ -265,42 +450,68 @@ class DialogueManager {
   }
 
   /**
-   * Update current story beat
-   * @param {string} storyBeat - New story beat
-   */
-  setStoryBeat(storyBeat) {
-    if (this.config?.storyStructure?.storyBeats && 
-        Object.values(this.config.storyStructure.storyBeats).includes(storyBeat)) {
-      this.currentStoryBeat = storyBeat;
-      console.log(`Story beat updated to: ${storyBeat}`);
-      
-      // Check if we need to load new character groups
-      this.checkForGroupLoading(storyBeat);
-      
-      // Check for character retirements
-      this.checkForCharacterRetirements(storyBeat);
-    } else {
-      console.warn(`Invalid story beat: ${storyBeat}`);
+ * Update current story beat (affects banter dialogue availability)
+ * @param {string} newStoryBeat - New story beat to set
+ * @returns {boolean} - Whether update was successful
+ */
+setStoryBeat(newStoryBeat) {
+  try {
+    // Validate story beat against config
+    if (!this.isValidStoryBeat(newStoryBeat)) {
+      console.warn(`Invalid story beat: ${newStoryBeat}`);
+      return false;
     }
+    
+    const previousBeat = this.currentStoryBeat;
+    this.currentStoryBeat = newStoryBeat;
+    
+    console.log(`Story beat updated: ${previousBeat} → ${newStoryBeat}`);
+    
+    // Future hook: Check for new character groups to load
+    this.checkForGroupLoading(newStoryBeat);
+    
+    // Future hook: Check for character retirements  
+    this.checkForCharacterRetirements(newStoryBeat);
+    
+    return true;
+  } catch (error) {
+    this.handleError('story-beat-update', error);
+    return false;
   }
+}
 
-  /**
-   * Check if new character groups should be loaded based on story beat
-   * @param {string} storyBeat - Current story beat
-   */
-  checkForGroupLoading(storyBeat) {
-    // Placeholder - will implement loading logic in later steps
-    console.log(`Checking for group loading at story beat: ${storyBeat}`);
+/**
+ * Validate if story beat exists in configuration
+ * @param {string} storyBeat - Story beat to validate
+ * @returns {boolean} - Whether story beat is valid
+ */
+isValidStoryBeat(storyBeat) {
+  if (!this.config?.storyStructure?.storyBeats) {
+    console.warn('Story structure not loaded');
+    return false;
   }
+  
+  const validBeats = Object.values(this.config.storyStructure.storyBeats);
+  return validBeats.includes(storyBeat);
+}
 
-  /**
-   * Check for character retirements based on story beat
-   * @param {string} storyBeat - Current story beat
-   */
-  checkForCharacterRetirements(storyBeat) {
-    // Placeholder - will implement retirement logic in later steps
-    console.log(`Checking for character retirements at story beat: ${storyBeat}`);
-  }
+/**
+ * Check for new character groups to load (placeholder for future)
+ * @param {string} storyBeat - Current story beat
+ */
+checkForGroupLoading(storyBeat) {
+  // Placeholder - will implement when we have more character groups
+  console.log(`Checking for group loading at story beat: ${storyBeat}`);
+}
+
+/**
+ * Check for character retirements (placeholder for future)
+ * @param {string} storyBeat - Current story beat
+ */
+checkForCharacterRetirements(storyBeat) {
+  // Placeholder - will implement when we have retirement logic
+  console.log(`Checking for character retirements at story beat: ${storyBeat}`);
+}
 
   /**
    * Handle errors with configurable responses
@@ -309,9 +520,9 @@ class DialogueManager {
    */
   handleError(context, error) {
     const errorAction = this.config?.behavior?.errorHandling || {};
-    
+
     console.error(`DialogueManager error in ${context}:`, error);
-    
+
     // Log error details for debugging
     if (this.config?.system?.enableLogging) {
       console.log('Error details:', {
@@ -320,7 +531,7 @@ class DialogueManager {
         stack: error.stack
       });
     }
-    
+
     // Could implement error reporting here in the future
   }
 
