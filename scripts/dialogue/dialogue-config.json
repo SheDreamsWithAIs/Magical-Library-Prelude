@@ -59,7 +59,8 @@
     "banterSelection": {
       "method": "random",
       "avoidRepeats": true,
-      "resetAfterAllSeen": true
+      "resetAfterAllSeen": true,
+      "recentAvoidanceWindow": 3
     },
     "storyEvents": {
       "triggerMethod": "external",

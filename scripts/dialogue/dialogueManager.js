@@ -13,7 +13,22 @@ class DialogueManager {
     this.currentStoryBeat = 'hook'; // track story progression
     this.isInitialized = false;
   }
+  /**
+   * Simple event emission for UI integration
+   * @param {string} eventName - Name of event to emit
+   * @param {any} data - Data to send with event
+   */
+  emit(eventName, data) {
+    // Create custom event
+    const event = new CustomEvent(`dialogueManager:${eventName}`, {
+      detail: data
+    });
 
+    // Dispatch on document for global listening
+    document.dispatchEvent(event);
+
+    console.log(`DialogueManager event emitted: ${eventName}`, data);
+  }
   /**
    * Initialize the dialogue system
    * @returns {Promise<boolean>} - Success status
@@ -273,58 +288,58 @@ class DialogueManager {
  * @param {string} storyBeat - Optional story beat (uses current if not provided)
  * @returns {Object|null} - Complete banter object ready for UI or null if none available
  */
-getRandomBanter(storyBeat = null) {
-  try {
-    if (!this.isInitialized) {
-      console.warn('DialogueManager not initialized - cannot get random banter');
+  getRandomBanter(storyBeat = null) {
+    try {
+      if (!this.isInitialized) {
+        console.warn('DialogueManager not initialized - cannot get random banter');
+        return null;
+      }
+
+      // Get available characters for current story beat
+      const availabilityResult = this.getAvailableCharacters(storyBeat);
+
+      if (!availabilityResult.availableCharacters || availabilityResult.availableCharacters.length === 0) {
+        console.log('No characters available for banter at current story beat');
+        return null;
+      }
+
+      // Select character using weighted random selection
+      const selectedCharacter = this.selectCharacterWeighted(availabilityResult.availableCharacters);
+
+      if (!selectedCharacter) {
+        console.log('Character selection failed');
+        return null;
+      }
+
+      // Random dialogue selection from available dialogue
+      const availableDialogue = selectedCharacter.availableDialogue;
+      const randomDialogueIndex = Math.floor(Math.random() * availableDialogue.length);
+      const selectedDialogue = availableDialogue[randomDialogueIndex];
+
+      // Add character to recently used list
+      this.addToRecentlyUsed(selectedCharacter.characterId);
+
+      // Return complete banter object ready for UI
+      return {
+        characterId: selectedCharacter.characterId,
+        characterName: selectedCharacter.characterData.character.name,
+        characterTitle: selectedCharacter.characterData.character.title,
+        portraitFile: selectedCharacter.characterData.character.portraitFile,
+        dialogue: {
+          id: selectedDialogue.id,
+          text: selectedDialogue.text,
+          emotion: selectedDialogue.emotion,
+          category: selectedDialogue.category
+        },
+        storyBeat: availabilityResult.debugInfo.currentStoryBeat,
+        timestamp: new Date().toISOString()
+      };
+
+    } catch (error) {
+      this.handleError('random-banter-generation', error);
       return null;
     }
-    
-    // Get available characters for current story beat
-    const availabilityResult = this.getAvailableCharacters(storyBeat);
-    
-    if (!availabilityResult.availableCharacters || availabilityResult.availableCharacters.length === 0) {
-      console.log('No characters available for banter at current story beat');
-      return null;
-    }
-    
-    // Select character using weighted random selection
-    const selectedCharacter = this.selectCharacterWeighted(availabilityResult.availableCharacters);
-    
-    if (!selectedCharacter) {
-      console.log('Character selection failed');
-      return null;
-    }
-    
-    // Random dialogue selection from available dialogue
-    const availableDialogue = selectedCharacter.availableDialogue;
-    const randomDialogueIndex = Math.floor(Math.random() * availableDialogue.length);
-    const selectedDialogue = availableDialogue[randomDialogueIndex];
-    
-    // Add character to recently used list
-    this.addToRecentlyUsed(selectedCharacter.characterId);
-    
-    // Return complete banter object ready for UI
-    return {
-      characterId: selectedCharacter.characterId,
-      characterName: selectedCharacter.characterData.character.name,
-      characterTitle: selectedCharacter.characterData.character.title,
-      portraitFile: selectedCharacter.characterData.character.portraitFile,
-      dialogue: {
-        id: selectedDialogue.id,
-        text: selectedDialogue.text,
-        emotion: selectedDialogue.emotion,
-        category: selectedDialogue.category
-      },
-      storyBeat: availabilityResult.debugInfo.currentStoryBeat,
-      timestamp: new Date().toISOString()
-    };
-    
-  } catch (error) {
-    this.handleError('random-banter-generation', error);
-    return null;
   }
-}
 
   /**
  * Get characters available for the current story beat
@@ -454,7 +469,7 @@ getRandomBanter(storyBeat = null) {
  * @param {string} newStoryBeat - New story beat to set
  * @returns {boolean} - Whether update was successful
  */
-setStoryBeat(newStoryBeat) {
+  setStoryBeat(newStoryBeat) {
   try {
     // Validate story beat against config
     if (!this.isValidStoryBeat(newStoryBeat)) {
@@ -466,6 +481,13 @@ setStoryBeat(newStoryBeat) {
     this.currentStoryBeat = newStoryBeat;
     
     console.log(`Story beat updated: ${previousBeat} → ${newStoryBeat}`);
+    
+    // Emit event for UI integration
+    this.emit('beatChanged', {
+      previousBeat,
+      newBeat: newStoryBeat,
+      timestamp: new Date().toISOString()
+    });
     
     // Future hook: Check for new character groups to load
     this.checkForGroupLoading(newStoryBeat);
@@ -480,38 +502,38 @@ setStoryBeat(newStoryBeat) {
   }
 }
 
-/**
- * Validate if story beat exists in configuration
- * @param {string} storyBeat - Story beat to validate
- * @returns {boolean} - Whether story beat is valid
- */
-isValidStoryBeat(storyBeat) {
-  if (!this.config?.storyStructure?.storyBeats) {
-    console.warn('Story structure not loaded');
-    return false;
+  /**
+   * Validate if story beat exists in configuration
+   * @param {string} storyBeat - Story beat to validate
+   * @returns {boolean} - Whether story beat is valid
+   */
+  isValidStoryBeat(storyBeat) {
+    if (!this.config?.storyStructure?.storyBeats) {
+      console.warn('Story structure not loaded');
+      return false;
+    }
+
+    const validBeats = Object.values(this.config.storyStructure.storyBeats);
+    return validBeats.includes(storyBeat);
   }
-  
-  const validBeats = Object.values(this.config.storyStructure.storyBeats);
-  return validBeats.includes(storyBeat);
-}
 
-/**
- * Check for new character groups to load (placeholder for future)
- * @param {string} storyBeat - Current story beat
- */
-checkForGroupLoading(storyBeat) {
-  // Placeholder - will implement when we have more character groups
-  console.log(`Checking for group loading at story beat: ${storyBeat}`);
-}
+  /**
+   * Check for new character groups to load (placeholder for future)
+   * @param {string} storyBeat - Current story beat
+   */
+  checkForGroupLoading(storyBeat) {
+    // Placeholder - will implement when we have more character groups
+    console.log(`Checking for group loading at story beat: ${storyBeat}`);
+  }
 
-/**
- * Check for character retirements (placeholder for future)
- * @param {string} storyBeat - Current story beat
- */
-checkForCharacterRetirements(storyBeat) {
-  // Placeholder - will implement when we have retirement logic
-  console.log(`Checking for character retirements at story beat: ${storyBeat}`);
-}
+  /**
+   * Check for character retirements (placeholder for future)
+   * @param {string} storyBeat - Current story beat
+   */
+  checkForCharacterRetirements(storyBeat) {
+    // Placeholder - will implement when we have retirement logic
+    console.log(`Checking for character retirements at story beat: ${storyBeat}`);
+  }
 
   /**
    * Handle errors with configurable responses
