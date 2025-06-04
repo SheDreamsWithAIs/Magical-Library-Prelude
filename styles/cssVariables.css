@@ -1,0 +1,40 @@
+/* Color Palette */
+:root {
+  /* Primary Colors */
+  --primary-dark: #3a1143;      /* Dark purple - backgrounds */
+  --primary-medium: #4a3870;    /* Medium purple - accents */
+  --primary-light: #794d8e;     /* Light purple - buttons */
+  --primary-lighter: #9a7ecc;   /* Very light purple - secondary elements */
+
+  /* Neutral Colors */
+  --neutral-dark: #2c2240;      /* Dark neutral - backgrounds */
+  --neutral-medium: #3a2e51;    /* Medium neutral - containers */
+
+  /* Warm Colors */
+  --warm-light: #f4efe7;        /* Light warm - subtle backgrounds */
+  --warm-medium: #e9d8d0;       /* Medium warm - book pages */
+  --warm-dark: #dcd0c0;         /* Dark warm - borders */
+
+  /* Accent Color - Golden Amber */
+  --accent-main: #E6A817;       /* Golden amber - highlights & important elements */
+  --accent-light: #F7C956;      /* Light amber - subtle accents */
+  --accent-dark: #C48A0F;       /* Dark amber - hover states */
+  
+  /* Spacing Variables - Using Golden Ratio */
+  --space-xs: 0.382rem;
+  --space-sm: 0.618rem;
+  --space-md: 1rem;
+  --space-lg: 1.618rem;
+  --space-xl: 2.618rem;
+  --space-xxl: 4.236rem;
+  
+  /* Animation Timing */
+  --transition-fast: 0.2s;
+  --transition-medium: 0.5s;
+  --transition-slow: 1s;
+  
+  /* Elevation (Box Shadows) - Resonance Shields */
+  --elevation-low: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --elevation-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --elevation-high: 0 8px 16px rgba(0, 0, 0, 0.2);
+}

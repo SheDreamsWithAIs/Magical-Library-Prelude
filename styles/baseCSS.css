@@ -1,0 +1,227 @@
+/* Import variables */
+@import 'cssVariables.css';
+
+/* Reset and Base Styles */
+body {
+  font-family: Arial, sans-serif;
+  padding: 0;
+  margin: 0;
+  background-color: var(--warm-light);
+  color: #333;
+}
+
+/* Game container - holds all screens */
+#game-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Screen styling - base for all game screens */
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;  /* Default state is hidden */
+  box-sizing: border-box;
+  z-index: 1;     /* Baseline z-index */
+}
+
+/* Active screen */
+.screen.active {
+  z-index: 10;    /* Active screen appears on top */
+}
+
+/* Loading Indicator */
+#loading-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loader {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid var(--accent-main);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite;
+}
+
+/* Animations - dimensional shifts as Assembly called them */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseLogo {
+  0% { opacity: 0.1; }
+  33% { opacity: 0.8; } /* Reveals in 2s (33% of 6s) */
+  100% { opacity: 0.1; } /* Fades out over the remaining 4s */
+}
+
+@keyframes pulse {
+  0% { opacity: 0.1; }
+  100% { opacity: 0.7; }
+}
+
+/* Button base styles */
+button {
+  padding: 12px 25px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--primary-light);
+  color: white;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  margin: 10px;
+  box-shadow: var(--elevation-low);
+}
+
+button:hover {
+  background-color: var(--primary-medium);
+  transform: translateY(-2px);
+  box-shadow: var(--elevation-medium);
+}
+
+button.large {
+  font-size: 20px;
+  padding: 15px 30px;
+}
+
+button.secondary {
+  background-color: var(--primary-lighter);
+  color: white;
+}
+
+button.secondary:hover {
+  background-color: var(--primary-light);
+}
+
+button.accent {
+  background-color: var(--accent-main);
+  color: white;
+}
+
+button.accent:hover {
+  background-color: var(--accent-dark);
+}
+
+/* Panels - shared component styling */
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--warm-medium);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: var(--elevation-high);
+  text-align: center;
+  display: none;
+  max-width: 80%;
+  width: 500px;
+  z-index: 1000;
+  color: #333;
+  border-top: 4px solid var(--accent-main); /* Amber accent for panels */
+}
+
+/* Error panel styling */
+#error-panel {
+  z-index: 2000;
+}
+
+#error-panel h2 {
+  color: var(--primary-dark);
+  margin-bottom: 15px;
+}
+
+#error-panel p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Common circular patterns - protective lattices as Assembly mentioned */
+.circular-pattern {
+  display: inline-block;
+  border-radius: 50%;
+  border: 1px solid var(--accent-main);
+  position: relative;
+}
+
+.circular-pattern::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  border: 1px solid var(--accent-light);
+}
+
+/* Word grid base styles */
+.grid {
+  display: grid;
+  width: 100%;
+  border: 3px solid var(--primary-medium);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: var(--elevation-medium);
+}
+
+.grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+  border: 1px solid #ccc;
+  user-select: none;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  color: #333;
+  transition: background-color var(--transition-fast);
+}
+
+.grid-cell.selected {
+  background-color: var(--primary-lighter);
+}
+
+.grid-cell.correct {
+  background-color: var(--accent-light); /* Amber accent for correct cells */
+  color: #333;
+}
+
+/* Timer styling */
+.timer-container {
+  position: relative;
+  height: 20px;
+  background-color: var(--warm-light);
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--primary-medium);
+}
+
+.timer-bar {
+  background-color: var(--primary-light);
+  height: 100%;
+  width: 100%;
+  transition: width 1s linear;
+  border-radius: 10px;
+}
