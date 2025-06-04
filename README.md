@@ -52,7 +52,7 @@ npx cypress run --browser chrome --headless
 │   ├── kethaneumPuzzles.json
 │   └── naturePuzzles.json
 └── src/
-    ├── app.js              # Single entry-point bootstrap
+    ├── moduleBootstrap.js  # Single entry-point bootstrap
     ├── configModule.js     # Game settings (grid sizes, time limits)
     ├── gameState.js        # Core state singleton
     ├── saveSystem.js       # localStorage persistence
@@ -72,7 +72,7 @@ npx cypress run --browser chrome --headless
 ## ⚙️ Configuration
 
 * Edit `src/configModule.js` to tweak puzzle sizes, time limits, theme colors, etc.
-* JSON story packs live in `public/`; new packs auto-loaded if named in `app.js`’s `customPaths`.
+* JSON story packs live in `public/`; new packs auto-loaded if named in `moduleBootstrap.js`’s `customPaths`.
 
 ---
 
@@ -91,7 +91,7 @@ npx cypress run --browser chrome --headless
 ## 🔧 Troubleshooting
 
 * **404 on puzzle JSON** → ensure your story files are in `public/` (same folder as `index.html`), or adjust `import.meta.url` paths.
-* **Module import errors** → check import paths in `src/app.js` and that your server serves `type="module"` scripts.
+* **Module import errors** → check import paths in `src/moduleBootstrap.js` and that your server serves `type="module"` scripts.
 * **Test flakiness** → try resizing your test runner viewport or adding small timeouts around animations.
 
 ---
