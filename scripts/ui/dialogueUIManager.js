@@ -30,94 +30,270 @@ class DialogueUIManager {
   }
 
   /**
+ * Validate core system integrity
+ * @returns {boolean} - System is valid
+ */
+  validateSystemIntegrity() {
+    const issues = [];
+
+    // Check method integrity
+    const requiredMethods = ['initialize', 'getContainerBoundaries', 'createDialoguePanel'];
+    const missingMethods = requiredMethods.filter(method => typeof this[method] !== 'function');
+    if (missingMethods.length > 0) {
+      issues.push({ type: 'missing-methods', details: missingMethods });
+    }
+
+    // Check container state
+    if (!this.gameContainer) {
+      issues.push({ type: 'no-container', details: 'Game container not found' });
+    } else if (!document.body.contains(this.gameContainer)) {
+      issues.push({ type: 'container-detached', details: 'Container not in DOM' });
+    }
+
+    // Check panel state if it exists
+    if (this.dialoguePanel && !document.body.contains(this.dialoguePanel)) {
+      issues.push({ type: 'panel-detached', details: 'Panel removed from DOM' });
+    }
+
+    // Report issues to error handler if any found
+    if (issues.length > 0) {
+      // Import and use error handler
+      import('../utils/errorHandler.js').then(ErrorHandler => {
+        ErrorHandler.handleDialogueUIErrors(issues);
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Safe container validation with recovery attempt
+   * @returns {boolean} - Container is valid or recovered
+   */
+  validateGameContainer() {
+    if (!this.gameContainer) {
+      console.log('Attempting container recovery...');
+      this.gameContainer = document.getElementById('game-container');
+    }
+
+    if (!this.gameContainer) {
+      import('../utils/errorHandler.js').then(ErrorHandler => {
+        ErrorHandler.handleNavigationError(
+          new Error('Game container not found'),
+          'dialogue-initialization',
+          'title-screen'
+        );
+      });
+      return false;
+    }
+
+    // Ensure proper positioning
+    const position = window.getComputedStyle(this.gameContainer).position;
+    if (position !== 'relative' && position !== 'absolute') {
+      this.gameContainer.style.position = 'relative';
+    }
+
+    return true;
+  }
+
+    /**
    * Initialize the Dialogue UI Manager
    * @returns {boolean} - Success status
    */
   initialize() {
     try {
-      console.log('Initializing DialogueUIManager...');
+      console.log('Initializing DialogueUIManager... 🐉 The dragons are watching.');
 
-      // Find game container (our shield wall perimeter)
+      // Find game container
       this.gameContainer = document.getElementById('game-container');
 
-      if (!this.gameContainer) {
-        throw new Error('Game container not found - cannot establish defensive perimeter');
+      if (!this.validateGameContainer()) {
+        throw new Error('Game container validation failed');
       }
 
-      console.log('Game container located - perimeter established 🛡️');
+      console.log('Game container located - perimeter established');
 
-      // Test boundary detection immediately
+      // Test boundary detection
       const boundaries = this.getContainerBoundaries();
       console.log('Container boundaries calculated:', boundaries);
 
       this.isInitialized = true;
-      console.log('DialogueUIManager initialized successfully ✨');
+      console.log('DialogueUIManager initialized successfully');
 
       return true;
     } catch (error) {
       console.error('DialogueUIManager initialization failed:', error);
+
+      // Delegate to error handler
+      import('../utils/errorHandler.js').then(ErrorHandler => {
+        ErrorHandler.showErrorMessage(
+          "Dialogue System Error",
+          "The dialogue system failed to initialize. Some character interactions may not be available.",
+          "Continue"
+        );
+      });
+
       return false;
     }
   }
 
   /**
-   * Get game container boundary information
-   * @returns {Object} - Container boundary data
-   */
+ * Get game container boundary information with comprehensive error handling
+ * Dragon-protected against corruption and manipulation 🐉🛡️
+ * @returns {Object} - Container boundary data with safety guarantees
+ */
   getContainerBoundaries() {
-    if (!this.gameContainer) {
-      throw new Error('Game container not available - cannot calculate boundaries');
+    try {
+      // STEP 1: Validate game container exists and is properly positioned
+      if (!this.gameContainer) {
+        console.error('Game container lost - attempting recovery');
+        this.gameContainer = document.getElementById('game-container');
+
+        if (!this.gameContainer) {
+          console.error('Game container element not found - using fallback boundaries');
+          return this.getFallbackBoundaries();
+        }
+      }
+
+      // STEP 2: Verify container positioning (corruption countermeasure)
+      const containerPosition = window.getComputedStyle(this.gameContainer).position;
+      if (containerPosition !== 'relative') {
+        console.warn('Game container position corrupted - restoring to relative');
+        this.gameContainer.style.position = 'relative';
+      }
+
+      // STEP 3: Get boundary rectangle with validation
+      const rect = this.gameContainer.getBoundingClientRect();
+
+      // Validate rectangle data integrity
+      if (!rect || rect.width <= 0 || rect.height <= 0) {
+        console.error('Invalid container rectangle - using fallback boundaries');
+        return this.getFallbackBoundaries();
+      }
+
+      // STEP 4: Get computed styles with error handling
+      let computedStyle;
+      try {
+        computedStyle = window.getComputedStyle(this.gameContainer);
+      } catch (styleError) {
+        console.error('Failed to get computed styles:', styleError);
+        computedStyle = {}; // Use empty object as fallback
+      }
+
+      // STEP 5: Parse border and padding values safely
+      const borderLeft = this.parsePixelValue(computedStyle.borderLeftWidth) || 0;
+      const borderRight = this.parsePixelValue(computedStyle.borderRightWidth) || 0;
+      const borderTop = this.parsePixelValue(computedStyle.borderTopWidth) || 0;
+      const borderBottom = this.parsePixelValue(computedStyle.borderBottomWidth) || 0;
+
+      const paddingLeft = this.parsePixelValue(computedStyle.paddingLeft) || 0;
+      const paddingRight = this.parsePixelValue(computedStyle.paddingRight) || 0;
+      const paddingTop = this.parsePixelValue(computedStyle.paddingTop) || 0;
+      const paddingBottom = this.parsePixelValue(computedStyle.paddingBottom) || 0;
+
+      // STEP 6: Calculate scale factor with bounds checking
+      const scale = Math.max(0.1, Math.min(3.0, rect.width / 1000)); // Clamp between 0.1 and 3.0
+
+      // STEP 7: Build boundary object with validation
+      const boundaries = {
+        // Outer boundaries (including borders)
+        outer: {
+          left: Math.round(rect.left),
+          top: Math.round(rect.top),
+          right: Math.round(rect.right),
+          bottom: Math.round(rect.bottom),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height)
+        },
+
+        // Inner boundaries (content area)
+        inner: {
+          left: Math.round(rect.left + borderLeft + paddingLeft),
+          top: Math.round(rect.top + borderTop + paddingTop),
+          right: Math.round(rect.right - borderRight - paddingRight),
+          bottom: Math.round(rect.bottom - borderBottom - paddingBottom),
+          width: Math.round(rect.width - borderLeft - borderRight - paddingLeft - paddingRight),
+          height: Math.round(rect.height - borderTop - borderBottom - paddingTop - paddingBottom)
+        },
+
+        // Useful measurements
+        centerX: Math.round(rect.left + (rect.width / 2)),
+        centerY: Math.round(rect.top + (rect.height / 2)),
+
+        // Scale factor for responsive sizing (clamped for safety)
+        scale: scale,
+
+        // Responsive breakpoints for dialogue sizing
+        isSmall: rect.width < 600,
+        isMedium: rect.width >= 600 && rect.width < 1000,
+        isLarge: rect.width >= 1000
+      };
+
+      // STEP 8: Validate calculated boundaries make sense
+      if (boundaries.inner.width <= 0 || boundaries.inner.height <= 0) {
+        console.warn('Calculated inner boundaries invalid - adjusting');
+        boundaries.inner = { ...boundaries.outer }; // Fallback to outer boundaries
+      }
+
+      return boundaries;
+
+    } catch (error) {
+      // STEP 10: Comprehensive error recovery
+      console.error('Boundary calculation failed completely:', error);
+      this.handleCorruption('boundary-calculation-failure', error.message);
+      return this.getFallbackBoundaries();
+    }
+  }
+
+  /**
+   * Parse pixel values safely with corruption protection
+   * @param {string} value - CSS pixel value (e.g., "10px")
+   * @returns {number} - Parsed number or 0 if invalid
+   */
+  parsePixelValue(value) {
+    if (!value || typeof value !== 'string') return 0;
+
+    const parsed = parseFloat(value);
+
+    // Validate the parsed value is reasonable
+    if (isNaN(parsed) || parsed < 0 || parsed > 1000) {
+      return 0;
     }
 
-    const rect = this.gameContainer.getBoundingClientRect();
-    const computedStyle = window.getComputedStyle(this.gameContainer);
+    return parsed;
+  }
 
-    // Account for borders and padding
-    const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
-    const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
-    const borderTop = parseFloat(computedStyle.borderTopWidth) || 0;
-    const borderBottom = parseFloat(computedStyle.borderBottomWidth) || 0;
-
-    const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
-    const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
-    const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
-    const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
-
-    // Calculate scale factor based on container width (1000px = 1.0 scale)
-    const scale = rect.width / 1000;
+  /**
+   * Provide fallback boundaries when all else fails
+   * @returns {Object} - Safe fallback boundary data
+   */
+  getFallbackBoundaries() {
+    console.log('Using dragon-protected fallback boundaries 🐉🛡️');
 
     return {
-      // Outer boundaries (including borders)
       outer: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height
+        left: 0,
+        top: 0,
+        width: 1000,
+        height: 600,
+        right: 1000,
+        bottom: 600
       },
-
-      // Inner boundaries (content area)
       inner: {
-        left: rect.left + borderLeft + paddingLeft,
-        top: rect.top + borderTop + paddingTop,
-        right: rect.right - borderRight - paddingRight,
-        bottom: rect.bottom - borderBottom - paddingBottom,
-        width: rect.width - borderLeft - borderRight - paddingLeft - paddingRight,
-        height: rect.height - borderTop - borderBottom - paddingTop - paddingBottom
+        left: 10,
+        top: 10,
+        width: 980,
+        height: 580,
+        right: 990,
+        bottom: 590
       },
-
-      // Useful measurements
-      centerX: rect.left + (rect.width / 2),
-      centerY: rect.top + (rect.height / 2),
-
-      // Scale factor for responsive sizing
-      scale: scale,
-
-      // Responsive breakpoints for dialogue sizing
-      isSmall: rect.width < 600,
-      isMedium: rect.width >= 600 && rect.width < 1000,
-      isLarge: rect.width >= 1000
+      centerX: 500,
+      centerY: 300,
+      scale: 1.0,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false
     };
   }
 
@@ -152,13 +328,19 @@ class DialogueUIManager {
    * @returns {Object} - Current system status
    */
   getStatus() {
-    return {
+    const status = {
       initialized: this.isInitialized,
       gameContainer: this.gameContainer ? 'Found' : 'Not found',
       overlayElement: this.overlayElement ? 'Created' : 'Not created',
       dialoguePanel: this.dialoguePanel ? 'Created' : 'Not created',
-      currentDialogue: this.currentDialogue ? 'Active' : 'None'
+      currentDialogue: this.currentDialogue ? 'Active' : 'None',
+      dragonWatch: '🐉'
     };
+
+    // Add health check
+    status.systemIntegrity = this.validateSystemIntegrity();
+
+    return status;
   }
 
   /**
@@ -344,13 +526,18 @@ class DialogueUIManager {
 
   /**
  * Create hidden dialogue panel structure (Production Version)
- * Phase 2, Step 2a: Pre-created panel that stays hidden until needed
  * @returns {boolean} - Success status
  */
   createDialoguePanel() {
     try {
+      // Validate system before creating panel
+      if (!this.validateSystemIntegrity()) {
+        console.warn('Cannot create panel - system integrity check failed');
+        return false;
+      }
+
       if (this.dialoguePanel) {
-        console.log('Dialogue panel already exists, updating with scaling');
+        console.log('Dialogue panel already exists, updating position');
         this.updateDialoguePanelPosition();
         return true;
       }
@@ -487,8 +674,15 @@ class DialogueUIManager {
 
     } catch (error) {
       console.error('Failed to create dialogue panel:', error);
+
+      // Delegate complex error handling
+      import('../utils/errorHandler.js').then(ErrorHandler => {
+        ErrorHandler.handleSelectionError(error, 'dialogue-panel-creation');
+      });
+
       return false;
     }
+
   }
 
   /**
@@ -497,59 +691,69 @@ class DialogueUIManager {
   updateDialoguePanelPosition() {
     if (!this.dialoguePanel || !this.gameContainer) return;
 
-    const boundaries = this.getContainerBoundaries();
-    const scale = boundaries.scale;
+    try {
+      const boundaries = this.getContainerBoundaries();
+      const scale = boundaries.scale;
 
-    // Calculate scaled dimensions
-    const baseHeight = 200;
-    const scaledHeight = Math.max(150, baseHeight * scale);
-    const basePadding = 20;
-    const scaledPadding = Math.max(10, basePadding * scale);
-    const baseFontSize = 18;
-    const scaledFontSize = Math.max(14, baseFontSize * scale);
-    const basePortraitSize = 150;
-    const scaledPortraitSize = Math.max(100, basePortraitSize * scale);
+      // Calculate scaled dimensions
+      const baseHeight = 200;
+      const scaledHeight = Math.max(150, baseHeight * scale);
+      const basePadding = 20;
+      const scaledPadding = Math.max(10, basePadding * scale);
+      const baseFontSize = 18;
+      const scaledFontSize = Math.max(14, baseFontSize * scale);
+      const basePortraitSize = 150;
+      const scaledPortraitSize = Math.max(100, basePortraitSize * scale);
 
-    // Use container-relative positioning, NOT viewport positioning
-    this.dialoguePanel.style.left = '0px';      // Left edge of container
-    this.dialoguePanel.style.bottom = '0px';    // Bottom edge of container  
-    this.dialoguePanel.style.width = '100%';    // Full width of container
-    this.dialoguePanel.style.right = 'auto';    // Clear any right positioning
-    this.dialoguePanel.style.height = `${scaledHeight}px`;
-    this.dialoguePanel.style.padding = `${scaledPadding}px`;
+      // Use container-relative positioning, NOT viewport positioning
+      this.dialoguePanel.style.left = '0px';      // Left edge of container
+      this.dialoguePanel.style.bottom = '0px';    // Bottom edge of container  
+      this.dialoguePanel.style.width = '100%';    // Full width of container
+      this.dialoguePanel.style.right = 'auto';    // Clear any right positioning
+      this.dialoguePanel.style.height = `${scaledHeight}px`;
+      this.dialoguePanel.style.padding = `${scaledPadding}px`;
 
-    // Scale internal elements
-    const portrait = this.dialoguePanel.querySelector('.character-portrait');
-    if (portrait) {
-      Object.assign(portrait.style, {
-        width: `${scaledPortraitSize}px`,
-        height: `${scaledPortraitSize}px`,
-        marginRight: `${scaledPadding * 1.5}px`,
-        fontSize: `${Math.max(18, 24 * scale)}px`
+      // Scale internal elements
+      const portrait = this.dialoguePanel.querySelector('.character-portrait');
+      if (portrait) {
+        Object.assign(portrait.style, {
+          width: `${scaledPortraitSize}px`,
+          height: `${scaledPortraitSize}px`,
+          marginRight: `${scaledPadding * 1.5}px`,
+          fontSize: `${Math.max(18, 24 * scale)}px`
+        });
+      }
+
+      const characterName = this.dialoguePanel.querySelector('.character-name');
+      if (characterName) {
+        characterName.style.fontSize = `${Math.max(18, 24 * scale)}px`;
+        characterName.style.marginBottom = `${scaledPadding * 0.5}px`;
+      }
+
+      const dialogueText = this.dialoguePanel.querySelector('.dialogue-text');
+      if (dialogueText) {
+        dialogueText.style.fontSize = `${scaledFontSize}px`;
+        dialogueText.style.marginBottom = `${scaledPadding}px`;
+      }
+
+      const continueButton = this.dialoguePanel.querySelector('.dialogue-continue');
+      if (continueButton) {
+        Object.assign(continueButton.style, {
+          fontSize: `${Math.max(14, 16 * scale)}px`,
+          padding: `${scaledPadding * 0.5}px ${scaledPadding}px`
+        });
+      }
+
+      console.log('Dialogue panel positioned within game container boundaries');
+
+    } catch (error) {
+      console.error('Panel positioning failed:', error);
+
+      // Use error handler for recovery
+      import('../utils/errorHandler.js').then(ErrorHandler => {
+        ErrorHandler.handleSelectionError(error, 'panel-positioning');
       });
     }
-
-    const characterName = this.dialoguePanel.querySelector('.character-name');
-    if (characterName) {
-      characterName.style.fontSize = `${Math.max(18, 24 * scale)}px`;
-      characterName.style.marginBottom = `${scaledPadding * 0.5}px`;
-    }
-
-    const dialogueText = this.dialoguePanel.querySelector('.dialogue-text');
-    if (dialogueText) {
-      dialogueText.style.fontSize = `${scaledFontSize}px`;
-      dialogueText.style.marginBottom = `${scaledPadding}px`;
-    }
-
-    const continueButton = this.dialoguePanel.querySelector('.dialogue-continue');
-    if (continueButton) {
-      Object.assign(continueButton.style, {
-        fontSize: `${Math.max(14, 16 * scale)}px`,
-        padding: `${scaledPadding * 0.5}px ${scaledPadding}px`
-      });
-    }
-
-    console.log(`Dialogue panel positioned within game container boundaries ✨🛡️`);
   }
 
 

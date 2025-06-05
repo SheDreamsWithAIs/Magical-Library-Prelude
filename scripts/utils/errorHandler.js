@@ -575,6 +575,65 @@ function handleSelectionError(error, context) {
   }
 }
 
+/**
+ * Handle DialogueUIManager specific errors
+ * @param {Array} issues - Array of issue objects
+ */
+export function handleDialogueUIErrors(issues) {
+  console.error('DialogueUIManager issues detected:', issues);
+  
+  let recoverable = true;
+  let errorMessage = "The dialogue system experienced some issues:\n";
+  
+  issues.forEach(issue => {
+    switch (issue.type) {
+      case 'missing-methods':
+        errorMessage += `• Core functionality missing: ${issue.details.join(', ')}\n`;
+        recoverable = false;
+        break;
+      case 'no-container':
+      case 'container-detached':
+        errorMessage += "• Game display area not found\n";
+        recoverable = false;
+        break;
+      case 'panel-detached':
+        errorMessage += "• Dialogue panel was removed\n";
+        // Panel can be recreated, so this is recoverable
+        break;
+      default:
+        errorMessage += `• ${issue.details}\n`;
+    }
+  });
+  
+  if (recoverable) {
+    errorMessage += "\nThe system will attempt to recover automatically.";
+    showNotification(errorMessage, 'warning', 5000);
+  } else {
+    errorMessage += "\nCharacter dialogue may not be available.";
+    showErrorMessage(
+      "Dialogue System Error",
+      errorMessage,
+      "Continue"
+    );
+  }
+}
+
+/**
+ * Handle dialogue panel corruption specifically  
+ * @param {string} corruptionType - Type of corruption detected
+ * @param {Object} details - Corruption details
+ */
+export function handleDialoguePanelCorruption(corruptionType, details) {
+  console.warn(`Dialogue panel corruption detected: ${corruptionType}`, details);
+  
+  // Most panel corruption is recoverable by recreating the panel
+  showNotification(
+    "Dialogue display was reset due to an interface conflict.",
+    'info',
+    3000
+  );
+}
+
 // Export functions for module system
 export {
   showErrorMessage,
