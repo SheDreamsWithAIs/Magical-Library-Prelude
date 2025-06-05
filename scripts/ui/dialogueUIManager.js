@@ -62,7 +62,6 @@ class DialogueUIManager {
 
   /**
    * Get game container boundary information
-   * Phase 4, Step 2: Dynamic boundary calculation
    * @returns {Object} - Container boundary data
    */
   getContainerBoundaries() {
@@ -83,6 +82,9 @@ class DialogueUIManager {
     const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
     const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
     const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+
+    // Calculate scale factor based on container width (1000px = 1.0 scale)
+    const scale = rect.width / 1000;
 
     return {
       // Outer boundaries (including borders)
@@ -108,6 +110,9 @@ class DialogueUIManager {
       // Useful measurements
       centerX: rect.left + (rect.width / 2),
       centerY: rect.top + (rect.height / 2),
+
+      // Scale factor for responsive sizing
+      scale: scale,
 
       // Responsive breakpoints for dialogue sizing
       isSmall: rect.width < 600,
@@ -345,45 +350,57 @@ class DialogueUIManager {
   createDialoguePanel() {
     try {
       if (this.dialoguePanel) {
-        console.log('Dialogue panel already exists');
+        console.log('Dialogue panel already exists, updating with scaling');
+        this.updateDialoguePanelPosition();
         return true;
       }
 
-      // Ensure game container is positioned to be our reference point
+      // CORRUPTION COUNTERMEASURE: Explicitly ensure game container positioning
       if (this.gameContainer) {
         this.gameContainer.style.position = 'relative';
+        console.log('Game container set to relative positioning - defensive measure active 🛡️');
       }
+
+      // Get boundaries and scale factor
+      const boundaries = this.getContainerBoundaries();
+      const scale = boundaries.scale;
+
+      // Calculate initial scaled dimensions
+      const baseHeight = 200;
+      const scaledHeight = Math.max(150, baseHeight * scale);
+      const basePadding = 20;
+      const scaledPadding = Math.max(10, basePadding * scale);
 
       // Create main dialogue container
       this.dialoguePanel = document.createElement('div');
       this.dialoguePanel.id = 'dialogue-panel';
       this.dialoguePanel.className = 'dialogue-panel';
 
-      // Set base styles - hidden by default, positioned within game container
+      // CORRUPTION COUNTERMEASURE: Set base styles with explicit positioning
       Object.assign(this.dialoguePanel.style, {
-        position: 'absolute',
-        height: '200px',
+        position: 'absolute',    // Relative to game container
+        bottom: '0',            // Bottom of container, not viewport
+        left: '0',              // Left edge of container
+        right: '0',             // Right edge of container  
+        height: `${scaledHeight}px`,
         background: 'linear-gradient(to top, rgba(77, 35, 97, 0.95) 0%, rgba(77, 35, 97, 0.9) 100%)',
         borderTop: '3px solid #E6A817',
-        display: 'none', // Hidden by default
-        padding: '20px',
+        display: 'none',
+        padding: `${scaledPadding}px`,
         boxSizing: 'border-box',
-        zIndex: this.config.zIndex.panel,
-        overflow: 'hidden'
+        zIndex: this.config.zIndex.panel
       });
 
-      // Add to the game container
-      this.gameContainer.appendChild(this.dialoguePanel);
-
-      // Position panel within game container boundaries
-      this.updateDialoguePanelPosition();
+      // Create scaled internal elements
+      const scaledPortraitSize = Math.max(100, 150 * scale);
+      const scaledFontSize = Math.max(14, 18 * scale);
 
       // Create character portrait container
       const portraitContainer = document.createElement('div');
       portraitContainer.className = 'character-portrait';
       Object.assign(portraitContainer.style, {
-        width: '150px',
-        height: '150px',
+        width: `${scaledPortraitSize}px`,
+        height: `${scaledPortraitSize}px`,
         border: '3px solid #E6A817',
         borderRadius: '10px',
         background: '#4d2361',
@@ -391,9 +408,9 @@ class DialogueUIManager {
         alignItems: 'center',
         justifyContent: 'center',
         color: '#E6A817',
-        fontSize: '24px',
+        fontSize: `${Math.max(18, 24 * scale)}px`,
         float: 'left',
-        marginRight: '30px',
+        marginRight: `${scaledPadding * 1.5}px`,
         flexShrink: '0'
       });
       portraitContainer.textContent = '[Portrait]';
@@ -414,8 +431,8 @@ class DialogueUIManager {
       characterName.className = 'character-name';
       Object.assign(characterName.style, {
         color: '#E6A817',
-        fontSize: '24px',
-        margin: '0 0 10px 0',
+        fontSize: `${Math.max(18, 24 * scale)}px`,
+        margin: `0 0 ${scaledPadding * 0.5}px 0`,
         fontFamily: 'serif'
       });
       characterName.textContent = 'Character Name';
@@ -425,8 +442,8 @@ class DialogueUIManager {
       dialogueText.className = 'dialogue-text';
       Object.assign(dialogueText.style, {
         color: '#f4efe7',
-        fontSize: '18px',
-        margin: '0 0 20px 0',
+        fontSize: `${scaledFontSize}px`,
+        margin: `0 0 ${scaledPadding}px 0`,
         lineHeight: '1.4'
       });
       dialogueText.textContent = 'Dialogue text will appear here.';
@@ -438,10 +455,10 @@ class DialogueUIManager {
         background: '#E6A817',
         color: '#4d2361',
         border: 'none',
-        padding: '10px 20px',
+        padding: `${scaledPadding * 0.5}px ${scaledPadding}px`,
         borderRadius: '5px',
         cursor: 'pointer',
-        fontSize: '16px',
+        fontSize: `${Math.max(14, 16 * scale)}px`,
         alignSelf: 'flex-start',
         transition: 'all 0.3s'
       });
@@ -455,13 +472,17 @@ class DialogueUIManager {
       this.dialoguePanel.appendChild(portraitContainer);
       this.dialoguePanel.appendChild(contentContainer);
 
-      // Add to game container for proper containment
+      // CORRUPTION COUNTERMEASURE: Add to game container for proper containment
       this.gameContainer.appendChild(this.dialoguePanel);
 
-      // Set up resize handler to keep panel positioned correctly
+      // Position panel correctly within container
+      this.updateDialoguePanelPosition();
+
+      // Set up resize handler
       this.setupDialoguePanelResizeHandler();
 
-      console.log('Dialogue panel created and constrained to game container ✨🛡️');
+      console.log(`Dialogue panel created and constrained to game container ✨🛡️`);
+      console.log(`Scale applied: scale factor ${scale.toFixed(3)}, height ${scaledHeight}px`);
       return true;
 
     } catch (error) {
@@ -477,12 +498,60 @@ class DialogueUIManager {
     if (!this.dialoguePanel || !this.gameContainer) return;
 
     const boundaries = this.getContainerBoundaries();
+    const scale = boundaries.scale;
 
-    // Position panel at bottom of game container
-    this.dialoguePanel.style.left = `${boundaries.outer.left}px`;
-    this.dialoguePanel.style.bottom = `${window.innerHeight - boundaries.outer.bottom}px`;
-    this.dialoguePanel.style.width = `${boundaries.outer.width}px`;
+    // Calculate scaled dimensions
+    const baseHeight = 200;
+    const scaledHeight = Math.max(150, baseHeight * scale);
+    const basePadding = 20;
+    const scaledPadding = Math.max(10, basePadding * scale);
+    const baseFontSize = 18;
+    const scaledFontSize = Math.max(14, baseFontSize * scale);
+    const basePortraitSize = 150;
+    const scaledPortraitSize = Math.max(100, basePortraitSize * scale);
+
+    // Use container-relative positioning, NOT viewport positioning
+    this.dialoguePanel.style.left = '0px';      // Left edge of container
+    this.dialoguePanel.style.bottom = '0px';    // Bottom edge of container  
+    this.dialoguePanel.style.width = '100%';    // Full width of container
+    this.dialoguePanel.style.right = 'auto';    // Clear any right positioning
+    this.dialoguePanel.style.height = `${scaledHeight}px`;
+    this.dialoguePanel.style.padding = `${scaledPadding}px`;
+
+    // Scale internal elements
+    const portrait = this.dialoguePanel.querySelector('.character-portrait');
+    if (portrait) {
+      Object.assign(portrait.style, {
+        width: `${scaledPortraitSize}px`,
+        height: `${scaledPortraitSize}px`,
+        marginRight: `${scaledPadding * 1.5}px`,
+        fontSize: `${Math.max(18, 24 * scale)}px`
+      });
+    }
+
+    const characterName = this.dialoguePanel.querySelector('.character-name');
+    if (characterName) {
+      characterName.style.fontSize = `${Math.max(18, 24 * scale)}px`;
+      characterName.style.marginBottom = `${scaledPadding * 0.5}px`;
+    }
+
+    const dialogueText = this.dialoguePanel.querySelector('.dialogue-text');
+    if (dialogueText) {
+      dialogueText.style.fontSize = `${scaledFontSize}px`;
+      dialogueText.style.marginBottom = `${scaledPadding}px`;
+    }
+
+    const continueButton = this.dialoguePanel.querySelector('.dialogue-continue');
+    if (continueButton) {
+      Object.assign(continueButton.style, {
+        fontSize: `${Math.max(14, 16 * scale)}px`,
+        padding: `${scaledPadding * 0.5}px ${scaledPadding}px`
+      });
+    }
+
+    console.log(`Dialogue panel positioned within game container boundaries ✨🛡️`);
   }
+
 
   /**
    * Set up resize handler for dialogue panel positioning
@@ -498,6 +567,8 @@ class DialogueUIManager {
 
     window.addEventListener('resize', this.panelResizeHandler);
     window.addEventListener('scroll', this.panelResizeHandler);
+
+    console.log('Dialogue panel resize handler established - corruption countermeasures active 🛡️');
   }
 
   /**
