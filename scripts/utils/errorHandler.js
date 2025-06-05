@@ -211,7 +211,7 @@ function handleGridGenerationError(error, words, config, fillEmptyCellsFunction)
   console.error('Error during grid generation:', error);
   
   // Create fallback grid directly, don't try to call generateGrid again
-  return createResilientFallbackGrid(words, config, fillEmptyCellsFunction);
+  return createResilientFallbackGrid(words, config, fillEmptyCellsFunction); // needs to be replaced with createFallbackGrid
 }
 
 /**
@@ -221,7 +221,7 @@ function handleGridGenerationError(error, words, config, fillEmptyCellsFunction)
  * @param {Function} fillEmptyCellsFunction - Function to fill empty cells
  * @returns {Array} - 2D grid array
  */
-function createResilientFallbackGrid(words, config, fillEmptyCellsFunction) {
+function createResilientFallbackGrid(words, config, fillEmptyCellsFunction) { //needs to be merged with createFallbackGrid
   // Use simple, guaranteed-to-work fallback words
   const fallbackWords = ['BOOK', 'PAGE', 'WORD', 'FIND', 'READ'];
   const gridSize = config?.gridSize || 10;
@@ -648,5 +648,5 @@ export {
   handleSaveError,
   handleNavigationError,
   handleSelectionError,
-  createResilientFallbackGrid
+  createResilientFallbackGrid //needs to be merged with createFallbackGrid
 };

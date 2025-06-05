@@ -1,7 +1,5 @@
 /**
  * Dialogue UI Manager for Chronicles of the Kethaneum
- * Phase 4, Step 1: Basic class structure with initialization
- * 
  * Blessed by Milton's sparkly sigils ✨
  * Protected by Phalanx formation 🛡️
  */
@@ -25,8 +23,6 @@ class DialogueUIManager {
         easing: 'ease-in-out'
       }
     };
-
-    console.log('DialogueUIManager created - Phase 4, Step 1 complete ✨');
   }
 
   /**
@@ -73,7 +69,6 @@ class DialogueUIManager {
    */
   validateGameContainer() {
     if (!this.gameContainer) {
-      console.log('Attempting container recovery...');
       this.gameContainer = document.getElementById('game-container');
     }
 
@@ -97,13 +92,13 @@ class DialogueUIManager {
     return true;
   }
 
-    /**
-   * Initialize the Dialogue UI Manager
-   * @returns {boolean} - Success status
-   */
+  /**
+ * Initialize the Dialogue UI Manager
+ * @returns {boolean} - Success status
+ */
   initialize() {
     try {
-      console.log('Initializing DialogueUIManager... 🐉 The dragons are watching.');
+      console.log('Initializing DialogueUIManager... 🐉 The dragons are keeping watch.');
 
       // Find game container
       this.gameContainer = document.getElementById('game-container');
@@ -112,14 +107,10 @@ class DialogueUIManager {
         throw new Error('Game container validation failed');
       }
 
-      console.log('Game container located - perimeter established');
-
       // Test boundary detection
       const boundaries = this.getContainerBoundaries();
-      console.log('Container boundaries calculated:', boundaries);
 
       this.isInitialized = true;
-      console.log('DialogueUIManager initialized successfully');
 
       return true;
     } catch (error) {
@@ -269,6 +260,57 @@ class DialogueUIManager {
    * @returns {Object} - Safe fallback boundary data
    */
   getFallbackBoundaries() {
+    console.warn('Using fallback boundaries due to calculation failure');
+
+    return {
+      outer: {
+        left: 0,
+        top: 0,
+        width: 1000,
+        height: 600,
+        right: 1000,
+        bottom: 600
+      },
+      inner: {
+        left: 10,
+        top: 10,
+        width: 980,
+        height: 580,
+        right: 990,
+        bottom: 590
+      },
+      centerX: 500,
+      centerY: 300,
+      scale: 1.0,
+      isSmall: false,
+      isMedium: true,
+      isLarge: false
+    };
+  }
+
+  /**
+   * Parse pixel values safely with corruption protection
+   * @param {string} value - CSS pixel value (e.g., "10px")
+   * @returns {number} - Parsed number or 0 if invalid
+   */
+  parsePixelValue(value) {
+    if (!value || typeof value !== 'string') return 0;
+
+    const parsed = parseFloat(value);
+
+    // Validate the parsed value is reasonable
+    if (isNaN(parsed) || parsed < 0 || parsed > 1000) {
+      return 0;
+    }
+
+    return parsed;
+  }
+
+  /**
+   * Provide fallback boundaries when all else fails
+   * @returns {Object} - Safe fallback boundary data
+   */
+  getFallbackBoundaries() {
     console.log('Using dragon-protected fallback boundaries 🐉🛡️');
 
     return {
@@ -345,13 +387,11 @@ class DialogueUIManager {
 
   /**
  * Create overlay element for dialogue display
- * Phase 4, Step 4: Fixed positioning with scroll awareness
  * @returns {boolean} - Success status
  */
   createOverlay() {
     try {
       if (this.overlayElement) {
-        console.log('Overlay already exists, updating position');
         this.updateOverlayPosition();
         return true;
       }
@@ -381,7 +421,6 @@ class DialogueUIManager {
       // Set up resize listener to keep overlay positioned correctly
       this.setupOverlayResizeHandler();
 
-      console.log('Dialogue overlay created with proper positioning ✨🛡️');
       return true;
     } catch (error) {
       console.error('Overlay creation failed:', error);
@@ -537,7 +576,6 @@ class DialogueUIManager {
       }
 
       if (this.dialoguePanel) {
-        console.log('Dialogue panel already exists, updating position');
         this.updateDialoguePanelPosition();
         return true;
       }
@@ -668,8 +706,6 @@ class DialogueUIManager {
       // Set up resize handler
       this.setupDialoguePanelResizeHandler();
 
-      console.log(`Dialogue panel created and constrained to game container ✨🛡️`);
-      console.log(`Scale applied: scale factor ${scale.toFixed(3)}, height ${scaledHeight}px`);
       return true;
 
     } catch (error) {
@@ -744,7 +780,6 @@ class DialogueUIManager {
         });
       }
 
-      console.log('Dialogue panel positioned within game container boundaries');
 
     } catch (error) {
       console.error('Panel positioning failed:', error);
@@ -771,8 +806,6 @@ class DialogueUIManager {
 
     window.addEventListener('resize', this.panelResizeHandler);
     window.addEventListener('scroll', this.panelResizeHandler);
-
-    console.log('Dialogue panel resize handler established - corruption countermeasures active 🛡️');
   }
 
   /**
