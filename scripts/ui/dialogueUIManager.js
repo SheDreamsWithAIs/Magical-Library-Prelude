@@ -309,66 +309,212 @@ class DialogueUIManager {
  * @param {string} category - Device category (medium, large, extraLarge)
  * @returns {Object} - Standardized limits with safety margins
  */
-applyTextMarginStandards(baseCharLimit, category) {
-  try {
-    // Hard minimum limits - never go below these regardless of corruption
-    const HARD_MINIMUMS = {
-      medium: 50,
-      large: 75,
-      extraLarge: 100,
-      mobile: 30 // For future mobile support
-    };
+  applyTextMarginStandards(baseCharLimit, category) {
+    try {
+      // Hard minimum limits - never go below these regardless of corruption
+      const HARD_MINIMUMS = {
+        medium: 50,
+        large: 75,
+        extraLarge: 100,
+        mobile: 30 // For future mobile support
+      };
 
-    // Safety margin percentages
-    const SAFETY_MARGIN = 0.15; // 15% buffer
+      // Safety margin percentages
+      const SAFETY_MARGIN = 0.15; // 15% buffer
 
-    // Validate input parameters
-    if (!baseCharLimit || baseCharLimit < 0) {
-      console.warn('Invalid character limit detected - using fallback');
-      baseCharLimit = HARD_MINIMUMS[category] || 50;
-    }
+      // Validate input parameters
+      if (!baseCharLimit || baseCharLimit < 0) {
+        console.warn('Invalid character limit detected - using fallback');
+        baseCharLimit = HARD_MINIMUMS[category] || 50;
+      }
 
-    // Apply safety margin (reduce limit by 15% for safety buffer)
-    const marginAdjusted = Math.floor(baseCharLimit * (1 - SAFETY_MARGIN));
+      // Apply safety margin (reduce limit by 15% for safety buffer)
+      const marginAdjusted = Math.floor(baseCharLimit * (1 - SAFETY_MARGIN));
 
-    // Enforce hard minimums (anti-corruption measure)
-    const hardMin = HARD_MINIMUMS[category] || 50;
-    const safeLimit = Math.max(marginAdjusted, hardMin);
+      // Enforce hard minimums (anti-corruption measure)
+      const hardMin = HARD_MINIMUMS[category] || 50;
+      const safeLimit = Math.max(marginAdjusted, hardMin);
 
-    // Corruption detection - check if limits seem reasonable
-    if (safeLimit > 1000) {
-      console.warn('Suspiciously high character limit detected - possible corruption');
+      // Corruption detection - check if limits seem reasonable
+      if (safeLimit > 1000) {
+        console.warn('Suspiciously high character limit detected - possible corruption');
+        return {
+          characterLimit: hardMin,
+          appliedMargin: SAFETY_MARGIN,
+          category: category,
+          corruptionDetected: true,
+          error: 'limit-too-high'
+        };
+      }
+
       return {
-        characterLimit: hardMin,
+        characterLimit: safeLimit,
+        originalLimit: baseCharLimit,
         appliedMargin: SAFETY_MARGIN,
+        hardMinimum: hardMin,
         category: category,
-        corruptionDetected: true,
-        error: 'limit-too-high'
+        corruptionDetected: false,
+        error: null
+      };
+
+    } catch (error) {
+      console.error('Text margin standards application failed:', error);
+
+      // Emergency fallback
+      const emergencyLimit = HARD_MINIMUMS[category] || 50;
+      return {
+        characterLimit: emergencyLimit,
+        error: error.message,
+        corruptionDetected: true
       };
     }
-
-    return {
-      characterLimit: safeLimit,
-      originalLimit: baseCharLimit,
-      appliedMargin: SAFETY_MARGIN,
-      hardMinimum: hardMin,
-      category: category,
-      corruptionDetected: false,
-      error: null
-    };
-
-  } catch (error) {
-    console.error('Text margin standards application failed:', error);
-    
-    // Emergency fallback
-    const emergencyLimit = HARD_MINIMUMS[category] || 50;
-    return {
-      characterLimit: emergencyLimit,
-      error: error.message,
-      corruptionDetected: true
-    };
   }
-}
+
+  /**
+   * Chunk dialogue text into readable segments
+   * Respects character limits and natural text boundaries
+   * 
+   * @param {string} dialogueText - Text to chunk
+   * @param {Object} marginStandards - Output from applyTextMarginStandards()
+   * @returns {Object} - Chunked text data with validation
+   */
+  chunkDialogueText(dialogueText, marginStandards) {
+    try {
+      // Validate inputs
+      if (!dialogueText || typeof dialogueText !== 'string') {
+        throw new Error('Invalid dialogue text provided');
+      }
+
+      const charLimit = marginStandards.characterLimit || 200;
+
+      // If text fits in one chunk, return as-is
+      if (dialogueText.length <= charLimit) {
+        return {
+          chunks: [dialogueText],
+          totalChunks: 1,
+          originalLength: dialogueText.length,
+          error: null
+        };
+      }
+
+      // Split into chunks intelligently
+      const chunks = [];
+      let currentChunk = '';
+
+      // Split by sentences first
+      const sentences = dialogueText.split(/[.!?]+/).filter(s => s.trim());
+
+      for (let sentence of sentences) {
+        sentence = sentence.trim();
+
+        // If adding this sentence would exceed limit
+        if ((currentChunk + sentence).length > charLimit) {
+          // Save current chunk if it has content
+          if (currentChunk.trim()) {
+            chunks.push(currentChunk.trim());
+            currentChunk = '';
+          }
+
+          // If single sentence is too long, we'll need word-level splitting
+          if (sentence.length > charLimit) {
+            const wordChunks = this.splitLongSentence(sentence, charLimit);
+            chunks.push(...wordChunks);
+          } else {
+            currentChunk = sentence;
+          }
+        } else {
+          currentChunk += (currentChunk ? '. ' : '') + sentence;
+        }
+      }
+
+      // Add remaining chunk
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+      }
+
+      return {
+        chunks: chunks,
+        totalChunks: chunks.length,
+        originalLength: dialogueText.length,
+        averageChunkLength: Math.round(chunks.reduce((sum, chunk) => sum + chunk.length, 0) / chunks.length),
+        error: null
+      };
+
+    } catch (error) {
+      console.error('Dialogue chunking failed:', error);
+      return {
+        chunks: [dialogueText.substring(0, 200)], // Emergency fallback
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Split overly long sentences at word boundaries
+   * Moves entire words to next chunk, allows overflow for giant words
+   */
+  splitLongSentence(sentence, charLimit) {
+    try {
+      const words = sentence.split(' ');
+      const chunks = [];
+      let currentChunk = '';
+
+      for (let word of words) {
+        const testChunk = currentChunk + (currentChunk ? ' ' : '') + word;
+
+        // If adding this word would exceed limit
+        if (testChunk.length > charLimit) {
+          // Save current chunk if it has content
+          if (currentChunk.trim()) {
+            chunks.push(currentChunk.trim());
+          }
+
+          // Start new chunk with the word that didn't fit
+          currentChunk = word;
+        } else {
+          currentChunk = testChunk;
+        }
+      }
+
+      // Add remaining chunk
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+      }
+
+      return chunks;
+
+    } catch (error) {
+      console.error('Long sentence splitting failed:', error);
+      return [sentence];
+    }
+  }
+
+  /**
+  * Handle individual words that might exceed character limits
+  * For dialogue, we preserve word integrity and allow overflow if necessary
+  */
+  checkWordLength(word, charLimit) {
+    try {
+      return {
+        word: word,
+        length: word.length,
+        exceedsLimit: word.length > charLimit,
+        shouldOverflow: word.length > charLimit,
+        recommendedAction: word.length > charLimit ? 'allow-overflow' : 'normal'
+      };
+
+    } catch (error) {
+      console.error('Word length check failed:', error);
+      return {
+        word: word,
+        length: word.length,
+        exceedsLimit: false,
+        shouldOverflow: false,
+        recommendedAction: 'normal',
+        error: error.message
+      };
+    }
+  }
 
   /**
    * Parse pixel values safely with corruption protection
