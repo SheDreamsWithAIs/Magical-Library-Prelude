@@ -218,13 +218,20 @@ class DialogueUIManager {
         // Responsive breakpoints for dialogue sizing
         isSmall: rect.width < 600,
         isMedium: rect.width >= 600 && rect.width < 1000,
-        isLarge: rect.width >= 1000
+        isLarge: rect.width >= 1000,
+        isExtraLarge: rect.width >= 1200
       };
 
       // STEP 8: Validate calculated boundaries make sense
       if (boundaries.inner.width <= 0 || boundaries.inner.height <= 0) {
         console.warn('Calculated inner boundaries invalid - adjusting');
         boundaries.inner = { ...boundaries.outer }; // Fallback to outer boundaries
+      }
+
+      // Validate exactly one category is true (anti-corruption measure)
+      const categoryCount = [boundaries.isSmall, boundaries.isMedium, boundaries.isLarge, boundaries.isExtraLarge].filter(Boolean).length;
+      if (categoryCount !== 1) {
+        console.warn('Boundary categorization corruption detected - exactly one category should be true');
       }
 
       return boundaries;
@@ -236,6 +243,132 @@ class DialogueUIManager {
       return this.getFallbackBoundaries();
     }
   }
+
+  /**
+ * Measure text proportions for dialogue display
+ * Currently handles desktop/tablet layouts (Medium, Large, ExtraLarge)
+ * 
+ * TODO: Add mobile layout support in Beta phase
+ * - Mobile will need separate layout calculations
+ * - Update this function once mobile dialogue layout is implemented
+ * - Consider different text flow patterns for mobile
+ * 
+ * @param {string} text - Text to measure
+ * @param {Object} boundaries - Container boundaries from getContainerBoundaries()
+ * @returns {Object} - Text proportion data with character limits and sizing
+ */
+  measureTextProportions(text, boundaries) {
+    try {
+      // Skip mobile calculations for Alpha - will be handled in Beta
+      if (boundaries.isSmall) {
+        console.warn('Mobile text proportions not implemented - Beta phase feature');
+        return {
+          characterLimit: 100, // Temporary fallback
+          chunks: [text.substring(0, 100)],
+          error: 'mobile-not-implemented'
+        };
+      }
+
+      // Handle desktop/tablet proportions
+      const scale = boundaries.scale;
+
+      // Base character limits for different categories
+      let baseCharLimit;
+      if (boundaries.isMedium) {
+        baseCharLimit = 200;
+      } else if (boundaries.isLarge) {
+        baseCharLimit = 300;
+      } else if (boundaries.isExtraLarge) {
+        baseCharLimit = 400;
+      }
+
+      // Scale the character limit proportionally
+      const scaledCharLimit = Math.round(baseCharLimit * scale);
+
+      return {
+        characterLimit: scaledCharLimit,
+        scale: scale,
+        category: boundaries.isMedium ? 'medium' : boundaries.isLarge ? 'large' : 'extraLarge',
+        error: null
+      };
+
+    } catch (error) {
+      console.error('Text proportion measurement failed:', error);
+      return {
+        characterLimit: 200, // Safe fallback
+        error: error.message
+      };
+    }
+  }
+
+  /**
+ * Apply safety margin standards to text character limits
+ * Adds buffer zones and validates against corruption/tampering
+ * 
+ * @param {number} baseCharLimit - Base character limit from measureTextProportions
+ * @param {string} category - Device category (medium, large, extraLarge)
+ * @returns {Object} - Standardized limits with safety margins
+ */
+applyTextMarginStandards(baseCharLimit, category) {
+  try {
+    // Hard minimum limits - never go below these regardless of corruption
+    const HARD_MINIMUMS = {
+      medium: 50,
+      large: 75,
+      extraLarge: 100,
+      mobile: 30 // For future mobile support
+    };
+
+    // Safety margin percentages
+    const SAFETY_MARGIN = 0.15; // 15% buffer
+
+    // Validate input parameters
+    if (!baseCharLimit || baseCharLimit < 0) {
+      console.warn('Invalid character limit detected - using fallback');
+      baseCharLimit = HARD_MINIMUMS[category] || 50;
+    }
+
+    // Apply safety margin (reduce limit by 15% for safety buffer)
+    const marginAdjusted = Math.floor(baseCharLimit * (1 - SAFETY_MARGIN));
+
+    // Enforce hard minimums (anti-corruption measure)
+    const hardMin = HARD_MINIMUMS[category] || 50;
+    const safeLimit = Math.max(marginAdjusted, hardMin);
+
+    // Corruption detection - check if limits seem reasonable
+    if (safeLimit > 1000) {
+      console.warn('Suspiciously high character limit detected - possible corruption');
+      return {
+        characterLimit: hardMin,
+        appliedMargin: SAFETY_MARGIN,
+        category: category,
+        corruptionDetected: true,
+        error: 'limit-too-high'
+      };
+    }
+
+    return {
+      characterLimit: safeLimit,
+      originalLimit: baseCharLimit,
+      appliedMargin: SAFETY_MARGIN,
+      hardMinimum: hardMin,
+      category: category,
+      corruptionDetected: false,
+      error: null
+    };
+
+  } catch (error) {
+    console.error('Text margin standards application failed:', error);
+    
+    // Emergency fallback
+    const emergencyLimit = HARD_MINIMUMS[category] || 50;
+    return {
+      characterLimit: emergencyLimit,
+      error: error.message,
+      corruptionDetected: true
+    };
+  }
+}
 
   /**
    * Parse pixel values safely with corruption protection
