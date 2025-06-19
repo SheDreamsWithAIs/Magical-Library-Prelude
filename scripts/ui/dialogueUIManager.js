@@ -11,6 +11,7 @@ class DialogueUIManager {
     this.overlayElement = null;
     this.dialoguePanel = null;
     this.currentDialogue = null;
+    this.initializePagination();
 
     // Configuration
     this.config = {
@@ -23,6 +24,15 @@ class DialogueUIManager {
         easing: 'ease-in-out'
       }
     };
+    
+    this.initializePagination();
+  }
+
+  
+
+  // Initialize pagination controller
+  initializePagination() {
+    this.paginationController = new PaginationController();
   }
 
   /**
@@ -1098,6 +1108,134 @@ class DialogueUIManager {
 
 // Create singleton instance for the game
 const dialogueUIManager = new DialogueUIManager();
+
+/**
+ * PaginationController for dialogue text management
+ * Protected State Controller
+ */
+class PaginationController {
+  constructor() {
+    this.state = {
+      chunks: [],
+      currentChunk: 0,
+      totalChunks: 0,
+      isActive: false,
+      lastValidated: null,
+      checksum: null
+    };
+    
+    this.validation = {
+      maxChunks: 50,
+      maxChunkLength: 1000,
+      checksumSalt: 'kethaneum-pagination-v1'
+    };
+  }
+
+  calculateChecksum(state) {
+    try {
+      const stateString = JSON.stringify({
+        chunksLength: state.chunks.length,
+        currentChunk: state.currentChunk,
+        totalChunks: state.totalChunks,
+        isActive: state.isActive
+      });
+      
+      let hash = 0;
+      const saltedString = stateString + this.validation.checksumSalt;
+      
+      for (let i = 0; i < saltedString.length; i++) {
+        const char = saltedString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      return Math.abs(hash).toString(16);
+    } catch (error) {
+      console.error('Checksum calculation failed:', error);
+      return null;
+    }
+  }
+
+  validateState() {
+    try {
+      if (!this.state || typeof this.state !== 'object') {
+        throw new Error('State structure corrupted');
+      }
+
+      // FIXED: Allow empty state (0,0)
+      if (this.state.currentChunk < 0 || 
+          (this.state.totalChunks > 0 && this.state.currentChunk >= this.state.totalChunks)) {
+        throw new Error('Current chunk index out of bounds');
+      }
+
+      if (this.state.totalChunks > this.validation.maxChunks) {
+        throw new Error('Suspicious chunk count detected');
+      }
+
+      const currentChecksum = this.calculateChecksum(this.state);
+      if (this.state.checksum && this.state.checksum !== currentChecksum) {
+        throw new Error('State checksum mismatch - corruption detected');
+      }
+
+      this.state.lastValidated = Date.now();
+      this.state.checksum = currentChecksum;
+      
+      return true;
+    } catch (error) {
+      console.error('State validation failed:', error);
+      return false;
+    }
+  }
+
+  resetState() {
+    try {
+      this.state = {
+        chunks: [],
+        currentChunk: 0,
+        totalChunks: 0,
+        isActive: false,
+        lastValidated: Date.now(),
+        checksum: null
+      };
+      
+      this.state.checksum = this.calculateChecksum(this.state);
+      return true;
+    } catch (error) {
+      console.error('State reset failed:', error);
+      return false;
+    }
+  }
+
+  recoverState() {
+    try {
+      const validChunks = Array.isArray(this.state.chunks) ? 
+        this.state.chunks.filter(chunk => 
+          typeof chunk === 'string' && 
+          chunk.length > 0 && 
+          chunk.length <= this.validation.maxChunkLength
+        ) : [];
+      
+      this.resetState();
+      
+      if (validChunks.length > 0) {
+        this.state.chunks = validChunks;
+        this.state.totalChunks = validChunks.length;
+        this.state.checksum = this.calculateChecksum(this.state);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('State recovery failed:', error);
+      return this.resetState();
+    }
+  }
+
+  initializeDefaults() {
+    this.resetState();
+    return this.validateState();
+  }
+}
+
 
 // Export for module system
 export { DialogueUIManager, dialogueUIManager };
