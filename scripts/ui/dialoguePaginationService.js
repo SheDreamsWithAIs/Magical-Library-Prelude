@@ -2,16 +2,6 @@
  * DialoguePaginationService for Chronicles of the Kethaneum
  * Handles all text measurement, chunking, and pagination logic
  * Protected by Phalanx Formation 🛡️
- * 
- * EVENTUAL REFACTOR PLAN:
- * This service will eventually hold ALL pagination logic currently in DialogueUIManager
- * Functions to move FROM DialogueUIManager TO this service:
- * - measureTextProportions(text, boundaries)
- * - applyTextMarginStandards(baseCharLimit, category) 
- * - chunkDialogueText(dialogueText, marginStandards)
- * - splitLongSentence(sentence, charLimit)
- * - checkWordLength(word, charLimit)
- * - PaginationController class (entire embedded class)
  */
 
 class DialoguePaginationService {
@@ -74,15 +64,15 @@ class DialoguePaginationService {
 
       // Step 1: Measure text requirements (will use moved function)
       // TODO: Use measureTextProportions() when moved from DialogueUIManager
-      const textProportions = this.measureTextRequirements(dialogueText, boundaries);
+      const textProportions = this.measureTextProportions(dialogueText, boundaries);
       
       // Step 2: Apply safety margins (will use moved function)
       // TODO: Use applyTextMarginStandards() when moved from DialogueUIManager  
-      const marginStandards = this.applySafetyMargins(textProportions.characterLimit, textProportions.category);
+      const marginStandards = this.applyTextMarginStandards(textProportions.characterLimit, textProportions.category);
       
       // Step 3: Chunk text if needed (will use moved function)
       // TODO: Use chunkDialogueText() when moved from DialogueUIManager
-      const chunkedData = this.chunkTextSafely(dialogueText, marginStandards);
+      const chunkedData = this.chunkDialogueText(dialogueText, marginStandards);
       
       // Step 4: Initialize pagination state
       const paginationReady = this.initializePaginationState(chunkedData);
@@ -181,11 +171,6 @@ class DialoguePaginationService {
       this.initialize();
     }
   }
-
-  /**
-   * TEMPORARY IMPLEMENTATIONS - Will be replaced with moved functions
-   * These are placeholders until we move the real implementations from DialogueUIManager
-   */
   
   /**
   * Measure text proportions for dialogue display
@@ -393,6 +378,73 @@ class DialoguePaginationService {
   }
 
   /**
+   * Split overly long sentences at word boundaries
+   * Moves entire words to next chunk, allows overflow for giant words
+   */
+  splitLongSentence(sentence, charLimit) {
+    try {
+      const words = sentence.split(' ');
+      const chunks = [];
+      let currentChunk = '';
+
+      for (let word of words) {
+        const testChunk = currentChunk + (currentChunk ? ' ' : '') + word;
+
+        // If adding this word would exceed limit
+        if (testChunk.length > charLimit) {
+          // Save current chunk if it has content
+          if (currentChunk.trim()) {
+            chunks.push(currentChunk.trim());
+          }
+
+          // Start new chunk with the word that didn't fit
+          currentChunk = word;
+        } else {
+          currentChunk = testChunk;
+        }
+      }
+
+      // Add remaining chunk
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim());
+      }
+
+      return chunks;
+
+    } catch (error) {
+      console.error('Long sentence splitting failed:', error);
+      return [sentence];
+    }
+  }
+
+  /**
+  * Handle individual words that might exceed character limits
+  * For dialogue, we preserve word integrity and allow overflow if necessary
+  */
+  checkWordLength(word, charLimit) {
+    try {
+      return {
+        word: word,
+        length: word.length,
+        exceedsLimit: word.length > charLimit,
+        shouldOverflow: word.length > charLimit,
+        recommendedAction: word.length > charLimit ? 'allow-overflow' : 'normal'
+      };
+
+    } catch (error) {
+      console.error('Word length check failed:', error);
+      return {
+        word: word,
+        length: word.length,
+        exceedsLimit: false,
+        shouldOverflow: false,
+        recommendedAction: 'normal',
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Initialize pagination controller state with chunked data
    */
   initializePaginationState(chunkedData) {
@@ -446,9 +498,8 @@ class DialoguePaginationService {
 }
 
 /**
- * Embedded PaginationController 
- * TODO: This will eventually be moved here from DialogueUIManager during refactor
- * For now, we'll use a simplified version to establish the interface
+ * PaginationController for dialogue text management
+ * Protected State Controller
  */
 class PaginationController {
   constructor() {
@@ -499,6 +550,7 @@ class PaginationController {
         throw new Error('State structure corrupted');
       }
 
+      // FIXED: Allow empty state (0,0)
       if (this.state.currentChunk < 0 || 
           (this.state.totalChunks > 0 && this.state.currentChunk >= this.state.totalChunks)) {
         throw new Error('Current chunk index out of bounds');
@@ -542,13 +594,33 @@ class PaginationController {
     }
   }
 
-  getStatus() {
-    return {
-      currentChunk: this.state.currentChunk,
-      totalChunks: this.state.totalChunks,
-      isActive: this.state.isActive,
-      isValid: this.validateState()
-    };
+  recoverState() {
+    try {
+      const validChunks = Array.isArray(this.state.chunks) ? 
+        this.state.chunks.filter(chunk => 
+          typeof chunk === 'string' && 
+          chunk.length > 0 && 
+          chunk.length <= this.validation.maxChunkLength
+        ) : [];
+      
+      this.resetState();
+      
+      if (validChunks.length > 0) {
+        this.state.chunks = validChunks;
+        this.state.totalChunks = validChunks.length;
+        this.state.checksum = this.calculateChecksum(this.state);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('State recovery failed:', error);
+      return this.resetState();
+    }
+  }
+
+  initializeDefaults() {
+    this.resetState();
+    return this.validateState();
   }
 }
 
