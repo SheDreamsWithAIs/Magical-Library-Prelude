@@ -34,11 +34,11 @@
 - [x] Genre Selection UI button
   - [x] Genre card container
   - [x] Genre Selection cards
-- [ ] Character Dialogue System Integration 
-  - [ ] Dialogue overlay container
-  - [ ] Character portrait area
-  - [ ] Dialogue text display area
-  - [ ] Dialogue navigation controls
+- [ ] Character Dialogue System Integration (not fully integrated yet)
+  - [x] Dialogue overlay container
+  - [x] Character portrait area
+  - [x] Dialogue text display area
+  - [x] Dialogue navigation controls
 
 ### Book of Passage Screen
 - [x] Book of Passage Title
@@ -109,17 +109,17 @@ ___
   - [ ] kethaneum
 ___
 ## .:: Narrative Delivery ::.
-- [ ] Easy Narrative File Swap Out
+- [x] Easy Narrative File Swap Out
 - [x] Easy Puzzle File Swap Out
 
 ### Backstory Screen
 - [x] Kethaneum Backstory Placeholder Text
 
 ### Library Screen
-- [ ] Placeholder Character Dialogue Text
+- [x] Placeholder Character Dialogue Text
 - [ ] Character dialogue system
   - [ ] Event driven dialogue
-  - [ ] Banter dialogue
+  - [x] Banter dialogue
 - [x] Genre Cards
 
 ### Core Dialogue Foundation
@@ -139,14 +139,14 @@ ___
   - [ ] Sequential dialogue file structure (JSON)
   - [ ] Multi-character conversation handling
   - [ ] Story event triggering system
-- [ ] Dialogue UI Implementation
-  - [ ] Basic dialogue overlay panel
-  - [ ] Character portrait placeholder system
-  - [ ] Text display with responsive sizing
-  - [ ] Continue/advance dialogue controls
+- [x] Dialogue UI Implementation
+  - [x] Basic dialogue overlay panel
+  - [x] Character portrait placeholder system
+  - [x] Text display with responsive sizing
+  - [x] Continue/advance dialogue controls
 - [ ] Library Screen Integration
-  - [ ] "Speak to Archivist" button functionality
-  - [ ] Dialogue panel show/hide management
+  - [ ] "Start Conversation" button functionality
+  - [x] Dialogue panel show/hide management
   - [ ] Integration with existing library navigation
 
 ### Book of Passage Screen
@@ -272,8 +272,8 @@ ___
 ___
 ## .:: Character Dialogue System ::.
   - [ ] Character Image Handler
-  - [ ] Character Dialogue Handler
-  - [ ] Dialogue Navigation
+  - [x] Character Dialogue Handler
+  - [x] Dialogue Navigation
   - [ ] Event triggers 
 ___
 ## .:: Event System ::.
