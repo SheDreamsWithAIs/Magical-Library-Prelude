@@ -20,9 +20,9 @@ class DialogueIntegration {
     /**
      * Initialize the dialogue integration system
      * @param {DialogueUIManager} dialogueUIManager - The dialogue UI manager instance
-     * @returns {boolean} - Success status
+     * @returns {Promise<boolean>} - Success status
      */
-    initialize(dialogueUIManager) {
+    async initialize(dialogueUIManager) {
         try {
             if (!dialogueUIManager) {
                 throw new Error('DialogueUIManager instance is required');

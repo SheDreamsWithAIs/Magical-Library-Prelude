@@ -553,48 +553,43 @@ function initializeLibraryNavigation() {
         });
     },
     'start-conversation-btn': function() {
-      
       // Import and initialize dialogue system
       import('../dialogue/dialogueIntegration.js')
         .then(DialogueIntegration => {
-          // Import DialogueManager
-          return import('../dialogue/dialogueManager.js')
-            .then(DialogueManagerModule => {
-              // Get DialogueUIManager from moduleBootstrap
-              return import('../moduleBootstrap.js')
-                .then(ModuleBootstrap => {
-                  const dialogueUIManager = ModuleBootstrap.getDialogueUIManager();
-                  
-                  if (!dialogueUIManager) {
-                    throw new Error('DialogueUIManager not available');
-                  }
+          // Get DialogueUIManager from moduleBootstrap
+          return import('../moduleBootstrap.js')
+            .then(ModuleBootstrap => {
+              const dialogueUIManager = ModuleBootstrap.getDialogueUIManager();
+              
+              if (!dialogueUIManager) {
+                throw new Error('DialogueUIManager not available');
+              }
 
-                  // Create dialogue integration instance
-                  const dialogueIntegration = new DialogueIntegration.default();
-                  
-                  // Initialize with DialogueUIManager instance (async)
-                  return dialogueIntegration.initialize(dialogueUIManager)
-                    .then(initSuccess => {
-                      if (initSuccess) {
-                        // Start dialogue with Archivist Lumina
-                        const dialogueSuccess = dialogueIntegration.startDialogue('archivist-lumina', 'introduction');
-                        
-                        if (!dialogueSuccess) {
-                          console.error('Failed to start dialogue');
-                          // Show error message
-                          import('../utils/errorHandler.js')
-                            .then(ErrorHandler => {
-                              ErrorHandler.showErrorMessage(
-                                "Dialogue Error",
-                                "Unable to start conversation with the Archivist. Please try again later.",
-                                "Return to Library"
-                              );
-                            });
-                        }
-                      } else {
-                        throw new Error('Failed to initialize dialogue integration');
-                      }
-                    });
+              // Create dialogue integration instance
+              const dialogueIntegration = new DialogueIntegration.default();
+              
+              // Initialize with DialogueUIManager instance (async)
+              return dialogueIntegration.initialize(dialogueUIManager)
+                .then(initSuccess => {
+                  if (initSuccess) {
+                    // Start dialogue with Archivist Lumina (using 'hook' story beat)
+                    const dialogueSuccess = dialogueIntegration.startDialogue('archivist-lumina', 'hook');
+                    
+                    if (!dialogueSuccess) {
+                      console.error('Failed to start dialogue');
+                      // Show error message
+                      import('../utils/errorHandler.js')
+                        .then(ErrorHandler => {
+                          ErrorHandler.showErrorMessage(
+                            "Dialogue Error",
+                            "Unable to start conversation with the Archivist. Please try again later.",
+                            "Return to Library"
+                          );
+                        });
+                    }
+                  } else {
+                    throw new Error('Failed to initialize dialogue integration');
+                  }
                 });
             });
         })

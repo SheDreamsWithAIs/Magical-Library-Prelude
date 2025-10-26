@@ -269,6 +269,16 @@ class DialogueManager {
   isStoryBeatInRange(currentBeat, availableFrom, availableUntil) {
     // Story beat order from config
     const beatOrder = Object.values(this.config.storyStructure.storyBeats);
+    
+    console.log('Story beat range check:', {
+      currentBeat,
+      availableFrom,
+      availableUntil,
+      beatOrder,
+      currentIndex: beatOrder.indexOf(currentBeat),
+      fromIndex: beatOrder.indexOf(availableFrom),
+      untilIndex: availableUntil ? beatOrder.indexOf(availableUntil) : 'N/A'
+    });
 
     const currentIndex = beatOrder.indexOf(currentBeat);
     const fromIndex = beatOrder.indexOf(availableFrom);
@@ -299,8 +309,12 @@ class DialogueManager {
       const availabilityResult = this.getAvailableCharacters(storyBeat);
 
       if (!availabilityResult.availableCharacters || availabilityResult.availableCharacters.length === 0) {
-        console.log('No characters available for banter at current story beat');
-        return null;
+        console.log('No characters available for banter at current story beat:', availabilityResult.debugInfo);
+        return {
+          success: false,
+          error: 'No characters available for current story beat',
+          dialogue: null
+        };
       }
 
       // Select character using weighted random selection
@@ -308,7 +322,11 @@ class DialogueManager {
 
       if (!selectedCharacter) {
         console.log('Character selection failed');
-        return null;
+        return {
+          success: false,
+          error: 'Character selection failed',
+          dialogue: null
+        };
       }
 
       // Random dialogue selection from available dialogue
@@ -321,23 +339,24 @@ class DialogueManager {
 
       // Return complete banter object ready for UI
       return {
-        characterId: selectedCharacter.characterId,
-        characterName: selectedCharacter.characterData.character.name,
-        characterTitle: selectedCharacter.characterData.character.title,
-        portraitFile: selectedCharacter.characterData.character.portraitFile,
+        success: true,
+        error: null,
         dialogue: {
-          id: selectedDialogue.id,
+          characterId: selectedCharacter.characterId,
+          character: selectedCharacter.characterData.character.name,
           text: selectedDialogue.text,
           emotion: selectedDialogue.emotion,
           category: selectedDialogue.category
-        },
-        storyBeat: availabilityResult.debugInfo.currentStoryBeat,
-        timestamp: new Date().toISOString()
+        }
       };
 
     } catch (error) {
       this.handleError('random-banter-generation', error);
-      return null;
+      return {
+        success: false,
+        error: error.message,
+        dialogue: null
+      };
     }
   }
 

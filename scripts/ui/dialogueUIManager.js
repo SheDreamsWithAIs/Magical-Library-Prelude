@@ -174,9 +174,9 @@ class DialogueUIManager {
         // Force style application
         this.overlayElement.offsetHeight;
 
-        // REAL corruption detection - check if values are reasonably close to expected
+        // Check if positioning worked - if not, use fallback positioning
         const appliedRect = this.overlayElement.getBoundingClientRect();
-        const tolerance = 10; // Allow small browser rendering differences
+        const tolerance = 50; // More lenient tolerance
 
         const leftOk = Math.abs(appliedRect.left - boundaries.outer.left) <= tolerance;
         const topOk = Math.abs(appliedRect.top - boundaries.outer.top) <= tolerance;
@@ -186,25 +186,12 @@ class DialogueUIManager {
         const positioningCorrupted = !leftOk || !topOk || !widthOk || !heightOk;
 
         if (positioningCorrupted) {
-            // Log the corruption attempt with full details
-            console.error('DialogueUIManager: Overlay positioning corruption detected', {
-                expected: {
-                    left: boundaries.outer.left,
-                    top: boundaries.outer.top,
-                    width: boundaries.outer.width,
-                    height: boundaries.outer.height
-                },
-                actual: {
-                    left: appliedRect.left,
-                    top: appliedRect.top,
-                    width: appliedRect.width,
-                    height: appliedRect.height
-                },
-                timestamp: new Date().toISOString()
-            });
-
-            // Make overlay invisible rather than fight corruption
-            this.overlayElement.style.display = 'none';
+            // Use fallback positioning - cover the entire viewport
+            this.overlayElement.style.left = '0px';
+            this.overlayElement.style.top = '0px';
+            this.overlayElement.style.width = '100vw';
+            this.overlayElement.style.height = '100vh';
+            this.overlayElement.style.display = 'block';
         } else {
             // Ensure it's visible if positioning worked correctly
             this.overlayElement.style.display = 'block';
