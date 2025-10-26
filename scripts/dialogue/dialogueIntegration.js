@@ -4,7 +4,7 @@
  * Phase 5: Game Integration
  */
 
-import DialogueManager from './dialogueManager.js';
+import { DialogueManager } from './dialogueManager.js';
 import DialogueUIManager from '../ui/dialogueUIManager.js';
 
 class DialogueIntegration {
@@ -19,31 +19,30 @@ class DialogueIntegration {
 
     /**
      * Initialize the dialogue integration system
-     * @param {DialogueManager} dialogueManager - The dialogue manager instance
      * @param {DialogueUIManager} dialogueUIManager - The dialogue UI manager instance
      * @returns {boolean} - Success status
      */
-    initialize(dialogueManager, dialogueUIManager) {
+    initialize(dialogueUIManager) {
         try {
-            console.log('Initializing Dialogue Integration...');
-
-            if (!dialogueManager) {
-                throw new Error('DialogueManager instance is required');
-            }
-
             if (!dialogueUIManager) {
                 throw new Error('DialogueUIManager instance is required');
             }
 
-            this.dialogueManager = dialogueManager;
+            // Create new DialogueManager instance
+            this.dialogueManager = new DialogueManager();
             this.dialogueUIManager = dialogueUIManager;
+
+            // Initialize the DialogueManager
+            const managerInitSuccess = await this.dialogueManager.initialize();
+            if (!managerInitSuccess) {
+                throw new Error('Failed to initialize DialogueManager');
+            }
 
             // Ensure UI components are created
             this.dialogueUIManager.createOverlay();
             this.dialogueUIManager.createDialoguePanel();
 
             this.isInitialized = true;
-            console.log('Dialogue Integration initialized successfully ✨');
             return true;
 
         } catch (error) {
@@ -64,10 +63,11 @@ class DialogueIntegration {
                 throw new Error('Dialogue Integration not initialized');
             }
 
-            console.log(`Starting dialogue with ${characterName} (story beat: ${storyBeat})`);
-
             // Set story beat in dialogue manager
-            this.dialogueManager.setStoryBeat(storyBeat);
+            const beatSet = this.dialogueManager.setStoryBeat(storyBeat);
+            if (!beatSet) {
+                throw new Error(`Invalid story beat: ${storyBeat}`);
+            }
 
             // Get random banter from dialogue manager
             const banterResult = this.dialogueManager.getRandomBanter(characterName);
@@ -77,7 +77,6 @@ class DialogueIntegration {
             }
 
             this.currentDialogue = banterResult.dialogue;
-            console.log('Retrieved dialogue:', this.currentDialogue);
 
             // Process dialogue text for display
             this.processDialogueText();
@@ -131,7 +130,6 @@ class DialogueIntegration {
             }
 
             this.currentChunkIndex = 0;
-            console.log(`Processed dialogue into ${this.currentChunks.length} chunks`);
 
         } catch (error) {
             console.error('Failed to process dialogue text:', error);
@@ -199,8 +197,6 @@ class DialogueIntegration {
                 }, 10);
             }
 
-            console.log(`Showing dialogue chunk ${this.currentChunkIndex + 1}/${this.currentChunks.length}`);
-
         } catch (error) {
             console.error('Failed to show dialogue:', error);
         }
@@ -230,8 +226,6 @@ class DialogueIntegration {
      */
     endDialogue() {
         try {
-            console.log('Ending dialogue conversation');
-
             // Hide dialogue panel
             const panel = this.dialogueUIManager.dialoguePanel;
             if (panel) {
@@ -252,8 +246,6 @@ class DialogueIntegration {
             this.currentDialogue = null;
             this.currentChunkIndex = 0;
             this.currentChunks = [];
-
-            console.log('Dialogue conversation ended');
 
         } catch (error) {
             console.error('Failed to end dialogue:', error);

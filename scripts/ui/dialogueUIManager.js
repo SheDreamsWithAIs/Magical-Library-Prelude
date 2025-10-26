@@ -24,7 +24,6 @@ class DialogueUIManager {
             }
         };
 
-        console.log('DialogueUIManager created - Phase 2, Step 1 complete ✨');
     }
 
     /**
@@ -33,8 +32,6 @@ class DialogueUIManager {
      */
     initialize() {
         try {
-            console.log('Initializing DialogueUIManager...');
-
             // Find game container (our shield wall perimeter)
             this.gameContainer = document.getElementById('game-container');
 
@@ -42,15 +39,10 @@ class DialogueUIManager {
                 throw new Error('Game container not found - cannot establish defensive perimeter');
             }
 
-            console.log('Game container located - perimeter established 🛡️');
-
             // Test boundary detection immediately
             const boundaries = this.getContainerBoundaries();
-            console.log('Container boundaries calculated:', boundaries);
 
             this.isInitialized = true;
-            console.log('DialogueUIManager initialized successfully ✨');
-
             return true;
         } catch (error) {
             console.error('DialogueUIManager initialization failed:', error);
@@ -158,7 +150,6 @@ class DialogueUIManager {
             // Set up resize listener to keep overlay positioned correctly
             this.setupOverlayResizeHandler();
 
-            console.log('Dialogue overlay created with proper positioning ✨🛡️');
             return true;
         } catch (error) {
             console.error('Overlay creation failed:', error);
@@ -295,8 +286,6 @@ class DialogueUIManager {
             });
         }
 
-        console.log(`Dialogue panel positioned within game container boundaries ✨🛡️`);
-        console.log(`Scale applied: height ${scaledHeight}px, padding ${scaledPadding}px, scale factor ${scale.toFixed(3)}`);
     }
 
     /**
@@ -313,8 +302,6 @@ class DialogueUIManager {
 
         window.addEventListener('resize', this.panelResizeHandler);
         window.addEventListener('scroll', this.panelResizeHandler);
-
-        console.log('Dialogue panel resize handler established - corruption countermeasures active 🛡️');
     }
 
     /**
@@ -346,7 +333,6 @@ class DialogueUIManager {
             // CORRUPTION COUNTERMEASURE: Explicitly ensure game container positioning
             if (this.gameContainer) {
                 this.gameContainer.style.position = 'relative';
-                console.log('Game container set to relative positioning - defensive measure active 🛡️');
             }
 
             // Get boundaries and scale factor
@@ -469,8 +455,6 @@ class DialogueUIManager {
             // Set up resize handler
             this.setupDialoguePanelResizeHandler();
 
-            console.log(`Dialogue panel created and constrained to game container ✨🛡️`);
-            console.log(`Scale applied: scale factor ${scale.toFixed(3)}, height ${scaledHeight}px`);
             return true;
 
         } catch (error) {
