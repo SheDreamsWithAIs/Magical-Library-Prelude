@@ -57,7 +57,7 @@ class DialogueIntegration {
      * @param {string} storyBeat - Current story beat for dialogue filtering
      * @returns {boolean} - Success status
      */
-    startDialogue(characterName, storyBeat = 'introduction') {
+    startDialogue(characterName, storyBeat = 'hook') {
         try {
             if (!this.isInitialized) {
                 throw new Error('Dialogue Integration not initialized');
@@ -70,7 +70,8 @@ class DialogueIntegration {
             }
 
             // Get random banter from dialogue manager
-            const banterResult = this.dialogueManager.getRandomBanter(characterName);
+            // Use the current story beat, not the character name
+            const banterResult = this.dialogueManager.getRandomBanter();
 
             if (!banterResult.success) {
                 throw new Error(`Failed to get banter: ${banterResult.error}`);

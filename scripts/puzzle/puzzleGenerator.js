@@ -55,7 +55,6 @@ function generateGrid(words) {
 
     // Try to place each word
     for (const word of sortedWords) {
-      console.log(`Attempting to place word: ${word}`);
       let placed = false;
       let attempts = 0;
       const maxRandomAttempts = 100;
@@ -87,7 +86,6 @@ function generateGrid(words) {
           });
 
           placed = true;
-          console.log(`Successfully placed word: ${word} after ${attempts} random attempts`);
         }
       }
       
@@ -109,7 +107,6 @@ function generateGrid(words) {
                   direction: [dRow, dCol]
                 });
                 placed = true;
-                console.log(`Successfully placed word: ${word} using systematic placement at [${r},${c}]`);
                 break;
               }
             }
@@ -128,9 +125,6 @@ function generateGrid(words) {
 
     // Fill remaining empty cells with random letters
     fillEmptyCells(grid);
-    
-    console.log("Grid generation successful with", placements.length, "words placed");
-
     return grid;
   } catch (error) {
     // Use the error handler function
@@ -332,8 +326,6 @@ function getDistinctivePatterns(word) {
  */
 function initializePuzzle(puzzleData) {
   try {
-    console.log('Initializing puzzle with data:', puzzleData);
-    
     // Get state and config
     const state = GameState.getGameState();
     const config = Config.getConfig();
@@ -373,8 +365,6 @@ function initializePuzzle(puzzleData) {
     if (!bookAlreadyDiscovered) {
       state.discoveredBooks.add(state.currentBook);
       state.completedBooks = state.discoveredBooks.size;
-      
-      console.log(`Added "${state.currentBook}" to discoveredBooks. New count:`, state.completedBooks);
       
       // Save progress immediately to ensure this discovery persists
       try {
@@ -422,10 +412,8 @@ function initializePuzzle(puzzleData) {
       RenderSystem.renderWordList();
       RenderSystem.renderTimer();
       
-      // Key addition: Set up event listeners for the puzzle
-      console.log('Setting up puzzle event listeners');
+      // Set up event listeners for the puzzle
       InputHandler.setupPuzzleEventListeners();
-      console.log('Puzzle event listeners set up successfully');
     } catch (renderError) {
       console.error('Render error:', renderError);
       throw new Error(`Failed to render puzzle: ${renderError.message}`);

@@ -35,8 +35,6 @@ class DialogueManager {
    */
   async initialize() {
     try {
-      console.log('Initializing DialogueManager...');
-
       // Load configuration first
       await this.loadConfiguration();
 
@@ -44,10 +42,8 @@ class DialogueManager {
       await this.loadCharacterGroup('introduction_characters');
 
       this.isInitialized = true;
-      console.log('DialogueManager initialized successfully');
       return true;
     } catch (error) {
-      console.error('DialogueManager initialization failed:', error);
       this.handleError('initialization', error);
       return false;
     }
@@ -111,13 +107,10 @@ class DialogueManager {
    */
   async loadCharacterGroup(groupName) {
     if (this.loadedGroups.has(groupName)) {
-      console.log(`Character group '${groupName}' already loaded`);
       return;
     }
 
     try {
-      console.log(`Loading character group: ${groupName}`);
-
       // Load character manifest to discover available files
       const filenames = await this.loadCharacterManifest();
 
@@ -132,14 +125,12 @@ class DialogueManager {
             this.characters.set(characterData.character.id, characterData);
           }
         } catch (error) {
-          console.warn(`Skipping invalid character file: ${filename}`, error);
+          this.handleError('character-file-loading', error);
         }
       }
 
       this.loadedGroups.add(groupName);
-      console.log(`Character group '${groupName}' loaded successfully with ${groupCharacters.length} characters`);
     } catch (error) {
-      console.error(`Error loading character group '${groupName}':`, error);
       this.handleError('character-loading', error);
     }
   }
@@ -164,11 +155,9 @@ class DialogueManager {
         throw new Error('Invalid manifest structure: expected array of filenames');
       }
 
-      console.log(`Loaded character manifest with ${filenames.length} character files`);
       return filenames;
     } catch (error) {
-      console.error('Error loading character manifest:', error);
-
+      this.handleError('manifest-loading', error);
       // Return fallback array for our existing character
       return ["archivist-lumina.json"];
     }
@@ -195,10 +184,8 @@ class DialogueManager {
         throw new Error(`Invalid character data structure in ${filename}`);
       }
 
-      console.log(`Loaded character: ${characterData.character.name} (${characterData.character.id})`);
       return characterData;
     } catch (error) {
-      console.error(`Error loading character file '${filename}':`, error);
       this.handleError('character-file-loading', error);
       return null;
     }
@@ -244,18 +231,15 @@ class DialogueManager {
     if (!Array.isArray(dialogueEntries)) {
       return [];
     }
-
+    
     return dialogueEntries.filter(entry => {
       // If no availableFrom specified, assume always available
       const availableFrom = entry.availableFrom || 'hook';
-
       // If no availableUntil specified, assume available indefinitely
       const availableUntil = entry.availableUntil;
 
       // Check if current story beat meets the availability window
-      const isAvailable = this.isStoryBeatInRange(currentStoryBeat, availableFrom, availableUntil);
-
-      return isAvailable;
+      return this.isStoryBeatInRange(currentStoryBeat, availableFrom, availableUntil);
     });
   }
 
@@ -270,18 +254,21 @@ class DialogueManager {
     // Story beat order from config
     const beatOrder = Object.values(this.config.storyStructure.storyBeats);
     
-    console.log('Story beat range check:', {
-      currentBeat,
-      availableFrom,
-      availableUntil,
-      beatOrder,
-      currentIndex: beatOrder.indexOf(currentBeat),
-      fromIndex: beatOrder.indexOf(availableFrom),
-      untilIndex: availableUntil ? beatOrder.indexOf(availableUntil) : 'N/A'
-    });
+    // Use current story beat from class if not provided
+    const actualCurrentBeat = currentBeat === this.currentStoryBeat ? currentBeat : this.currentStoryBeat;
 
-    const currentIndex = beatOrder.indexOf(currentBeat);
+    const currentIndex = beatOrder.indexOf(actualCurrentBeat);
     const fromIndex = beatOrder.indexOf(availableFrom);
+
+    // If either beat is not found in the order, log warning and return false
+    if (currentIndex === -1 || fromIndex === -1) {
+      console.warn('Invalid story beat in range check:', {
+        currentBeat: actualCurrentBeat,
+        availableFrom,
+        availableUntil
+      });
+      return false;
+    }
 
     // If availableUntil not specified, available indefinitely
     if (!availableUntil) {
@@ -289,6 +276,12 @@ class DialogueManager {
     }
 
     const untilIndex = beatOrder.indexOf(availableUntil);
+    // If until beat is not found, warn but continue with from check only
+    if (untilIndex === -1) {
+      console.warn('Invalid availableUntil beat:', availableUntil);
+      return currentIndex >= fromIndex;
+    }
+
     return currentIndex >= fromIndex && currentIndex <= untilIndex;
   }
 
