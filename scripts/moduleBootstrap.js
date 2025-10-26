@@ -8,12 +8,16 @@ import * as EventSystem from './core/eventSystem.js';
 import * as Navigation from './ui/navigation.js';
 import * as ErrorHandler from './utils/errorHandler.js';
 import { loadSequentialPuzzle } from './puzzle/puzzleLoader.js';
+import DialogueUIManager from './ui/dialogueUIManager.js';
 
 // Application version
 const APP_VERSION = '0.5.0';
 
 // Track initialization state
 let gameInitialized = false;
+
+// Global dialogue UI manager instance
+let dialogueUIManager = null;
 
 /**
  * Initialize minimal UI and button handlers only
@@ -422,6 +426,19 @@ async function initializeBasicGameSystems(isNewGame = false) {
     // Setup navigation protection
     Navigation.setupNavigationProtection();
 
+    // Initialize dialogue UI manager
+    try {
+      dialogueUIManager = new DialogueUIManager();
+      const dialogueInitSuccess = dialogueUIManager.initialize();
+      if (dialogueInitSuccess) {
+        console.log('%cDialogue UI Manager initialized successfully', 'color: #E6A817; font-weight: bold;');
+      } else {
+        console.warn('Dialogue UI Manager initialization failed - dialogue features may not work');
+      }
+    } catch (error) {
+      console.error('Error initializing Dialogue UI Manager:', error);
+    }
+
     console.log('%cBasic game systems initialized', 'color: #E6A817; font-weight: bold;');
     return true;
   } catch (error) {
@@ -558,6 +575,14 @@ document.addEventListener('DOMContentLoaded', function () {
 // Import GameState for loadSequentialPuzzle
 import * as GameState from './core/gameState.js';
 
+/**
+ * Get the global dialogue UI manager instance
+ * @returns {DialogueUIManager|null} - The dialogue UI manager instance
+ */
+function getDialogueUIManager() {
+  return dialogueUIManager;
+}
+
 // Export functions for module access
 export {
   APP_VERSION,
@@ -566,5 +591,6 @@ export {
   loadGameData,
   initializeFullGame,
   loadSequentialPuzzle,
-  setupRemainingScreenHandlers
+  setupRemainingScreenHandlers,
+  getDialogueUIManager
 };

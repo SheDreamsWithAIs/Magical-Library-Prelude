@@ -28,13 +28,29 @@ Our architecture now cleanly separates:
 
 ### Install & Run Locally
 
-```bash
-git clone https://github.com/your-org/kethaneum.git
-cd kethaneum
-npm install            # installs Cypress & any build tools
-npm start              # e.g. `http-server . -c-1` or your custom script
-# then open http://localhost:8080 (or port shown)
-````
+To run Chronicles of the Kethaneum locally, you need to serve the game using a static file server. This ensures ES modules and resources load correctly. You do **not** need npm or package scripts—just a simple static file server such as [http-server](https://www.npmjs.com/package/http-server).
+
+1. **Install http-server (if you don’t have it):**
+   ```bash
+   npm install -g http-server
+   ```
+   (Or use `npx http-server` without installing globally.)
+
+2. **Open your terminal and change to your game directory:**
+   ```bash
+   cd "Game Files"
+   ```
+
+3. **Start the server:**
+   ```bash
+   http-server . -c-1
+   # or, if not installed globally:
+   npx http-server . -c-1
+   ```
+
+4. **Visit the URL shown in the terminal (usually http://localhost:8080)**
+
+You should see the title screen and be able to play the prototype!
 
 ### Run the Tests
 
@@ -102,14 +118,13 @@ npx cypress run --browser chrome --headless
 * [ ] Bundling & tree-shaking via Rollup or Vite
 * [ ] Patreon-driven story pack loader
 * [ ] Mobile-friendly layout & controls
-* [ ] Confluence Workshop prototype integration
 
 ---
 
 ## 👥 Team
 
 * **Seraphine** (Creative Lead & Senior QA)
-* **Sonny** (Lead Dev & Test Automation Wrangler)
-* **Paper Pusher** (Technical Reviewer and Tech Lead)
-* **Assembly** (Architecture Lead)
-* **Blueberry** (Automation & Build Scripts)
+* **Sonny** (AI Lead Dev & Test Automation Wrangler)
+* **Paper Pusher** (AI Technical Reviewer and Tech Lead)
+* **Assembly** (AI Architecture Lead)
+* **Blueberry** (AI Automation & Build Scripts Lead)

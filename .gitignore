@@ -1,0 +1,5 @@
+# Cursor Files
+.cursorignore
+
+# Documentation Specifically For AIs
+/AI_docs
