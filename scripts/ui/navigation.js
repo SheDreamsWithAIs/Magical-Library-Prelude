@@ -11,7 +11,6 @@ import { getGameState } from '../core/gameState.js';
  * @param {string} screenId - ID of the screen to navigate to
  */
 function navigateToScreen(screenId) {
-  console.log('Navigating to:', screenId);
 
   try {
     // Get all screens
@@ -253,13 +252,11 @@ function getStoryPartName(value) {
  * Set up screen navigation event handlers
  */
 function setupScreenNavigation() {
-  console.log('Setting up screen navigation');
 
   // Title screen buttons
   const newGameBtn = document.getElementById('new-game-btn');
   if (newGameBtn) {
     newGameBtn.addEventListener('click', function () {
-      console.log('New Game button clicked');
 
       // Clear progress and ensure complete state reset
       resetGameState(true);
@@ -271,7 +268,6 @@ function setupScreenNavigation() {
   const continueBtn = document.getElementById('continue-btn');
   if (continueBtn) {
     continueBtn.addEventListener('click', function () {
-      console.log('Continue button clicked');
 
       // Ensure clean state before loading saved progress
       resetGameState(false);
@@ -288,7 +284,6 @@ function setupScreenNavigation() {
   const continueToBookBtn = document.getElementById('continue-to-book-btn');
   if (continueToBookBtn) {
     continueToBookBtn.addEventListener('click', function () {
-      console.log('Continue to library clicked');
       navigateToScreen('library-screen');
     });
   }
@@ -297,7 +292,6 @@ function setupScreenNavigation() {
   const bookOfPassageNavBtn = document.getElementById('book-of-passage-nav-btn');
   if (bookOfPassageNavBtn) {
     bookOfPassageNavBtn.addEventListener('click', function () {
-      console.log('Book of Passage button clicked from Library');
       navigateToScreen('book-of-passage-screen');
     });
   }
@@ -306,7 +300,6 @@ function setupScreenNavigation() {
   const startCatalogingBtn = document.getElementById('start-cataloging-btn');
   if (startCatalogingBtn) {
     startCatalogingBtn.addEventListener('click', function () {
-      console.log('Start cataloging clicked');
       // Load a sequential puzzle
       loadSequentialPuzzle();
       navigateToScreen('puzzle-screen');
@@ -317,7 +310,6 @@ function setupScreenNavigation() {
   const nextBookBtn = document.getElementById('next-book-btn');
   if (nextBookBtn) {
     nextBookBtn.addEventListener('click', function () {
-      console.log('Next book button clicked');
       if (document.getElementById('win-panel')) {
         document.getElementById('win-panel').style.display = 'none';
       }
@@ -390,7 +382,6 @@ function setupScreenNavigation() {
         };
         // Save progress to ensure uncompleted puzzle state persists
         saveGameProgress();
-        console.log('Saved uncompleted puzzle from pause menu:', state.lastUncompletedPuzzle);
       }
       navigateToScreen('book-of-passage-screen');
     });
@@ -438,7 +429,6 @@ function setupNavigationProtection() {
         const activeScreens = document.querySelectorAll('.screen.active');
         if (activeScreens.length !== 1 ||
           activeScreens[0].id !== state.currentScreen) {
-          console.log('Navigation state corrupted - restoring');
           navigateToScreen(state.currentScreen);
         }
       }, 2000); // Check every 2 seconds
@@ -452,7 +442,6 @@ function setupNavigationProtection() {
  * @param {Object} handlers - Map of button IDs to handler functions
  */
 function registerScreenNavigationHandlers(screenId, handlers) {
-  console.log(`Registering navigation handlers for screen: ${screenId}`);
 
   // Process each handler
   Object.entries(handlers).forEach(([buttonId, handlerFn]) => {
@@ -468,7 +457,6 @@ function registerScreenNavigationHandlers(screenId, handlers) {
 
       // Add the new handler
       button.addEventListener('click', handlerFn);
-      console.log(`- Registered handler for button: ${buttonId}`);
     } else {
       console.warn(`- Button not found: ${buttonId}`);
     }
@@ -481,15 +469,12 @@ function registerScreenNavigationHandlers(screenId, handlers) {
 function initializeLibraryNavigation() {
   registerScreenNavigationHandlers('library-screen', {
     'book-of-passage-nav-btn': function () {
-      console.log('Navigating from Library to Book of Passage');
       navigateToScreen('book-of-passage-screen');
     },
     'return-to-menu-btn': function () {
-      console.log('Returning to main menu from Library');
       navigateToScreen('title-screen');
     },
     'browse-archives-btn': function () {
-      console.log('Browse Archives button clicked');
 
       // Show loading indicator
       const loadingIndicator = document.getElementById('loading-indicator');
@@ -520,7 +505,6 @@ function initializeLibraryNavigation() {
                     .then(RenderSystem => {
                       const state = getGameState();
                       if (state && state.puzzles) {
-                        console.log('Generating cards for genres:', Object.keys(state.puzzles));
                         RenderSystem.generateGenreCards(container, state.puzzles);
                       }
                     })
@@ -613,7 +597,6 @@ function initializeLibraryNavigation() {
   // Add handlers for the genre panel itself
   registerScreenNavigationHandlers('genre-panel', {
     'close-genre-panel-btn': function () {
-      console.log('Closing genre panel');
       const genrePanel = document.getElementById('genre-panel');
       if (genrePanel) {
         genrePanel.style.display = 'none';
@@ -629,7 +612,6 @@ function initializeLibraryNavigation() {
         // Check if clicked element is a genre card
         const genreCard = event.target.closest('.genre-card');
         if (!genreCard) {
-          console.log('Click was not on a genre card');
           return;
         }
 
@@ -640,7 +622,6 @@ function initializeLibraryNavigation() {
           return;
         }
 
-        console.log('Genre card clicked:', selectedGenre);
         
         // Step 2 - Call the flow control function
         startPuzzleFromGenre(selectedGenre);
@@ -650,7 +631,6 @@ function initializeLibraryNavigation() {
       }
     });
     
-    console.log('Genre card click handler installed successfully');
   } else {
     console.warn('Genre container not found - genre card clicks will not work');
   }
@@ -662,13 +642,11 @@ function initializeLibraryNavigation() {
  */
 function startPuzzleFromGenre(selectedGenre) {
   try {
-    console.log('Starting puzzle from genre:', selectedGenre);
     
     // Step 2a: Explicitly close the genre panel
     const genrePanel = document.getElementById('genre-panel');
     if (genrePanel) {
       genrePanel.style.display = 'none';
-      console.log('Genre panel closed');
     } else {
       console.warn('Genre panel not found during close attempt');
     }
@@ -682,13 +660,11 @@ function startPuzzleFromGenre(selectedGenre) {
     // Step 2c: Load puzzle with selected genre
     import('../puzzle/puzzleLoader.js')
       .then(PuzzleLoader => {
-        console.log('Attempting to load sequential puzzle for genre:', selectedGenre);
         
         // Call loadSequentialPuzzle with the selected genre
         const success = PuzzleLoader.loadSequentialPuzzle(selectedGenre);
         
         if (success) {
-          console.log('Puzzle loaded successfully, navigating to puzzle screen');
           
           // Step 2d: Navigate to puzzle screen
           navigateToScreen('puzzle-screen');

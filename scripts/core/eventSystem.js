@@ -47,7 +47,6 @@ function subscribe(eventName, callback, options = {}) {
   // Sort by priority (highest first)
   subscriptions.sort((a, b) => b.priority - a.priority);
   
-  console.log(`Subscribed to event: ${eventName} (${subscriptionId})`);
   return subscriptionId;
 }
 
@@ -76,7 +75,6 @@ function unsubscribe(subscriptionId) {
     if (index !== -1) {
       // Remove subscription
       subscriptions.splice(index, 1);
-      console.log(`Unsubscribed from event: ${eventName} (${subscriptionId})`);
       
       // Clean up empty subscription lists
       if (subscriptions.length === 0) {

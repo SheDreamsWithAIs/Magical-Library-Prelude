@@ -25,8 +25,6 @@ let dialogueUIManager = null;
  */
 function initializeBasicUI() {
   try {
-    console.log(`%cInitializing Chronicles of the Kethaneum UI v${APP_VERSION}...`, 'color: #794d8e; font-weight: bold;');
-
     // Set up basic screen navigation handlers for title screen only
     setupTitleScreenHandlers();
 
@@ -43,7 +41,6 @@ function initializeBasicUI() {
       titleScreen.style.display = 'flex';
     }
 
-    console.log('%cUI initialization complete. Waiting for user action.', 'color: #E6A817; font-weight: bold;');
     return true;
   } catch (error) {
     // Handle initialization error
@@ -68,8 +65,6 @@ function setupTitleScreenHandlers() {
   const newGameBtn = document.getElementById('new-game-btn');
   if (newGameBtn) {
     newGameBtn.addEventListener('click', function () {
-      console.log('New Game button clicked');
-
       // Initialize full game if not already done
       if (!gameInitialized) {
         // Show loading indicator
@@ -101,8 +96,6 @@ function setupTitleScreenHandlers() {
   const continueBtn = document.getElementById('continue-btn');
   if (continueBtn) {
     continueBtn.addEventListener('click', function () {
-      console.log('Continue button clicked');
-
       // Initialize full game if not already done
       if (!gameInitialized) {
         // Show loading indicator
@@ -141,7 +134,6 @@ function setupRemainingScreenHandlers() {
   const continueToBookBtn = document.getElementById('continue-to-book-btn');
   if (continueToBookBtn) {
     continueToBookBtn.addEventListener('click', function () {
-      console.log('Enter the Library clicked');
       Navigation.navigateToScreen('library-screen'); // Changed to library-screen
     });
   }
@@ -150,8 +142,6 @@ function setupRemainingScreenHandlers() {
   const startCatalogingBtn = document.getElementById('start-cataloging-btn');
   if (startCatalogingBtn) {
     startCatalogingBtn.addEventListener('click', function () {
-      console.log('Start cataloging clicked');
-
       // Show loading indicator
       const loadingIndicator = document.getElementById('loading-indicator');
       if (loadingIndicator) {
@@ -189,18 +179,15 @@ function setupRemainingScreenHandlers() {
   try {
     // Initialize library screen navigation
     Navigation.initializeLibraryNavigation();
-    console.log('Library navigation initialized via API');
   } catch (navError) {
     console.error('Error initializing library navigation via API:', navError);
 
     // More comprehensive fallback that handles critical buttons
-    console.log('Using fallback for library navigation');
 
     // Book of Passage button
     const bookOfPassageNavBtn = document.getElementById('book-of-passage-nav-btn');
     if (bookOfPassageNavBtn) {
       bookOfPassageNavBtn.addEventListener('click', function () {
-        console.log('Navigating from Library to Book of Passage (fallback)');
         Navigation.navigateToScreen('book-of-passage-screen');
       });
     }
@@ -209,7 +196,6 @@ function setupRemainingScreenHandlers() {
     const returnToMenuBtn = document.getElementById('return-to-menu-btn');
     if (returnToMenuBtn) {
       returnToMenuBtn.addEventListener('click', function () {
-        console.log('Returning to main menu from Library (fallback)');
         Navigation.navigateToScreen('title-screen');
       });
     }
@@ -399,8 +385,6 @@ function setupGamePanelHandlers() {
  */
 async function initializeBasicGameSystems(isNewGame = false) {
   try {
-    console.log(`%cInitializing basic game systems...`, 'color: #794d8e; font-weight: bold;');
-
     // Import core modules - needed for basic functionality
     const GameState = await import('./core/gameState.js');
     const SaveSystem = await import('./core/saveSystem.js');
@@ -431,7 +415,6 @@ async function initializeBasicGameSystems(isNewGame = false) {
       dialogueUIManager = new DialogueUIManager();
       const dialogueInitSuccess = dialogueUIManager.initialize();
       if (dialogueInitSuccess) {
-        console.log('%cDialogue UI Manager initialized successfully', 'color: #E6A817; font-weight: bold;');
       } else {
         console.warn('Dialogue UI Manager initialization failed - dialogue features may not work');
       }
@@ -439,7 +422,6 @@ async function initializeBasicGameSystems(isNewGame = false) {
       console.error('Error initializing Dialogue UI Manager:', error);
     }
 
-    console.log('%cBasic game systems initialized', 'color: #E6A817; font-weight: bold;');
     return true;
   } catch (error) {
     console.error('Error during basic game system initialization:', error);
@@ -453,8 +435,6 @@ async function initializeBasicGameSystems(isNewGame = false) {
  */
 async function loadGameData() {
   try {
-    console.log(`%cLoading game data...`, 'color: #794d8e; font-weight: bold;');
-
     // Show loading indicator
     const loadingIndicator = document.getElementById('loading-indicator');
     if (loadingIndicator) {
@@ -486,7 +466,6 @@ async function loadGameData() {
       loadingIndicator.style.display = 'none';
     }
 
-    console.log('%cGame data loaded successfully', 'color: #E6A817; font-weight: bold;');
     return true;
   } catch (error) {
     console.error('Error loading game data:', error);
@@ -507,7 +486,6 @@ async function loadGameData() {
  */
 async function initializeFullGame(isNewGame = false) {
   try {
-    console.log(`%cInitializing full game systems...`, 'color: #794d8e; font-weight: bold;');
 
     // First initialize basic systems
     const basicInitSuccess = await initializeBasicGameSystems(isNewGame);
@@ -519,7 +497,6 @@ async function initializeFullGame(isNewGame = false) {
     // This marks initialization as complete even without data loading
     gameInitialized = true;
 
-    console.log('%cFull game initialization complete', 'color: #E6A817; font-weight: bold;');
     return true;
   } catch (error) {
     // Handle initialization error
@@ -543,22 +520,18 @@ async function initializeFullGame(isNewGame = false) {
 function setupEventHandlers() {
   // Word found event
   EventSystem.subscribe(EventSystem.GameEvents.WORD_FOUND, (wordData) => {
-    console.log(`Word found: ${wordData.word}`);
   });
 
   // Puzzle completed event
   EventSystem.subscribe(EventSystem.GameEvents.PUZZLE_COMPLETED, (data) => {
-    console.log(`Puzzle completed: ${data.book} - Part ${data.part}`);
   });
 
   // Book completed event
   EventSystem.subscribe(EventSystem.GameEvents.BOOK_COMPLETED, (bookTitle) => {
-    console.log(`Book completed: ${bookTitle}`);
   });
 
   // Screen change event
   EventSystem.subscribe(EventSystem.GameEvents.SCREEN_CHANGED, (screenId) => {
-    console.log(`Screen changed: ${screenId}`);
   });
 
   // Error event

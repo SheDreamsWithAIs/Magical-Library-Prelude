@@ -149,7 +149,6 @@ function setDifficultyLevel(level) {
     activeConfig[key] = value;
   }
   
-  console.log(`Applied ${level} difficulty settings`);
   return true;
 }
 

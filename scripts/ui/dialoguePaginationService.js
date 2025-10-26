@@ -11,7 +11,6 @@ class DialoguePaginationService {
     this.currentDialogueId = null;
     this.errorState = false;
     
-    console.log('DialoguePaginationService created - Phalanx shields ready 🛡️');
   }
 
   /**
@@ -26,7 +25,6 @@ class DialoguePaginationService {
       this.isInitialized = true;
       this.errorState = false;
       
-      console.log('DialoguePaginationService initialized successfully');
       return true;
     } catch (error) {
       console.error('DialoguePaginationService initialization failed:', error);
@@ -164,7 +162,6 @@ class DialoguePaginationService {
         this.paginationController.resetState();
       }
       this.currentDialogueId = null;
-      console.log('DialoguePaginationService reset for new dialogue');
     } catch (error) {
       console.error('Error resetting pagination service:', error);
       // Reinitialize if reset fails

@@ -272,7 +272,6 @@ function startTimer() {
       }
     }, 1000);
 
-    console.log('Game timer started');
   } catch (error) {
     handleSelectionError(error, 'start-timer');
   }
@@ -300,7 +299,6 @@ function resetCurrentPuzzle() {
           instructionsPanel.style.display = 'block';
         }
 
-        console.log('Current puzzle reset');
       })
       .catch(error => {
         console.error('Error importing puzzle generator:', error);
@@ -337,7 +335,6 @@ function loadNextPuzzle() {
         state.startCell = null;
         state.currentCell = null;
 
-        console.log('Next puzzle loaded');
       })
       .catch(error => {
         console.error('Error importing moduleBootstrap:', error);
@@ -364,7 +361,6 @@ function confirmReturn() {
         };
         // Save progress to ensure uncompleted puzzle state persists
         SaveSystem.saveGameProgress();
-        console.log('Saved uncompleted puzzle:', state.lastUncompletedPuzzle);
       }
 
       // Navigate to Book of Passage
@@ -396,7 +392,6 @@ function startPuzzleGame() {
     // Start the timer
     startTimer();
 
-    console.log('Puzzle game started');
   } catch (error) {
     handleSelectionError(error, 'start-game');
   }

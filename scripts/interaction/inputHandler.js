@@ -17,7 +17,6 @@ const activeListeners = [];
  */
 function setupPuzzleEventListeners() {
   try {
-    console.log('Setting up puzzle event listeners');
     
     // Clean up any existing event listeners first
     removeAllEventListeners();
@@ -103,7 +102,6 @@ function setupPuzzleEventListeners() {
       );
     }
     
-    console.log('All puzzle event listeners set up successfully');
   } catch (error) {
     console.error('Error setting up puzzle event listeners:', error);
   }
@@ -140,7 +138,6 @@ function removeAllEventListeners() {
       removeListener();
     }
   }
-  console.log('All event listeners removed');
 }
 
 /**
@@ -411,7 +408,6 @@ function setupMobileInputHandling() {
     // Add haptic feedback initialization
     setupHapticFeedback();
     
-    console.log('Mobile input handling initialized');
   } catch (error) {
     console.error('Error setting up mobile input:', error);
   }
@@ -423,7 +419,6 @@ function setupMobileInputHandling() {
 function setupHapticFeedback() {
   // Check if device supports vibration
   if (navigator.vibrate) {
-    console.log('Haptic feedback initialized');
   }
 }
 

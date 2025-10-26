@@ -120,7 +120,6 @@ class DialogueUIManager {
     createOverlay() {
         try {
             if (this.overlayElement) {
-                console.log('Overlay already exists, updating position');
                 this.updateOverlayPosition();
                 return true;
             }
@@ -312,7 +311,6 @@ class DialogueUIManager {
     createDialoguePanel() {
         try {
             if (this.dialoguePanel) {
-                console.log('Dialogue panel already exists, updating with scaling');
                 this.updateDialoguePanelPosition();
                 return true;
             }

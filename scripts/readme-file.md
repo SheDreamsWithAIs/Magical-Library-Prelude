@@ -166,7 +166,6 @@ window.game.ui.navigation.navigateToScreen('puzzle-screen');
 import { subscribe, GameEvents } from './core/eventSystem.js';
 
 subscribe(GameEvents.WORD_FOUND, (wordData) => {
-  console.log(`Player found the word: ${wordData.word}`);
 });
 
 // Emit an event

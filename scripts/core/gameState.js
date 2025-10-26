@@ -44,7 +44,6 @@ function initializeGameState() {
   // Initialize discoveredBooks as a Set
   window.state.discoveredBooks = new Set();
   
-  console.log('Game state initialized with default values');
   
   return window.state;
 }
@@ -110,7 +109,6 @@ function restoreGameState(savedState) {
   // Ensure completedBooks matches the size of discoveredBooks
   window.state.completedBooks = window.state.discoveredBooks.size;
   
-  console.log('Game state restored from saved data');
 }
 
 /**
@@ -127,7 +125,6 @@ async function initializeGame() {
   // Load puzzle data
   try {
     await loadAllPuzzles();
-    console.log('All game data loaded successfully');
   } catch (error) {
     console.error('Error loading game data:', error);
   }

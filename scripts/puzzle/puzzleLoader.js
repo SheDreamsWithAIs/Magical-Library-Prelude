@@ -11,7 +11,6 @@ import { initializePuzzle } from './puzzleGenerator.js';
  * @returns {Promise} - Promise resolving when all puzzles are loaded
  */
 async function loadAllPuzzles() {
-  console.log('Loading all puzzles...');
   
   // Show loading indicator
   const loadingIndicator = document.getElementById('loading-indicator');
@@ -38,8 +37,6 @@ async function loadAllPuzzles() {
     // Wait for all puzzles to load
     await Promise.all(loadPromises);
     
-    console.log('All puzzles loaded successfully');
-    console.log('Available genres:', Object.keys(state.puzzles));
     
     // Build book-to-parts mapping for easier navigation
     buildBookPartsMapping();
@@ -72,7 +69,6 @@ async function loadAllPuzzles() {
  * @returns {Promise} - Promise resolving when all puzzles are loaded
  */
 async function loadAllPuzzlesWithPaths(puzzlePaths) {
-  console.log('Loading puzzles with custom paths:', puzzlePaths);
   
   // Show loading indicator
   const loadingIndicator = document.getElementById('loading-indicator');
@@ -93,10 +89,7 @@ async function loadAllPuzzlesWithPaths(puzzlePaths) {
     
     // Wait for all puzzles to load
     await Promise.all(loadPromises);
-    
-    console.log('All puzzles loaded successfully');
-    console.log('Available genres:', Object.keys(state.puzzles));
-    
+      
     // Build book-to-parts mapping for easier navigation
     buildBookPartsMapping();
     
@@ -130,7 +123,6 @@ async function loadAllPuzzlesWithPaths(puzzlePaths) {
  */
 async function loadGenrePuzzles(genre, filePath) {
   try {
-    console.log(`Loading puzzles for genre: ${genre} from ${filePath}`);
     
     // Fetch the puzzle data
     const response = await fetch(filePath);
@@ -168,7 +160,6 @@ async function loadGenrePuzzles(genre, filePath) {
       state.puzzles[genre].push(puzzle);
     });
     
-    console.log(`Loaded ${state.puzzles[genre].length} puzzles for genre: ${genre}`);
     return state.puzzles[genre];
   } catch (error) {
     console.error(`Error loading puzzles for genre ${genre}:`, error);
@@ -191,14 +182,12 @@ async function loadGenrePuzzles(genre, filePath) {
  */
 function loadSequentialPuzzle(genre, book) {
   try {
-    console.log('Loading sequential puzzle:', { genre, book });
     
     // Get state reference
     const state = window.state;
     
     // Check if we have an uncompleted puzzle to resume
     if (state.lastUncompletedPuzzle && !genre && !book) {
-      console.log('Resuming previously uncompleted puzzle:', state.lastUncompletedPuzzle);
       book = state.lastUncompletedPuzzle.book;
       genre = state.lastUncompletedPuzzle.genre;
     }
@@ -247,7 +236,6 @@ function loadSequentialPuzzle(genre, book) {
     // STEP 1: Determine which genre to use
     let selectedGenre = genre;
     if (!selectedGenre) {
-      console.log('No genre specified, determining best genre...');
       
       // Calculate genre stats (cached for this function call)
       const genreStats = {};
@@ -288,14 +276,12 @@ function loadSequentialPuzzle(genre, book) {
           books
         };
         
-        console.log(`Genre '${g}' stats:`, genreStats[g]);
       }
       
       // First check current genre for incomplete books
       if (state.currentGenre && genreStats[state.currentGenre] && 
           genreStats[state.currentGenre].incompleteBooks > 0) {
         selectedGenre = state.currentGenre;
-        console.log(`Continuing with current genre: ${selectedGenre}`);
       } else {
         // Find genres with incomplete books
         const genresWithIncompleteBooks = Object.keys(genreStats).filter(g => 
@@ -307,12 +293,10 @@ function loadSequentialPuzzle(genre, book) {
           selectedGenre = genresWithIncompleteBooks[
             Math.floor(Math.random() * genresWithIncompleteBooks.length)
           ];
-          console.log(`Selected genre with incomplete books: ${selectedGenre}`);
         } else {
           // All books in all genres are complete, pick a random genre
           const allGenres = Object.keys(genreStats);
           selectedGenre = allGenres[Math.floor(Math.random() * allGenres.length)];
-          console.log(`All books complete, randomly selected genre: ${selectedGenre}`);
         }
       }
     }
@@ -325,7 +309,6 @@ function loadSequentialPuzzle(genre, book) {
     // STEP 2: Select a book within the genre
     let selectedBook = book;
     if (!selectedBook) {
-      console.log('No book specified, determining best book...');
       
       // Get all books in this genre
       const bookTitles = [...new Set(state.puzzles[selectedGenre].map(p => p.book))];
@@ -345,33 +328,25 @@ function loadSequentialPuzzle(genre, book) {
         }
       });
       
-      console.log(`Book categories in '${selectedGenre}':`, {
-        complete: completeBooks.length,
-        inProgress: inProgressBooks.length,
-        unstarted: unstartedBooks.length
-      });
+  
       
       // Priority 1: Continue current book if not complete
       if (state.currentBook && 
           bookTitles.includes(state.currentBook) && 
           !isBookComplete(state.currentBook)) {
         selectedBook = state.currentBook;
-        console.log(`Continuing current book: ${selectedBook}`);
       } 
       // Priority 2: Random in-progress book
       else if (inProgressBooks.length > 0) {
         selectedBook = inProgressBooks[Math.floor(Math.random() * inProgressBooks.length)];
-        console.log(`Selected in-progress book: ${selectedBook}`);
       } 
       // Priority 3: Random unstarted book
       else if (unstartedBooks.length > 0) {
         selectedBook = unstartedBooks[Math.floor(Math.random() * unstartedBooks.length)];
-        console.log(`Selected unstarted book: ${selectedBook}`);
       } 
       // Priority 4: Reset a completed book
       else if (completeBooks.length > 0) {
         selectedBook = completeBooks[Math.floor(Math.random() * completeBooks.length)];
-        console.log(`All books complete, resetting book: ${selectedBook}`);
         
         // Track historical completion as suggested by Assembly
         if (!state.historicalCompletions) {
@@ -383,7 +358,6 @@ function loadSequentialPuzzle(genre, book) {
         }
         
         state.historicalCompletions[selectedBook]++;
-        console.log(`${selectedBook} has been completed ${state.historicalCompletions[selectedBook]} times`);
         
         // Reset book completion status but preserve historical data
         if (state.books && state.books[selectedBook]) {
@@ -401,7 +375,6 @@ function loadSequentialPuzzle(genre, book) {
           
           // Log what we did
           if (wasComplete) {
-            console.log(`Reset completion status for book: ${selectedBook}`);
           }
         }
       } else {
@@ -416,7 +389,6 @@ function loadSequentialPuzzle(genre, book) {
     }
     
     // STEP 3: Determine which part to load next
-    console.log(`Determining next part for book: ${selectedBook}`);
     
     // Initialize book tracking if needed
     if (!state.books) {
@@ -438,7 +410,6 @@ function loadSequentialPuzzle(genre, book) {
     // Case 1: Continuing current book
     if (state.currentBook === selectedBook && 
         state.currentStoryPart !== undefined) {
-      console.log(`Current part: ${state.currentStoryPart}`);
       
       // Find parts higher than current
       const higherParts = availableParts.filter(part => part > state.currentStoryPart);
@@ -446,7 +417,6 @@ function loadSequentialPuzzle(genre, book) {
       if (higherParts.length > 0) {
         // Next sequential part
         nextPartToLoad = Math.min(...higherParts);
-        console.log(`Found next sequential part: ${nextPartToLoad}`);
       } else {
         // No higher parts, check for incomplete parts
         const incompleteParts = availableParts.filter(part => 
@@ -456,11 +426,9 @@ function loadSequentialPuzzle(genre, book) {
         if (incompleteParts.length > 0) {
           // Lowest incomplete part
           nextPartToLoad = Math.min(...incompleteParts);
-          console.log(`Found lowest incomplete part: ${nextPartToLoad}`);
         } else {
           // All parts complete, start from beginning
           nextPartToLoad = Math.min(...availableParts);
-          console.log(`All parts complete, starting over with part: ${nextPartToLoad}`);
           
           // Reset just this part's completion status
           state.books[selectedBook][nextPartToLoad] = false;
@@ -477,11 +445,9 @@ function loadSequentialPuzzle(genre, book) {
       if (incompleteParts.length > 0) {
         // Start with lowest incomplete part
         nextPartToLoad = Math.min(...incompleteParts);
-        console.log(`Found lowest incomplete part: ${nextPartToLoad}`);
       } else {
         // All parts complete, start from beginning
         nextPartToLoad = Math.min(...availableParts);
-        console.log(`All parts complete, starting with part: ${nextPartToLoad}`);
         
         // Reset just this part's completion status
         state.books[selectedBook][nextPartToLoad] = false;
@@ -523,8 +489,6 @@ function loadSequentialPuzzle(genre, book) {
       currentPuzzleIndex: state.currentPuzzleIndex
     };
     
-    console.log(`Loading puzzle: "${puzzleToLoad.title}", Book: "${selectedBook}", Part: ${nextPartToLoad}`);
-    console.log('State transition:', verificationCheck);
     
     // Initialize the puzzle
     const initResult = initializePuzzle(puzzleToLoad);
@@ -540,7 +504,6 @@ function loadSequentialPuzzle(genre, book) {
     // Add recovery mechanism
     try {
       if (state.lastUncompletedPuzzle) {
-        console.log('Attempting fallback to last uncompleted puzzle');
         const fallbackGenre = state.lastUncompletedPuzzle.genre;
         const fallbackBook = state.lastUncompletedPuzzle.book;
         
@@ -548,7 +511,6 @@ function loadSequentialPuzzle(genre, book) {
           const fallbackPuzzles = state.puzzles[fallbackGenre].filter(p => p.book === fallbackBook);
           if (fallbackPuzzles.length > 0) {
             const fallbackPuzzle = fallbackPuzzles[0];
-            console.log('Using fallback puzzle:', fallbackPuzzle.title);
             initializePuzzle(fallbackPuzzle);
             return true;
           }
@@ -593,7 +555,6 @@ function buildBookPartsMapping() {
     state.bookPartsMap[book] = Array.from(state.bookPartsMap[book]).sort((a, b) => a - b);
   }
   
-  console.log('Book parts mapping created:', state.bookPartsMap);
 }
 
 // Temporarily continue making functions available globally

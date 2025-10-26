@@ -419,7 +419,6 @@ function initializePuzzle(puzzleData) {
       throw new Error(`Failed to render puzzle: ${renderError.message}`);
     }
     
-    console.log('Puzzle initialization complete');
     return true;
   } catch (error) {
     // Handle errors in puzzle initialization

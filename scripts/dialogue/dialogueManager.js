@@ -26,8 +26,6 @@ class DialogueManager {
 
     // Dispatch on document for global listening
     document.dispatchEvent(event);
-
-    console.log(`DialogueManager event emitted: ${eventName}`, data);
   }
   /**
    * Initialize the dialogue system
@@ -61,7 +59,6 @@ class DialogueManager {
       }
 
       this.config = await response.json();
-      console.log('Dialogue configuration loaded');
     } catch (error) {
       console.error('Error loading dialogue configuration:', error);
       // Use fallback configuration
@@ -302,7 +299,6 @@ class DialogueManager {
       const availabilityResult = this.getAvailableCharacters(storyBeat);
 
       if (!availabilityResult.availableCharacters || availabilityResult.availableCharacters.length === 0) {
-        console.log('No characters available for banter at current story beat:', availabilityResult.debugInfo);
         return {
           success: false,
           error: 'No characters available for current story beat',
@@ -314,7 +310,6 @@ class DialogueManager {
       const selectedCharacter = this.selectCharacterWeighted(availabilityResult.availableCharacters);
 
       if (!selectedCharacter) {
-        console.log('Character selection failed');
         return {
           success: false,
           error: 'Character selection failed',
@@ -465,8 +460,6 @@ class DialogueManager {
     }
 
     try {
-      console.log(`Triggering story event: ${eventId}`);
-
       // Placeholder implementation - will be expanded in later steps
       return null;
     } catch (error) {
@@ -491,9 +484,7 @@ class DialogueManager {
     
     const previousBeat = this.currentStoryBeat;
     this.currentStoryBeat = newStoryBeat;
-    
-    console.log(`Story beat updated: ${previousBeat} → ${newStoryBeat}`);
-    
+        
     // Emit event for UI integration
     this.emit('beatChanged', {
       previousBeat,
@@ -535,7 +526,6 @@ class DialogueManager {
    */
   checkForGroupLoading(storyBeat) {
     // Placeholder - will implement when we have more character groups
-    console.log(`Checking for group loading at story beat: ${storyBeat}`);
   }
 
   /**
@@ -544,7 +534,6 @@ class DialogueManager {
    */
   checkForCharacterRetirements(storyBeat) {
     // Placeholder - will implement when we have retirement logic
-    console.log(`Checking for character retirements at story beat: ${storyBeat}`);
   }
 
   /**
@@ -556,15 +545,6 @@ class DialogueManager {
     const errorAction = this.config?.behavior?.errorHandling || {};
 
     console.error(`DialogueManager error in ${context}:`, error);
-
-    // Log error details for debugging
-    if (this.config?.system?.enableLogging) {
-      console.log('Error details:', {
-        context,
-        message: error.message,
-        stack: error.stack
-      });
-    }
 
     // Could implement error reporting here in the future
   }
