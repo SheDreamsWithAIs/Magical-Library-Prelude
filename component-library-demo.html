@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Library Demo - Chronicles of the Kethaneum</title>
+  <link rel="stylesheet" href="styles/cssVariables.css">
+  <link rel="stylesheet" href="styles/baseCSS.css">
+  <link rel="stylesheet" href="styles/component-library.css">
+  <style>
+    body {
+      padding: 20px;
+      background: var(--neutral-dark);
+      color: var(--warm-light);
+      font-family: 'Crimson Text', Georgia, serif;
+    }
+
+    .demo-section {
+      margin-bottom: var(--space-xxl);
+      padding: var(--space-xl);
+      background: var(--neutral-medium);
+      border-radius: 8px;
+      box-shadow: var(--elevation-medium);
+    }
+
+    .demo-section h2 {
+      color: var(--accent-main);
+      margin-bottom: var(--space-lg);
+      border-bottom: 2px solid var(--accent-dark);
+      padding-bottom: var(--space-sm);
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-lg);
+      margin-top: var(--space-lg);
+    }
+
+    .component-example {
+      padding: var(--space-md);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+
+    .component-label {
+      font-size: 0.875rem;
+      color: var(--accent-light);
+      margin-bottom: var(--space-sm);
+      font-style: italic;
+    }
+
+    .code-block {
+      background: var(--primary-dark);
+      padding: var(--space-md);
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-top: var(--space-md);
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    .code-block code {
+      color: var(--accent-light);
+    }
+
+    #demo-container {
+      min-height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center; color: var(--accent-main); margin-bottom: var(--space-xxl);">
+    🎨 Component Library Demo
+  </h1>
+
+  <!-- Buttons Section -->
+  <div class="demo-section">
+    <h2>Buttons</h2>
+    <p>Reusable button component with multiple variants and states.</p>
+
+    <div class="demo-grid">
+      <div class="component-example">
+        <div class="component-label">Primary Button</div>
+        <div id="button-primary"></div>
+      </div>
+
+      <div class="component-example">
+        <div class="component-label">Secondary Button</div>
+        <div id="button-secondary"></div>
+      </div>
+
+      <div class="component-example">
+        <div class="component-label">Accent Button</div>
+        <div id="button-accent"></div>
+      </div>
+
+      <div class="component-example">
+        <div class="component-label">Large Button</div>
+        <div id="button-large"></div>
+      </div>
+
+      <div class="component-example">
+        <div class="component-label">Disabled Button</div>
+        <div id="button-disabled"></div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <code>
+import { Button, createPrimaryButton } from './components/Button.js';
+
+// Using the class
+const button = new Button({
+  text: 'Click Me',
+  variant: 'primary',
+  onClick: () => console.log('Clicked!')
+});
+button.mount('#container');
+
+// Using factory function
+const primaryBtn = createPrimaryButton('Primary', () => alert('Hello!'));
+primaryBtn.mount('#container');
+      </code>
+    </div>
+  </div>
+
+  <!-- Cards Section -->
+  <div class="demo-section">
+    <h2>Cards</h2>
+    <p>Flexible card components for displaying content in a structured format.</p>
+
+    <div class="demo-grid">
+      <div class="component-example">
+        <div class="component-label">Basic Card</div>
+        <div id="card-basic"></div>
+      </div>
+
+      <div class="component-example">
+        <div class="component-label">Genre Card</div>
+        <div id="card-genre"></div>
+      </div>
+
+      <div class="component-example">
+        <div class="component-label">Clickable Card</div>
+        <div id="card-clickable"></div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <code>
+import { Card, GenreCard } from './components/Card.js';
+
+const card = new Card({
+  title: 'Card Title',
+  description: 'This is a card description',
+  onClick: () => console.log('Card clicked')
+});
+card.mount('#container');
+
+const genreCard = new GenreCard({
+  genre: 'Mystery',
+  count: 12,
+  onClick: () => console.log('Genre selected')
+});
+genreCard.mount('#container');
+      </code>
+    </div>
+  </div>
+
+  <!-- Containers Section -->
+  <div class="demo-section">
+    <h2>Containers & Layouts</h2>
+    <p>Flexible container components for organizing content using flex and grid layouts.</p>
+
+    <div class="component-example">
+      <div class="component-label">Flex Container (Row)</div>
+      <div id="container-flex-row"></div>
+    </div>
+
+    <div class="component-example" style="margin-top: var(--space-lg);">
+      <div class="component-label">Grid Container (3 columns)</div>
+      <div id="container-grid"></div>
+    </div>
+
+    <div class="code-block">
+      <code>
+import { FlexContainer, GridContainer } from './components/Container.js';
+import { Button } from './components/Button.js';
+
+// Flex container
+const flexContainer = new FlexContainer({
+  direction: 'row',
+  gap: '1rem',
+  align: 'center'
+});
+
+flexContainer
+  .addChild(new Button({ text: 'Button 1' }))
+  .addChild(new Button({ text: 'Button 2' }))
+  .mount('#parent');
+
+// Grid container
+const gridContainer = new GridContainer({
+  columns: 3,
+  gap: '1rem'
+});
+      </code>
+    </div>
+  </div>
+
+  <!-- Lists Section -->
+  <div class="demo-section">
+    <h2>Lists</h2>
+    <p>Reusable list components with custom rendering and filtering capabilities.</p>
+
+    <div class="demo-grid">
+      <div class="component-example">
+        <div class="component-label">Basic List</div>
+        <div id="list-basic"></div>
+      </div>
+
+      <div class="component-example">
+        <div class="component-label">Word List</div>
+        <div id="list-words"></div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <code>
+import { List, WordList } from './components/List.js';
+
+const list = new List({
+  items: ['Item 1', 'Item 2', 'Item 3'],
+  onItemClick: (item) => console.log('Clicked:', item)
+});
+list.mount('#container');
+
+const wordList = new WordList({
+  items: ['MYSTERY', 'CLUE', 'DETECTIVE']
+});
+wordList.mount('#container');
+wordList.markWordFound('CLUE'); // Marks word as found
+      </code>
+    </div>
+  </div>
+
+  <!-- Panels Section -->
+  <div class="demo-section">
+    <h2>Panels (Modals)</h2>
+    <p>Modal overlay panels for displaying temporary content and dialogs.</p>
+
+    <div class="component-example">
+      <div class="component-label">Click to open panel</div>
+      <div id="panel-trigger"></div>
+    </div>
+
+    <div class="code-block">
+      <code>
+import { Panel } from './components/Panel.js';
+
+const panel = new Panel({
+  title: 'Puzzle Complete!',
+  content: 'Congratulations! You found all the words.',
+  buttons: [
+    {
+      text: 'Next Puzzle',
+      variant: 'accent',
+      onClick: () => { panel.close(); }
+    },
+    {
+      text: 'Return to Library',
+      variant: 'secondary',
+      onClick: () => { panel.close(); }
+    }
+  ]
+});
+
+panel.mount(document.body);
+panel.open(); // Shows the panel
+      </code>
+    </div>
+  </div>
+
+  <!-- Screens Section -->
+  <div class="demo-section">
+    <h2>Screens & Navigation</h2>
+    <p>Full-screen view components with navigation management.</p>
+
+    <div class="component-example">
+      <div class="component-label">Screen Navigation Demo</div>
+      <div id="screen-demo" style="min-height: 300px; background: rgba(0,0,0,0.3); border-radius: 8px; position: relative; overflow: hidden;">
+        <!-- Screens will be added here -->
+      </div>
+    </div>
+
+    <div class="code-block">
+      <code>
+import { Screen, ScreenManager } from './components/Screen.js';
+
+const screenManager = new ScreenManager();
+
+const titleScreen = new Screen({
+  id: 'title',
+  title: 'Welcome',
+  content: '&lt;p&gt;Welcome to the game!&lt;/p&gt;'
+});
+
+const gameScreen = new Screen({
+  id: 'game',
+  title: 'Gameplay',
+  onEnter: () => console.log('Game started!')
+});
+
+screenManager
+  .addScreen('title', titleScreen)
+  .addScreen('game', gameScreen);
+
+titleScreen.mount('#container');
+gameScreen.mount('#container');
+
+screenManager.navigateTo('title'); // Navigate to title screen
+      </code>
+    </div>
+  </div>
+
+  <!-- Usage Guide Section -->
+  <div class="demo-section">
+    <h2>📚 Usage Guide</h2>
+    <h3>Installation</h3>
+    <p>Import components from the component library:</p>
+    <div class="code-block">
+      <code>
+import {
+  Button,
+  Panel,
+  Card,
+  Screen,
+  ScreenManager,
+  Container
+} from './scripts/components/index.js';
+
+// Or import individually
+import { Button } from './scripts/components/Button.js';
+      </code>
+    </div>
+
+    <h3 style="margin-top: var(--space-xl);">Component Lifecycle</h3>
+    <p>All components follow a consistent lifecycle:</p>
+    <div class="code-block">
+      <code>
+// 1. Create
+const button = new Button({ text: 'Click Me' });
+
+// 2. Mount to DOM
+button.mount('#parent-element');
+
+// 3. Update state/props
+button.setText('New Text');
+button.setDisabled(true);
+
+// 4. Event handling
+button.on('click', () => console.log('Clicked!'));
+
+// 5. Cleanup
+button.destroy(); // Removes from DOM and cleans up event listeners
+      </code>
+    </div>
+
+    <h3 style="margin-top: var(--space-xl);">Creating Custom Components</h3>
+    <p>Extend BaseComponent to create your own reusable components:</p>
+    <div class="code-block">
+      <code>
+import { BaseComponent } from './scripts/components/BaseComponent.js';
+
+class CustomComponent extends BaseComponent {
+  constructor(config) {
+    super(config);
+    this.customProp = config.customProp;
+  }
+
+  createElement() {
+    const element = document.createElement('div');
+    element.textContent = this.customProp;
+    return element;
+  }
+
+  onMount() {
+    console.log('Component mounted!');
+  }
+}
+      </code>
+    </div>
+  </div>
+
+  <!-- Interactive Demo Container -->
+  <div id="demo-container"></div>
+
+  <!-- Component Library Scripts -->
+  <script type="module">
+    import {
+      Button,
+      createPrimaryButton,
+      createSecondaryButton,
+      createAccentButton,
+      createLargeButton,
+      Card,
+      GenreCard,
+      Panel,
+      List,
+      WordList,
+      FlexContainer,
+      GridContainer,
+      initComponentLibrary
+    } from './scripts/components/index.js';
+
+    // Initialize library
+    initComponentLibrary({ debug: true });
+
+    // === BUTTONS ===
+    createPrimaryButton('Primary', () => alert('Primary clicked!')).mount('#button-primary');
+    createSecondaryButton('Secondary', () => alert('Secondary clicked!')).mount('#button-secondary');
+    createAccentButton('Accent', () => alert('Accent clicked!')).mount('#button-accent');
+    createLargeButton('Large Button', () => alert('Large clicked!')).mount('#button-large');
+
+    const disabledBtn = new Button({
+      text: 'Disabled',
+      variant: 'primary',
+      disabled: true,
+      onClick: () => alert('This should not appear')
+    });
+    disabledBtn.mount('#button-disabled');
+
+    // === CARDS ===
+    const basicCard = new Card({
+      title: 'Basic Card',
+      description: 'This is a simple card component with title and description.'
+    });
+    basicCard.mount('#card-basic');
+
+    const genreCard = new GenreCard({
+      genre: 'Mystery',
+      title: 'Mystery',
+      description: '12 puzzles available',
+      count: 12,
+      onClick: () => alert('Mystery genre selected!')
+    });
+    genreCard.mount('#card-genre');
+
+    const clickableCard = new Card({
+      title: 'Clickable',
+      description: 'Click me to see the interaction!',
+      onClick: () => {
+        clickableCard.addGlow();
+        setTimeout(() => clickableCard.removeGlow(), 1000);
+      }
+    });
+    clickableCard.mount('#card-clickable');
+
+    // === CONTAINERS ===
+    const flexRow = new FlexContainer({
+      direction: 'row',
+      gap: '1rem',
+      align: 'center'
+    });
+
+    flexRow.addChild(createPrimaryButton('One', () => {}));
+    flexRow.addChild(createSecondaryButton('Two', () => {}));
+    flexRow.addChild(createAccentButton('Three', () => {}));
+    flexRow.mount('#container-flex-row');
+
+    const gridContainer = new GridContainer({
+      columns: 3,
+      gap: '1rem'
+    });
+
+    for (let i = 1; i <= 6; i++) {
+      const card = new Card({
+        title: `Item ${i}`,
+        description: `Grid item number ${i}`
+      });
+      gridContainer.addChild(card);
+    }
+    gridContainer.mount('#container-grid');
+
+    // === LISTS ===
+    const basicList = new List({
+      items: [
+        'First item in list',
+        'Second item in list',
+        'Third item in list'
+      ],
+      onItemClick: (item) => alert(`Clicked: ${item}`)
+    });
+    basicList.mount('#list-basic');
+
+    const wordList = new WordList({
+      items: ['MYSTERY', 'CLUE', 'DETECTIVE', 'SUSPECT']
+    });
+    wordList.mount('#list-words');
+
+    // Simulate finding a word after 1 second
+    setTimeout(() => {
+      wordList.markWordFound('CLUE');
+    }, 1000);
+
+    // === PANEL ===
+    const demoPanel = new Panel({
+      title: 'Example Panel',
+      content: '<p>This is a modal panel component. It can display any content and includes an overlay.</p><p>Click outside or use the buttons below to close.</p>',
+      buttons: [
+        {
+          text: 'Got it!',
+          variant: 'accent',
+          onClick: () => demoPanel.close()
+        },
+        {
+          text: 'Cancel',
+          variant: 'secondary',
+          onClick: () => demoPanel.close()
+        }
+      ]
+    });
+    demoPanel.mount(document.body);
+
+    const triggerBtn = createAccentButton('Open Panel', () => demoPanel.open());
+    triggerBtn.mount('#panel-trigger');
+
+    console.log('✅ All demo components loaded successfully!');
+  </script>
+</body>
+</html>
