@@ -53,6 +53,11 @@ export class Container extends BaseComponent {
       container.style.padding = this.padding;
     }
 
+    // Render all children that were added before createElement was called
+    this.children.forEach(child => {
+      container.appendChild(child.render());
+    });
+
     return container;
   }
 
@@ -139,7 +144,18 @@ export class GridContainer extends Container {
   }
 
   createElement() {
-    const container = super.createElement();
+    const container = document.createElement('div');
+
+    // Apply base layout styles
+    container.style.display = 'grid';
+
+    if (this.gap) {
+      container.style.gap = this.gap;
+    }
+
+    if (this.padding) {
+      container.style.padding = this.padding;
+    }
 
     if (this.columns) {
       container.style.gridTemplateColumns =
@@ -154,6 +170,11 @@ export class GridContainer extends Container {
           ? `repeat(${this.rows}, 1fr)`
           : this.rows;
     }
+
+    // Render all children that were added before createElement was called
+    this.children.forEach(child => {
+      container.appendChild(child.render());
+    });
 
     return container;
   }

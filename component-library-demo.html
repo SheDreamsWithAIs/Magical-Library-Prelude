@@ -411,6 +411,8 @@ class CustomComponent extends BaseComponent {
       WordList,
       FlexContainer,
       GridContainer,
+      Screen,
+      ScreenManager,
       initComponentLibrary
     } from './scripts/components/index.js';
 
@@ -525,6 +527,85 @@ class CustomComponent extends BaseComponent {
 
     const triggerBtn = createAccentButton('Open Panel', () => demoPanel.open());
     triggerBtn.mount('#panel-trigger');
+
+    // === SCREENS ===
+    const screenManager = new ScreenManager();
+
+    // Create welcome screen
+    const welcomeScreen = new Screen({
+      id: 'welcome',
+      title: 'Welcome Screen'
+    });
+
+    const welcomeContent = document.createElement('div');
+    welcomeContent.style.padding = '2rem';
+    welcomeContent.style.textAlign = 'center';
+    welcomeContent.innerHTML = '<p style="color: var(--warm-light); margin-bottom: 1rem;">This is the welcome screen. Click the button below to navigate to the next screen.</p>';
+
+    const navToGameBtn = createAccentButton('Go to Game Screen', () => {
+      screenManager.navigateTo('game');
+    });
+
+    welcomeContent.appendChild(navToGameBtn.render());
+    welcomeScreen.addContent(welcomeContent);
+
+    // Create game screen
+    const gameScreen = new Screen({
+      id: 'game',
+      title: 'Game Screen',
+      onEnter: () => console.log('Entered game screen'),
+      onExit: () => console.log('Exited game screen')
+    });
+
+    const gameContent = document.createElement('div');
+    gameContent.style.padding = '2rem';
+    gameContent.style.textAlign = 'center';
+    gameContent.innerHTML = '<p style="color: var(--warm-light); margin-bottom: 1rem;">This is the game screen. You can navigate back or go to settings.</p>';
+
+    const buttonContainer = new FlexContainer({
+      direction: 'row',
+      gap: '1rem',
+      justify: 'center'
+    });
+
+    buttonContainer.addChild(
+      createSecondaryButton('Go Back', () => screenManager.goBack())
+    );
+
+    buttonContainer.addChild(
+      createAccentButton('Go to Settings', () => screenManager.navigateTo('settings'))
+    );
+
+    gameContent.appendChild(buttonContainer.render());
+    gameScreen.addContent(gameContent);
+
+    // Create settings screen
+    const settingsScreen = new Screen({
+      id: 'settings',
+      title: 'Settings Screen'
+    });
+
+    const settingsContent = document.createElement('div');
+    settingsContent.style.padding = '2rem';
+    settingsContent.style.textAlign = 'center';
+    settingsContent.innerHTML = '<p style="color: var(--warm-light); margin-bottom: 1rem;">This is the settings screen. Navigate back to return to the previous screen.</p>';
+
+    const backBtn = createSecondaryButton('Go Back', () => screenManager.goBack());
+    settingsContent.appendChild(backBtn.render());
+    settingsScreen.addContent(settingsContent);
+
+    // Mount all screens
+    welcomeScreen.mount('#screen-demo');
+    gameScreen.mount('#screen-demo');
+    settingsScreen.mount('#screen-demo');
+
+    // Register screens and start on welcome
+    screenManager
+      .addScreen('welcome', welcomeScreen)
+      .addScreen('game', gameScreen)
+      .addScreen('settings', settingsScreen);
+
+    screenManager.navigateTo('welcome');
 
     console.log('✅ All demo components loaded successfully!');
   </script>
