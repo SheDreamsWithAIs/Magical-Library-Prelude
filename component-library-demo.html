@@ -466,9 +466,9 @@ class CustomComponent extends BaseComponent {
       align: 'center'
     });
 
-    flexRow.addChild(createPrimaryButton('One', () => {}));
-    flexRow.addChild(createSecondaryButton('Two', () => {}));
-    flexRow.addChild(createAccentButton('Three', () => {}));
+    flexRow.addChild(createPrimaryButton('One', () => alert('Button One clicked! (Primary variant)')));
+    flexRow.addChild(createSecondaryButton('Two', () => alert('Button Two clicked! (Secondary variant)')));
+    flexRow.addChild(createAccentButton('Three', () => alert('Button Three clicked! (Accent variant)')));
     flexRow.mount('#container-flex-row');
 
     const gridContainer = new GridContainer({

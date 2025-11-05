@@ -13,6 +13,7 @@ export class Screen extends BaseComponent {
     this.content = config.content || null;
     this.onEnter = config.onEnter || (() => {});
     this.onExit = config.onExit || (() => {});
+    this.pendingContent = []; // Store content added before render
 
     this.classes.push('screen');
   }
@@ -32,6 +33,7 @@ export class Screen extends BaseComponent {
     const contentContainer = document.createElement('div');
     contentContainer.classList.add('screen-content');
 
+    // Add initial content from constructor
     if (typeof this.content === 'string') {
       contentContainer.innerHTML = this.content;
     } else if (this.content instanceof HTMLElement) {
@@ -39,6 +41,22 @@ export class Screen extends BaseComponent {
     } else if (this.content instanceof BaseComponent) {
       contentContainer.appendChild(this.content.render());
     }
+
+    // Add any pending content that was added before render
+    this.pendingContent.forEach(content => {
+      if (typeof content === 'string') {
+        const div = document.createElement('div');
+        div.innerHTML = content;
+        contentContainer.appendChild(div);
+      } else if (content instanceof HTMLElement) {
+        contentContainer.appendChild(content);
+      } else if (content instanceof BaseComponent) {
+        contentContainer.appendChild(content.render());
+      }
+    });
+
+    // Clear pending content after rendering
+    this.pendingContent = [];
 
     screen.appendChild(contentContainer);
 
@@ -67,8 +85,13 @@ export class Screen extends BaseComponent {
    * Add content to the screen
    */
   addContent(content) {
-    if (!this.element) return this;
+    // If not yet rendered, store content for later
+    if (!this.element) {
+      this.pendingContent.push(content);
+      return this;
+    }
 
+    // If already rendered, add content directly
     const contentContainer = this.element.querySelector('.screen-content');
     if (!contentContainer) return this;
 
