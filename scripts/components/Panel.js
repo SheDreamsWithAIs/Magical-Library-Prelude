@@ -12,12 +12,18 @@ export class Panel extends BaseComponent {
 
     this.title = config.title || '';
     this.content = config.content || '';
+    this.inline = config.inline || false; // New: inline mode (no overlay)
     this.showCloseButton = config.showCloseButton !== false;
     this.closeOnOverlayClick = config.closeOnOverlayClick !== false;
     this.buttons = config.buttons || [];
     this.overlay = null;
 
     this.classes.push('panel');
+
+    // Add inline class if in inline mode
+    if (this.inline) {
+      this.classes.push('panel-inline');
+    }
   }
 
   createElement() {
@@ -35,8 +41,8 @@ export class Panel extends BaseComponent {
       panelContent.appendChild(titleElement);
     }
 
-    // Add close button if enabled
-    if (this.showCloseButton) {
+    // Add close button if enabled (only for modal mode)
+    if (this.showCloseButton && !this.inline) {
       const closeBtn = document.createElement('button');
       closeBtn.classList.add('panel-close');
       closeBtn.innerHTML = '&times;';
@@ -71,8 +77,10 @@ export class Panel extends BaseComponent {
 
     panel.appendChild(panelContent);
 
-    // Initially hidden
-    panel.style.display = 'none';
+    // Initially hidden for modal mode, visible for inline mode
+    if (!this.inline) {
+      panel.style.display = 'none';
+    }
 
     return panel;
   }
@@ -96,13 +104,16 @@ export class Panel extends BaseComponent {
    * Show the panel
    */
   open() {
-    // Create and show overlay if it doesn't exist
-    if (!this.overlay) {
-      this.overlay = this.createOverlay();
-      document.body.appendChild(this.overlay);
-    }
+    // Inline panels don't need overlay
+    if (!this.inline) {
+      // Create and show overlay if it doesn't exist
+      if (!this.overlay) {
+        this.overlay = this.createOverlay();
+        document.body.appendChild(this.overlay);
+      }
 
-    this.overlay.style.display = 'block';
+      this.overlay.style.display = 'block';
+    }
 
     // Show panel
     this.show();
@@ -181,7 +192,7 @@ export class Panel extends BaseComponent {
 }
 
 /**
- * Factory function for creating panels
+ * Factory function for creating modal panels
  */
 export function createPanel(title, content, buttons = [], config = {}) {
   return new Panel({
@@ -189,5 +200,19 @@ export function createPanel(title, content, buttons = [], config = {}) {
     title,
     content,
     buttons
+  });
+}
+
+/**
+ * Factory function for creating inline content panels
+ */
+export function createInlinePanel(title, content, buttons = [], config = {}) {
+  return new Panel({
+    ...config,
+    title,
+    content,
+    buttons,
+    inline: true,
+    showCloseButton: false
   });
 }

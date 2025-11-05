@@ -247,19 +247,28 @@ wordList.markWordFound('CLUE'); // Marks word as found
 
   <!-- Panels Section -->
   <div class="demo-section">
-    <h2>Panels (Modals)</h2>
-    <p>Modal overlay panels for displaying temporary content and dialogs.</p>
+    <h2>Panels</h2>
+    <p>Both modal overlay panels and inline content panels for organizing information.</p>
 
+    <h3 style="margin-top: var(--space-lg);">Modal Panels (Overlays)</h3>
     <div class="component-example">
-      <div class="component-label">Click to open panel</div>
+      <div class="component-label">Click to open modal panel</div>
       <div id="panel-trigger"></div>
     </div>
 
+    <h3 style="margin-top: var(--space-xl);">Inline Content Panels</h3>
+    <p style="font-size: 0.938rem; color: var(--warm-medium); margin-bottom: var(--space-md);">
+      These panels sit within the page flow and are always visible.
+    </p>
+
+    <div id="inline-panels-container"></div>
+
     <div class="code-block">
       <code>
-import { Panel } from './components/Panel.js';
+import { Panel, createInlinePanel } from './components/Panel.js';
 
-const panel = new Panel({
+// Modal Panel
+const modalPanel = new Panel({
   title: 'Puzzle Complete!',
   content: 'Congratulations! You found all the words.',
   buttons: [
@@ -267,17 +276,21 @@ const panel = new Panel({
       text: 'Next Puzzle',
       variant: 'accent',
       onClick: () => { panel.close(); }
-    },
-    {
-      text: 'Return to Library',
-      variant: 'secondary',
-      onClick: () => { panel.close(); }
     }
   ]
 });
+modalPanel.mount(document.body);
+modalPanel.open();
 
-panel.mount(document.body);
-panel.open(); // Shows the panel
+// Inline Panel
+const inlinePanel = createInlinePanel(
+  'Game Stats',
+  '&lt;p&gt;Puzzles Completed: 12&lt;/p&gt;&lt;p&gt;Total Words Found: 156&lt;/p&gt;',
+  [
+    { text: 'View Details', variant: 'accent', onClick: () => {} }
+  ]
+);
+inlinePanel.mount('#container');
       </code>
     </div>
   </div>
@@ -407,6 +420,7 @@ class CustomComponent extends BaseComponent {
       Card,
       GenreCard,
       Panel,
+      createInlinePanel,
       List,
       WordList,
       FlexContainer,
@@ -525,8 +539,47 @@ class CustomComponent extends BaseComponent {
     });
     demoPanel.mount(document.body);
 
-    const triggerBtn = createAccentButton('Open Panel', () => demoPanel.open());
+    const triggerBtn = createAccentButton('Open Modal Panel', () => demoPanel.open());
     triggerBtn.mount('#panel-trigger');
+
+    // === INLINE PANELS ===
+    const statsPanel = createInlinePanel(
+      'Game Statistics',
+      '<p style="margin: 0 0 0.5rem 0;"><strong>Puzzles Completed:</strong> 12</p><p style="margin: 0 0 0.5rem 0;"><strong>Total Words Found:</strong> 156</p><p style="margin: 0;"><strong>Average Time:</strong> 3:42</p>',
+      [
+        {
+          text: 'View Details',
+          variant: 'accent',
+          onClick: () => alert('Opening detailed stats...')
+        }
+      ]
+    );
+    statsPanel.mount('#inline-panels-container');
+
+    const infoPanel = createInlinePanel(
+      'Quick Tips',
+      '<p style="margin: 0 0 0.5rem 0;">💡 Words can be found horizontally, vertically, or diagonally.</p><p style="margin: 0 0 0.5rem 0;">⏱️ Complete puzzles quickly to earn bonus points.</p><p style="margin: 0;">🎯 Try to find all words without using hints!</p>',
+      []
+    );
+    infoPanel.mount('#inline-panels-container');
+
+    const progressPanel = createInlinePanel(
+      'Current Progress',
+      '<div style="margin-bottom: 0.5rem;"><strong>Mystery Genre:</strong> 8/12 puzzles</div><div style="background: var(--primary-dark); height: 20px; border-radius: 10px; overflow: hidden;"><div style="background: var(--accent-main); width: 67%; height: 100%;"></div></div>',
+      [
+        {
+          text: 'Continue',
+          variant: 'primary',
+          onClick: () => alert('Continuing with Mystery puzzles...')
+        },
+        {
+          text: 'Change Genre',
+          variant: 'secondary',
+          onClick: () => alert('Opening genre selection...')
+        }
+      ]
+    );
+    progressPanel.mount('#inline-panels-container');
 
     // === SCREENS ===
     const screenManager = new ScreenManager();

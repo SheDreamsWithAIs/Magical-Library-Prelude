@@ -240,6 +240,29 @@
   flex-wrap: wrap;
 }
 
+/* Inline Panel Variant */
+.panel-inline {
+  position: relative;
+  transform: none;
+  top: auto;
+  left: auto;
+  max-width: 100%;
+  max-height: none;
+  margin-bottom: var(--space-lg);
+}
+
+.panel-inline .panel-content {
+  box-shadow: var(--elevation-medium);
+}
+
+.panel-inline .panel-body {
+  margin-bottom: 0;
+}
+
+.panel-inline .panel-buttons {
+  margin-top: var(--space-md);
+}
+
 /* ============================================
    SCREEN COMPONENTS
    ============================================ */

@@ -17,7 +17,8 @@ export {
 
 export {
   Panel,
-  createPanel
+  createPanel,
+  createInlinePanel
 } from './Panel.js';
 
 export {
