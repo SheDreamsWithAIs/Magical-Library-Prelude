@@ -480,9 +480,28 @@ class CustomComponent extends BaseComponent {
       align: 'center'
     });
 
-    flexRow.addChild(createPrimaryButton('One', () => alert('Button One clicked! (Primary variant)')));
-    flexRow.addChild(createSecondaryButton('Two', () => alert('Button Two clicked! (Secondary variant)')));
-    flexRow.addChild(createAccentButton('Three', () => alert('Button Three clicked! (Accent variant)')));
+    let clickCount = 0;
+    const btnOne = createPrimaryButton('One (0)', () => {
+      clickCount++;
+      btnOne.setText(`One (${clickCount})`);
+    });
+
+    const btnTwo = createSecondaryButton('Two', () => {
+      btnTwo.element.style.transform = 'scale(1.2)';
+      setTimeout(() => {
+        btnTwo.element.style.transform = 'scale(1)';
+      }, 200);
+    });
+
+    const btnThree = createAccentButton('Three', () => {
+      const colors = ['#E6A817', '#F7C956', '#C48A0F', '#ff6b6b', '#4ecdc4'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      btnThree.element.style.backgroundColor = randomColor;
+    });
+
+    flexRow.addChild(btnOne);
+    flexRow.addChild(btnTwo);
+    flexRow.addChild(btnThree);
     flexRow.mount('#container-flex-row');
 
     const gridContainer = new GridContainer({
@@ -543,6 +562,8 @@ class CustomComponent extends BaseComponent {
     triggerBtn.mount('#panel-trigger');
 
     // === INLINE PANELS ===
+    console.log('🔵 Creating inline panels...');
+
     const statsPanel = createInlinePanel(
       'Game Statistics',
       '<p style="margin: 0 0 0.5rem 0;"><strong>Puzzles Completed:</strong> 12</p><p style="margin: 0 0 0.5rem 0;"><strong>Total Words Found:</strong> 156</p><p style="margin: 0;"><strong>Average Time:</strong> 3:42</p>',
@@ -554,14 +575,18 @@ class CustomComponent extends BaseComponent {
         }
       ]
     );
+    console.log('✅ Stats panel created:', statsPanel);
     statsPanel.mount('#inline-panels-container');
+    console.log('✅ Stats panel mounted');
 
     const infoPanel = createInlinePanel(
       'Quick Tips',
       '<p style="margin: 0 0 0.5rem 0;">💡 Words can be found horizontally, vertically, or diagonally.</p><p style="margin: 0 0 0.5rem 0;">⏱️ Complete puzzles quickly to earn bonus points.</p><p style="margin: 0;">🎯 Try to find all words without using hints!</p>',
       []
     );
+    console.log('✅ Info panel created:', infoPanel);
     infoPanel.mount('#inline-panels-container');
+    console.log('✅ Info panel mounted');
 
     const progressPanel = createInlinePanel(
       'Current Progress',
@@ -579,7 +604,11 @@ class CustomComponent extends BaseComponent {
         }
       ]
     );
+    console.log('✅ Progress panel created:', progressPanel);
     progressPanel.mount('#inline-panels-container');
+    console.log('✅ Progress panel mounted');
+    console.log('🟢 All inline panels should now be visible!');
+
 
     // === SCREENS ===
     const screenManager = new ScreenManager();
